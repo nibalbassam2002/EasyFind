@@ -828,6 +828,7 @@
                         </form>
                     </div>
             </div>
+        </div>
 
             <!-- Desktop Sidebar -->
             <div class="filter-section d-none d-md-block p-3 border">

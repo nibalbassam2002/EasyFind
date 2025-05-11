@@ -457,7 +457,7 @@
                     </div>
     </div>
     
-    </div>
+    
               <!--  Sidebar for big screen -->
                <div class="filter-section d-none d-md-block p-3 border">
                     <a href="#" class=" nav-link">

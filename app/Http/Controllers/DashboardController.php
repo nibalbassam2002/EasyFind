@@ -21,26 +21,32 @@ class DashboardController extends Controller
 
         $user = Auth::user();
         $role = $user->role;
+        if ($role === 'customer') {
+            return redirect()->route('frontend.home'); 
+       }
         $userId = $user->id;
 
         // تحديد الفترة الزمنية (اليوم/الأسبوع/الشهر/الكلي)
         $period = $request->input('period', 'all');
         $type = $request->input('type'); // فلتر نوع المعاملات
 
-        // --- تهيئة مصفوفة البيانات للـ View ---
+    
         $viewData = [
             'role' => $role,
             'period' => $period,
             'type' => $type,
-            // تعيين قيم افتراضية لتجنب الأخطاء في الـ Blade
+
             'totalUsers' => 0,
             'totalProperties' => 0,
             'totalRequests' => 0,
             'totalTransactions' => 0,
             'completedTransactions' => 0,
             'pendingPropertiesCount' => 0,
+            'activeListingsCount' => 0,
+            'pendingListingsCount' => 0,
+            'totalEarnings' => 0, 
             'myPropertiesCount' => 0,
-            'recentTransactions' => collect(), // مجموعة فارغة افتراضياً
+            'recentTransactions' => collect(), 
         ];
 
         // --- تحديد دالة الفلترة الزمنية ---
@@ -55,83 +61,75 @@ class DashboardController extends Controller
                 case 'month':
                     $query->whereMonth($column, now()->month)->whereYear($column, now()->year);
                     break;
-                // 'all' لا يفعل شيئًا
+               
             }
         };
 
-        // --- جلب البيانات بناءً على الدور ---
+ 
 
         if ($role === 'admin' || $role === 'content_moderator') {
-            // --- بيانات Admin / Moderator ---
 
-            // إحصائيات عامة مع فلتر زمني
+
             $usersQuery = User::query();
             $propertiesQuery = Property::query();
             $requestsQuery = PropertyRequest::query();
-            $transactionsQuery = Transaction::query(); // عام
+            $transactionsQuery = Transaction::query(); 
             $completedTransactionsQuery = Transaction::query()->where('status', 'completed');
 
             $applyTimeFilter($usersQuery, $period);
             $applyTimeFilter($propertiesQuery, $period);
             $applyTimeFilter($requestsQuery, $period);
-            $applyTimeFilter($completedTransactionsQuery, $period); // Completed transactions in period
-            // لا نطبق الفلتر الزمني على الإجمالي الكلي للمعاملات
-            // $applyTimeFilter($transactionsQuery, $period);
+            $applyTimeFilter($completedTransactionsQuery, $period); 
+          
 
             $viewData['totalUsers'] = $usersQuery->count();
             $viewData['totalProperties'] = $propertiesQuery->count();
             $viewData['totalRequests'] = $requestsQuery->count();
-            $viewData['totalTransactions'] = Transaction::count(); // الإجمالي الكلي دائماً
+            $viewData['totalTransactions'] = Transaction::count(); 
             $viewData['completedTransactions'] = $completedTransactionsQuery->count();
 
-            // عدد العقارات المعلقة (خاص بـ Moderator)
+        
             if ($role === 'content_moderator') {
                 $pendingPropertiesQuery = Property::where('status', 'pending');
-                // يمكنك اختيارياً تطبيق فلتر زمني هنا أيضاً إذا أردت
-                // $applyTimeFilter($pendingPropertiesQuery, $period);
+                
                 $viewData['pendingPropertiesCount'] = $pendingPropertiesQuery->count();
             }
 
-            // المعاملات الأخيرة العامة
+          
             $recentTransactionsQuery = Transaction::with(['user', 'property'])->latest();
             if ($type && in_array($type, ['sale', 'rent'])) {
                 $recentTransactionsQuery->where('type', $type);
             }
-            // يمكنك اختيارياً تطبيق فلتر زمني على الجدول أيضاً
-            // $applyTimeFilter($recentTransactionsQuery, $period);
+            
             $viewData['recentTransactions'] = $recentTransactionsQuery->paginate(10);
 
         } elseif ($role === 'property_lister') {
-            // --- بيانات Property Lister ---
+           
 
-            // عدد عقاراتي
-            $myPropertiesBaseQuery = Property::where('user_id', $userId);
-            $myPropertiesQuery = clone $myPropertiesBaseQuery; // نسخة للفلتر الزمني
-            $applyTimeFilter($myPropertiesQuery, $period);
-            $viewData['myPropertiesCount'] = $myPropertiesQuery->count();
+            
+            $viewData['myPropertiesCount'] = Property::where('user_id', $userId)->count();
+            $viewData['activeListingsCount'] = Property::where('user_id', $userId)->where('status', 'approved')->count();
+            $viewData['pendingListingsCount'] = Property::where('user_id', $userId)->where('status', 'pending')->count();
+           $earningsQuery = Transaction::where('status', 'completed')
+                                      ->whereHas('property', fn($q) => $q->where('user_id', $userId));
+           $applyTimeFilter($earningsQuery, $period, 'transactions.created_at'); // الفلترة على تاريخ المعاملة
+           $viewData['totalEarnings'] = $earningsQuery->sum('amount');
 
-            // معاملاتي الأخيرة (على عقاراتي)
+            
             $recentTransactionsQuery = Transaction::with(['user', 'property'])
-                ->whereHas('property', fn($q) => $q->where('user_id', $userId)) // <--- الفلترة الرئيسية هنا
+                ->whereHas('property', fn($q) => $q->where('user_id', $userId)) 
                 ->latest();
 
             if ($type && in_array($type, ['sale', 'rent'])) {
                 $recentTransactionsQuery->where('type', $type);
             }
-            // يمكنك اختيارياً تطبيق فلتر زمني على الجدول أيضاً
-            // $applyTimeFilter($recentTransactionsQuery, $period);
-            $viewData['recentTransactions'] = $recentTransactionsQuery->paginate(10);
+            $applyTimeFilter($recentTransactionsQuery, $period, 'transactions.created_at');
 
-        } elseif ($role === 'customer') {
-            // --- بيانات Customer ---
-            // يمكنك إضافة أي إحصائيات خاصة بالعميل هنا لاحقاً
-            // مثل عدد طلباته أو حجوزاته
-             // $myRequestsQuery = PropertyRequest::where('user_id', $userId);
-             // $applyTimeFilter($myRequestsQuery, $period);
-             // $viewData['myRequestsCount'] = $myRequestsQuery->count();
-        }
+            $viewData['recentTransactions'] = $recentTransactionsQuery->paginate(10)->withQueryString();;
 
-        // --- إرسال البيانات إلى الـ View ---
+        }  
+
+   
         return view('dashboard.index', $viewData);
     }
 
@@ -183,10 +181,10 @@ class DashboardController extends Controller
         };
 
 
-        // --- توليد بيانات الرسوم بناءً على الدور ---
+   
 
         if ($role === 'admin' || $role === 'content_moderator') {
-            // --- رسوم Admin / Moderator ---
+           
             $responseData['users'] = [
                 'active' => User::where('status', 'active')->count(),
                 'inactive' => User::where('status', 'inactive')->count()
@@ -201,17 +199,17 @@ class DashboardController extends Controller
                 'pending' => Transaction::where('status', 'pending')->count(),
                 'failed' => Transaction::where('status', 'failed')->count()
             ];
-             // بيانات المعاملات الشهرية العامة
+             
             $responseData['monthlyTransactions'] = $calculateMonthlyData(Transaction::query());
 
         } elseif ($role === 'property_lister') {
-             // --- رسوم Property Lister ---
+         
 
-             // حالة عقاراتي (Approved, Pending, Sold, etc.)
+             
              $myPropertyStatuses = Property::where('user_id', $userId)
                 ->select('status', DB::raw('count(*) as count'))
                 ->groupBy('status')
-                ->pluck('count', 'status'); // ['pending' => 5, 'approved' => 10, ...]
+                ->pluck('count', 'status'); 
 
             $responseData['myPropertiesStatus'] = [
                 'labels' => $myPropertyStatuses->keys()->map(fn($status) => ucfirst($status))->toArray(),
@@ -219,13 +217,13 @@ class DashboardController extends Controller
              ];
 
 
-             // معاملاتي الشهرية (على عقاراتي)
+             
              $myTransactionsQuery = Transaction::query()
                   ->whereHas('property', fn($q) => $q->where('user_id', $userId));
              $responseData['myMonthlyTransactions'] = $calculateMonthlyData($myTransactionsQuery);
 
         }
-        // لا حاجة لبيانات رسوم للـ Customer حالياً
+       
 
         return response()->json($responseData);
     }

@@ -1,4 +1,3 @@
-{{-- resources/views/layouts/frontend.blade.php --}}
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
@@ -35,30 +34,34 @@
 
             <div class="collapse navbar-collapse" id="navbarLinks">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    @can('create', App\Models\Property::class)
-                        <li class="nav-item"><a href="{{ route('lister.properties.create') }}" class="nav-link">Sell</a>
-                        </li>
-                    @else
-                        <li class="nav-item"><a
-                                href="{{ route('login') }}?redirect={{ urlencode(route('lister.properties.create')) }}"
-                                class="nav-link">Sell</a></li>
-                    @endcan
+                    <li class="nav-item">
+                        @if (Auth::check() && Auth::user()->role === 'customer')
+                            <a href="#" class="nav-link" data-bs-toggle="modal"
+                                data-bs-target="#subscribeModal">Sell</a>
+                        @else
+                            <a href="{{ route('lister.properties.create') }}" class="nav-link">Sell</a>
+                        @endif
+                    </li>
                     <li class="nav-item">
                         @guest
-                            <a href="{{ route('login') }}?redirect={{ urlencode(route('frontend.properties', ['purpose' => 'sale'])) }}" class="nav-link">Buy</a>
+                            <a href="{{ route('login') }}?redirect={{ urlencode(route('frontend.properties', ['purpose' => 'sale'])) }}"
+                                class="nav-link">Buy</a>
                         @endguest
                         @auth
-                            <a href="{{ route('frontend.properties', ['purpose' => 'sale']) }}" class="nav-link {{ request()->routeIs('frontend.properties') && request('purpose') == 'sale' ? 'active' : '' }}">Buy</a>
+                            <a href="{{ route('frontend.properties', ['purpose' => 'sale']) }}"
+                                class="nav-link {{ request()->routeIs('frontend.properties') && request('purpose') == 'sale' ? 'active' : '' }}">Buy</a>
                         @endauth
                     </li>
-                            <li class="nav-item">
-                                 @guest
-                                    <a href="{{ route('login') }}?redirect={{ urlencode(route('frontend.properties', ['purpose' => 'rent'])) }}" class="nav-link">Rent</a>
-                                @endguest
-                                @auth
-                                    <a href="{{ route('frontend.properties', ['purpose' => 'rent']) }}" class="nav-link {{ request()->routeIs('frontend.properties') && request('purpose') == 'rent' ? 'active' : '' }}">Rent</a>
-                                @endauth
-                            </li>
+                    <li class="nav-item">
+                        @guest
+                            <a href="{{ route('login') }}?redirect={{ urlencode(route('frontend.properties', ['purpose' => 'rent'])) }}"
+                                class="nav-link">Rent</a>
+                        @endguest
+                        @auth
+                            <a href="{{ route('frontend.properties', ['purpose' => 'rent']) }}"
+                                class="nav-link {{ request()->routeIs('frontend.properties') && request('purpose') == 'rent' ? 'active' : '' }}">Rent</a>
+                        @endauth
+                    </li>
                     <li class="nav-item"><a href="#" class="nav-link">Chats</a></li>
 
                     <li class="nav-item"><a href="{{ route('frontend.favorites') }}"
@@ -82,32 +85,51 @@
                         <div class="nav-item dropdown">
                             <a class="btn btn-light dropdown-toggle d-flex align-items-center" href="#"
                                 id="navbarUserDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <img src="{{ Auth::user()->profile_image_url }}" alt="{{ Auth::user()->name }}"
+                                <img src="{{ Auth::user()->profile_image ? asset('storage/images/' . Auth::user()->profile_image) : asset('assets/img/profile.jpg') }}"
                                     width="28" height="28" class="rounded-circle me-2 object-fit-cover">
                                 <span class="user-dropdown-name">{{ Str::words(Auth::user()->name, 1, '') }}</span>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarUserDropdown">
-                                <li><a class="dropdown-item d-flex align-items-center"
-                                        href="{{ route('profile.index') }}"><i class="bi bi-person fs-5 me-2"></i><span>My
-                                            Profile</span></a></li>
-                                @if (Auth::check() && in_array(Auth::user()->role, ['admin', 'content_moderator', 'property_lister']))
+                                <li>
+                                    @if (Auth::user()->role === 'customer')
+                                        <a class="dropdown-item d-flex align-items-center"
+                                            href="{{ route('frontend.account') }}">
+                                            <i class="bi bi-person-circle me-2"></i><span>My Account</span>
+                                        </a>
+                                    @else
+                                        <a class="dropdown-item d-flex align-items-center"
+                                            href="{{ route('profile.index') }}">
+                                            <i class="bi bi-person-circle me-2"></i><span>My Profile</span>
+                                        </a>
+                                    @endif
+                                </li>
+
+
+                                <li>
+                                    @if (Auth::user()->role === 'customer')
+                                        <a class="dropdown-item d-flex align-items-center"
+                                            href="{{ route('frontend.account') }}">
+                                            <i class="bi bi-gear me-2"></i><span>Settings</span>
+                                        </a>
+                                    @else
+                                        <a class="dropdown-item d-flex align-items-center"
+                                            href="{{ route('profile.index') }}#profile-settings"> {{-- توجيه مباشر لتبويب الإعدادات --}}
+                                            <i class="bi bi-gear me-2"></i><span>Account Settings</span>
+                                        </a>
+                                    @endif
+                                </li>
+                                @if (Auth::check() && Auth::user()->role != 'customer')
                                     <li><a class="dropdown-item d-flex align-items-center"
                                             href="{{ route('dashboard') }}"><i
-                                                class="bi bi-speedometer2 fs-5 me-2"></i><span>Dashboard</span></a></li>
+                                                class="bi bi-speedometer2 me-2"></i><span>Dashboard</span></a></li>
                                 @endif
-                                <li><a class="dropdown-item d-flex align-items-center"
-                                        href="{{ route('profile.index') }}"><i
-                                            class="bi bi-gear fs-5 me-2"></i><span>Settings</span></a></li>
                                 <li>
                                     <hr class="dropdown-divider">
                                 </li>
                                 <li>
-                                    <form method="POST" action="{{ route('logout') }}" class="mb-0">
-                                        @csrf
-                                        <button type="submit"
-                                            class="dropdown-item d-flex align-items-center text-danger"><i
-                                                class="bi bi-box-arrow-right fs-5 me-2"></i><span>Log out</span></button>
-                                    </form>
+                                    <form method="POST" action="{{ route('logout') }}" class="mb-0"> @csrf <button
+                                            type="submit" class="dropdown-item d-flex align-items-center text-danger"><i
+                                                class="bi bi-box-arrow-right me-2"></i><span>Log out</span></button></form>
                                 </li>
                             </ul>
                         </div>
@@ -116,14 +138,14 @@
             </div>
         </div>
     </nav>
-    {{-- مسافة تحت النافبار --}}
+
     <div style="height: 77px; background-color: white;"></div>
     <main class="flex-shrink-0 py-4">
         @yield('content')
     </main>
     <div class="house-divider my-5"></div>
 
-    {{-- ================== Footer ================== --}}
+
     <div class="container">
         <footer class="row row-cols-1 row-cols-sm-2 row-cols-md-5 py-5 my-5 border-top">
             <div class="col mb-3">
@@ -135,7 +157,6 @@
                 </a>
                 <p class="text-muted">© {{ date('Y') }} EasyFind. All rights reserved.</p>
             </div>
-            <div class="col mb-3"></div> {{-- عمود فارغ --}}
             <div class="col mb-3">
                 <h5>Company</h5>
                 <ul class="nav flex-column">
@@ -173,15 +194,207 @@
             </div>
         </footer>
     </div>
-    {{-- ================== End Footer ================== --}}
-
-    {{-- Bootstrap JS Bundle --}}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous">
     </script>
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.favorite-icon').forEach(iconElement => {
+                iconElement.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
 
-    {{-- مكان للسكريبتات الإضافية الخاصة بكل صفحة --}}
+                    const propertyId = this.dataset.propertyId;
+                    const heartIcon = this.querySelector('i');
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]')
+                        ?.getAttribute('content');
+
+                    if (!propertyId || !heartIcon || !csrfToken) {
+                        console.error("Favorite Toggle: Missing data", {
+                            propertyId,
+                            heartIconExists: !!heartIcon,
+                            csrfTokenExists: !!csrfToken
+                        });
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Could not process favorite request. (Missing data)',
+                            icon: 'error'
+                        });
+                        return;
+                    }
+
+
+                    heartIcon.classList.add(
+                        'processing-favorite');
+
+                    fetch("{{ route('favorites.toggle') }}", {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken,
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: JSON.stringify({
+                                property_id: propertyId
+                            })
+                        })
+                        .then(response => {
+                            if (response.status === 401) {
+                                Swal.fire({
+                                    title: 'Authentication Required',
+                                    text: 'You need to log in to add properties to your favorites.',
+                                    icon: 'warning',
+                                    showCancelButton: true,
+                                    confirmButtonText: 'Login',
+                                    cancelButtonText: 'Later',
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        window.location.href =
+                                            "{{ route('login') }}?redirect=" +
+                                            encodeURIComponent(window.location.href);
+                                    }
+                                });
+                                return Promise.reject({
+                                    unauthenticated: true,
+                                    message: 'Authentication required.'
+                                });
+                            }
+                            if (!response.ok) {
+
+                                return response.json().then(errData => {
+                                    throw new Error(errData.message ||
+                                        `Request failed with status ${response.status}`
+                                    );
+                                }).catch(() => {
+                                    // إذا لم يكن هناك JSON، ألقِ خطأ عام
+                                    throw new Error(
+                                        `Request failed with status ${response.status}`
+                                    );
+                                });
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            heartIcon.classList.remove('processing-favorite');
+
+                            if (data.success) {
+                                const isFavorite = data.is_favorited;
+                                heartIcon.classList.toggle('bi-heart-fill', isFavorite);
+                                heartIcon.classList.toggle('bi-heart', !isFavorite);
+                                heartIcon.classList.toggle('is-favorite',
+                                    isFavorite);
+
+                                const Toast = Swal.mixin({
+                                    toast: true,
+                                    position: 'top-end',
+                                    showConfirmButton: false,
+                                    timer: 2000,
+                                    timerProgressBar: true,
+                                    didOpen: (toast) => {
+                                        toast.onmouseenter = Swal.stopTimer;
+                                        toast.onmouseleave = Swal.resumeTimer;
+                                    }
+                                });
+                                Toast.fire({
+                                    icon: 'success',
+                                    title: data.message
+                                });
+
+                                if (!isFavorite && window.location.pathname.includes(
+                                        '/my-favorites')) {
+                                    const cardToRemove = this.closest(
+                                        '.favorite-property-card, .property-card'
+                                    );
+                                    if (cardToRemove) {
+                                        cardToRemove.style.transition =
+                                            "opacity 0.5s, transform 0.5s";
+                                        cardToRemove.style.opacity = "0";
+                                        cardToRemove.style.transform = "scale(0.9)";
+                                        setTimeout(() => {
+                                            cardToRemove.remove();
+
+                                            if (document.querySelectorAll(
+                                                    ".favorite-property-card")
+                                                .length === 0 &&
+                                                !document.querySelector(
+                                                    '.alert.alert-secondary')
+                                            ) {
+                                                const container = document
+                                                    .querySelector(
+                                                        '.container.mt-5:not(.recommended-section)'
+                                                    );
+                                                if (container) {
+                                                    const noFavMsg = `
+                                            <div class="alert alert-secondary text-center p-4">
+                                                <i class="bi bi-heart fs-3 d-block mb-2"></i>
+                                                You haven't added any properties to your favorites yet.
+                                            </div>`;
+                                                    const pagination = container
+                                                        .querySelector(
+                                                            '.mt-4.d-flex.justify-content-center'
+                                                        );
+                                                    if (pagination) pagination
+                                                        .insertAdjacentHTML(
+                                                            'beforebegin', noFavMsg);
+                                                    else container.insertAdjacentHTML(
+                                                        'beforeend', noFavMsg);
+
+                                                }
+                                            }
+                                        }, 500);
+                                    }
+                                }
+
+                            } else {
+                                Swal.fire({
+                                    title: 'Failed',
+                                    text: data.message || 'Failed to update favorites.',
+                                    icon: 'error'
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            heartIcon.classList.remove('processing-favorite');
+                            if (error.unauthenticated) {
+                                // تم التعامل معها بالفعل في .then(response => ...)
+                                console.warn("User not authenticated for favorite action.");
+                            } else {
+                                console.error('Error during favorite toggle request:', error);
+                                Swal.fire({
+                                    title: 'Error',
+                                    text: error.message ||
+                                        'An error occurred. Please try again.',
+                                    icon: 'error'
+                                });
+                            }
+                        });
+                });
+            });
+        });
+    </script>
+
     @stack('scripts')
+    <div class="modal fade" id="subscribeModal" tabindex="-1" aria-labelledby="subscribeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header border-0">
+              {{-- <h5 class="modal-title" id="subscribeModalLabel">Subscription Required</h5> --}}
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+              <i class="bi bi-exclamation-circle-fill text-warning fs-1 mb-3"></i>
+              <p class="lead">You cannot sell or rent before subscribing to EasyFind Plus.</p>
+            </div>
+            <div class="modal-footer justify-content-center border-0 pb-4">
+               {{-- هذا الزر سيوجه لصفحة الخطط --}}
+              <a href="{{ route('frontend.pricing') }}" class="btn btn-primary btn-lg">Subscribe Now</a>
+            </div>
+          </div>
+        </div>
+      </div>
 
 </body>
 

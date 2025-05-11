@@ -85,7 +85,7 @@
   {{-- ▲▲▲ نهاية قسم مشرف المحتوى ▲▲▲ --}}
 
 
-  {{-- === قسم الملف الشخصي (للجميع) === --}}
+  {{-- === قسم الملف الشخصي ) === --}}
    <li class="nav-heading">Account</li> {{-- إضافة عنوان للقسم --}}
   <li class="nav-item">
     <a class="nav-link {{ request()->routeIs('profile.index') ? '' : 'collapsed' }}" href="{{ route('profile.index') }}">
@@ -93,6 +93,6 @@
         <span>My Profile</span>
     </a>
   </li>
-  {{-- === نهاية قسم الملف الشخصي === --}}
+
 
 </ul>

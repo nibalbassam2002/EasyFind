@@ -7,12 +7,22 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash; 
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password; 
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
 
     public function showLoginForm()
     {
+        if (Auth::check()) {
+            $user = Auth::user();
+             if ($user->role === 'customer') {
+                return redirect()->route('frontend.home');
+            } else {
+                 return redirect()->route('dashboard');
+            }
+        }
+
         return view('auth.login');
     }
 
@@ -23,12 +33,16 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+        if (Auth::attempt($credentials, $request->boolean('remember'))) { 
             $request->session()->regenerate();
             $redirectUrl = $request->input('redirect');
-            if ($redirectUrl && Str::startsWith($redirectUrl, url('/'))) { 
-                return redirect()->intended($redirectUrl); 
-           }
+            if ($redirectUrl && Str::startsWith($redirectUrl, url('/'))) {
+                 $intendedPath = parse_url($redirectUrl, PHP_URL_PATH);
+                 if (!(Auth::user()->role === 'customer' && $intendedPath === '/dashboard')) {
+                     return redirect()->intended($redirectUrl);
+                 }
+                    }
+
             $user = Auth::user();
 
 
@@ -36,11 +50,14 @@ class AuthController extends Controller
                 case 'admin':
                 case 'content_moderator':
                 case 'property_lister':
+                    return redirect()->route('dashboard');
                 case 'customer':
-                    return $user->role === 'customer' ? redirect()->route('frontend.home') : redirect()->route('dashboard');
+                    return redirect()->route('frontend.home'); 
+
                 default:
 
-                    return redirect()->route('dashboard');
+                return redirect()->route('frontend.home');
+
             }
         }
 
@@ -63,12 +80,19 @@ class AuthController extends Controller
 
     public function showRegistrationForm()
     {
+        if (Auth::check()) {
+            return redirect()->route('frontend.home');
+         }
+
 
         return view('auth.register');
     }
 
     public function register(Request $request)
     {
+        if (Auth::check()) {
+            return redirect()->route('frontend.home');
+         }
 
         $validator = Validator::make($request->all(), [
             'name' => ['required', 'string', 'max:255'],
@@ -115,7 +139,7 @@ class AuthController extends Controller
             $request->session()->regenerate();
 
 
-            return redirect()->route('dashboard')->with('success', 'Account created successfully! Welcome!');
+            return redirect()->route('frontend.home')->with('success', 'Account created successfully! Welcome!');
 
         } catch (\Exception $e) {
 

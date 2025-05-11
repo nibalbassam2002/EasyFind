@@ -78,4 +78,21 @@ public function favorites()
 {
     return $this->hasMany(Favorite::class);
 }
+public function subscriptions() {
+    return $this->hasMany(Subscription::class);
+}
+
+public function activeSubscription() {
+    return $this->hasOne(Subscription::class)->where('status', 'active')->where(function ($query) {
+        $query->whereNull('ends_at')->orWhere('ends_at', '>', now());
+    });
+}
+
+public function activePlan() {
+    return $this->hasOneThrough(Plan::class, Subscription::class, 'user_id', 'id', 'id', 'plan_id')
+                ->where('subscriptions.status', 'active')
+                ->where(function ($query) {
+                    $query->whereNull('subscriptions.ends_at')->orWhere('subscriptions.ends_at', '>', now());
+                });
+}
 }

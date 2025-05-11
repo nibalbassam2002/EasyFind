@@ -539,7 +539,7 @@
     
             </div>
             <!-- main Section -->
-            <div class="col-md-8 col-lg-9 account-content">
+            <div class="col-md-9 col-lg-9 account-content">
 
                 <section class="section profile">
                     <div class="row">

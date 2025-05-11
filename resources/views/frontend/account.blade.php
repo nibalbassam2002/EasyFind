@@ -373,6 +373,7 @@
         <div class="row gx-lg-4">
             <!--  Sidebar -->
             <div class="col-md-3 col-lg-3 mb-4 mb-md-0 account-sidebar">
+                      <!-- زر برجر لفتح السايدبار (للشاشات الصغيرة فقط) -->
       <div class="d-md-none p-2">
         <button class="btn btn-outline-secondary" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas">
           <i class="bi bi-list "></i>
@@ -385,8 +386,8 @@
           <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
           <div class="offcanvas-body">
-          <!-- محتوى السايدبار -->
-     <a href="#" class=" nav-link">
+       <!-- محتوى السايدبار -->
+            <a href="#" class=" nav-link">
                         <p><img src="{{ Auth::user()->profile_image ? asset('storage/images/' . Auth::user()->profile_image) : asset('assets/img/profile.jpg') }}"
                                 alt="{{ Auth::user()->name }}" class="rounded-circle" width="30px" height="30px"
                                 style="border-radius: 50px;">{{ Auth::user()->name }}</p>
@@ -455,9 +456,12 @@
                             @csrf
                         </form>
                     </div>
+    
     </div>
+          </div>
     
-    
+     
+
               <!--  Sidebar for big screen -->
                <div class="filter-section d-none d-md-block p-3 border">
                     <a href="#" class=" nav-link">
@@ -1184,3 +1188,4 @@ function performImageDelete() {
                 };
             </script>
         @endpush
+

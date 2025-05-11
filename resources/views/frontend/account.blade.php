@@ -457,7 +457,7 @@
                     </div>
     </div>
               <!--  Sidebar for big screen -->
-                <div class="filter-sectiond-none d-md-block filter-section p-3 border">
+                <div class="filter-section d-none d-md-block p-3 border">
                     <a href="#" class=" nav-link">
                         <p><img src="{{ Auth::user()->profile_image ? asset('storage/images/' . Auth::user()->profile_image) : asset('assets/img/profile.jpg') }}"
                                 alt="{{ Auth::user()->name }}" class="rounded-circle" width="30px" height="30px"

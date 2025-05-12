@@ -1188,4 +1188,3 @@ function performImageDelete() {
                 };
             </script>
         @endpush
-

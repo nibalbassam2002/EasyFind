@@ -15,7 +15,7 @@
     <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="card-title mb-0">Manage Users</h5>
        
-        <a href="{{ route('admin.users.create') }}" class="btn btn-primary btn-sm">
+        <a href="{{ route('admin.users.create') }}" class="btn btn-sm btn-gold ">
             <i class="bi bi-plus-lg"></i> Add New User
         </a>
     </div>
@@ -89,7 +89,7 @@
                             <td>{{ $user->created_at->format('d M Y') }}</td>
                             <td class="text-end"> {{-- محاذاة لليمين --}}
                              
-                                    <a href="{{ route('admin.users.edit', $user->id) }}" class="btn btn-sm btn-outline-info me-1 px-2" title="Edit User">
+                                    <a href="{{ route('admin.users.edit', $user->id) }}" class="btn btn-sm btn-outline-gold me-1 px-2" title="Edit User">
                                         <i class="bi bi-pencil-fill"></i>
                                     </a>
 
@@ -99,7 +99,7 @@
                                         <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" class="d-inline delete-form">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-outline-danger px-2" title="Delete User">
+                                            <button type="submit" class="btn btn-sm btn-outline-dark1 px-2" title="Delete User">
                                                 <i class="bi bi-trash-fill"></i>
                                             </button>
                                         </form>

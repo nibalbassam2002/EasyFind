@@ -2,10 +2,10 @@
 <ul class="sidebar-nav" id="sidebar-nav">
 
   {{-- === قسم لوحة التحكم (للجميع) === --}}
-  <li class="nav-item">
+  <li class="nav>
     <a class="nav-link {{ request()->routeIs('dashboard') ? '' : 'collapsed' }}" href="{{ route('dashboard') }}">
       <i class="bi bi-grid"></i>
-      <span>Dashboard</span>
+      <span >Dashboard</span>
     </a>
   </li><!-- End Dashboard Nav -->
 

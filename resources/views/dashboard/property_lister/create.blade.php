@@ -40,9 +40,10 @@
                     'currentImages' => [],
                 ])
 
-                <div class="text-end mt-4">
+                <div class="text-start mt-4">
+                    <button type="submit" class="btn btn-gold">Submit Property for Review</button>
                     <a href="{{ route('lister.properties.index') }}" class="btn btn-secondary me-2">Cancel</a>
-                    <button type="submit" class="btn btn-primary">Submit Property for Review</button>
+                    
                 </div>
             </form>
         </div>

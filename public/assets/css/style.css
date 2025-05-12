@@ -1,10 +1,10 @@
 /**
-* Template Name: NiceAdmin
-* Template URL: https://bootstrapmade.com/nice-admin-bootstrap-admin-html-template/
-* Updated: Apr 20 2024 with Bootstrap v5.3.3
-* Author: BootstrapMade.com
-* License: https://bootstrapmade.com/license/
-*/
+ * Template Name: NiceAdmin
+ * Template URL: https://bootstrapmade.com/nice-admin-bootstrap-admin-html-template/
+ * Updated: Apr 20 2024 with Bootstrap v5.3.3
+ * Author: BootstrapMade.com
+ * License: https://bootstrapmade.com/license/
+ */
 
 /*--------------------------------------------------------------
 # General
@@ -15,26 +15,21 @@
 
 body {
   font-family: "Open Sans", sans-serif;
-  background: #f6f9ff;
-  color: #444444;
+  background: #ffffff;
+  color: #000000;
 }
 
 a {
-  color: #4154f1;
+  color: #000000;
   text-decoration: none;
 }
 
 a:hover {
-  color: #717ff5;
+  color: #FFD700;
   text-decoration: none;
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
+h1, h2, h3, h4, h5, h6 {
   font-family: "Nunito", sans-serif;
 }
 
@@ -64,7 +59,7 @@ h6 {
   font-size: 24px;
   margin-bottom: 0;
   font-weight: 600;
-  color: #012970;
+  color: #000000;
 }
 
 /*--------------------------------------------------------------
@@ -77,7 +72,7 @@ h6 {
   right: 15px;
   bottom: 15px;
   z-index: 99999;
-  background: #4154f1;
+  background: #000000;
   width: 40px;
   height: 40px;
   border-radius: 4px;
@@ -91,7 +86,7 @@ h6 {
 }
 
 .back-to-top:hover {
-  background: #6776f4;
+  background: #FFD700;
   color: #fff;
 }
 
@@ -111,7 +106,8 @@ h6 {
   animation-duration: 0.2s;
   animation-fill-mode: both;
   border: 0;
-  box-shadow: 0 5px 30px 0 rgba(82, 63, 105, 0.2);
+  box-shadow: 0 5px 30px 0 rgba(0, 0, 0, 0.2);
+  background: #ffffff;
 }
 
 .dropdown-menu .dropdown-header,
@@ -119,15 +115,17 @@ h6 {
   text-align: center;
   font-size: 15px;
   padding: 10px 25px;
+  color: #000000;
 }
 
 .dropdown-menu .dropdown-footer a {
-  color: #444444;
+  color: #000000;
   text-decoration: underline;
 }
 
 .dropdown-menu .dropdown-footer a:hover {
   text-decoration: none;
+  color: #FFD700;
 }
 
 .dropdown-menu .dropdown-divider {
@@ -139,6 +137,7 @@ h6 {
   font-size: 14px;
   padding: 10px 15px;
   transition: 0.3s;
+  color: #000000;
 }
 
 .dropdown-menu .dropdown-item i {
@@ -149,6 +148,7 @@ h6 {
 
 .dropdown-menu .dropdown-item:hover {
   background-color: #f6f9ff;
+  color: #FFD700;
 }
 
 @media (min-width: 768px) {
@@ -221,27 +221,37 @@ h6 {
   margin-bottom: 30px;
   border: none;
   border-radius: 5px;
-  box-shadow: 0px 0 30px rgba(1, 41, 112, 0.1);
+  box-shadow: 0px 0 10px rgba(0, 0, 0, 0.6);
+  background: #ffffff;
 }
-
+.card-1 {
+  margin-bottom: 30px;
+  border: none;
+  border-radius: 5px;
+  box-shadow: 0px 0 10px rgba(0, 0, 0, 0.6);
+  background: #ffffff;
+}
+.select-g:hover {
+border-color: #FFD700 ;
+}
 .card-header,
 .card-footer {
   border-color: #ebeef4;
   background-color: #fff;
-  color: #798eb3;
+  color: #000000;
   padding: 15px;
 }
-
+/**/
 .card-title {
   padding: 20px 0 15px 0;
   font-size: 18px;
   font-weight: 500;
-  color: #012970;
+  color: #000000;
   font-family: "Poppins", sans-serif;
 }
 
 .card-title span {
-  color: #899bbd;
+  color: #000000;
   font-size: 14px;
   font-weight: 400;
 }
@@ -249,9 +259,9 @@ h6 {
 .card-body {
   padding: 0 20px 20px 20px;
 }
-
+/**/
 .card-img-overlay {
-  background-color: rgba(255, 255, 255, 0.6);
+  background-color: rgba(180, 27, 27, 0.6);
 }
 
 /* Alerts */
@@ -259,8 +269,41 @@ h6 {
   font-weight: 500;
   font-family: "Poppins", sans-serif;
   font-size: 20px;
+  color: #000000;
 }
-
+/*add new user btn*/
+.btn-gold {
+background-color: #FFD700;
+color: black;
+}
+.btn-gold:hover {
+background-color: #FFD700;
+color: white;
+}
+.btn-outline-gold {
+border-color: #FFD700;
+color: #FFD700;
+}
+.btn-outline-gold:hover {
+background-color: #FFD700;
+color: white;
+}
+.btn-outline-gold1 {
+border-color: #FFD700;
+color: #FFD700;
+}
+.btn-outline-gold1:hover {
+background-color: #FFD700;
+color: black;
+}
+.btn-outline-dark1 {
+border-color: #000000;
+color: #000000;
+}
+.btn-outline-dark1:hover {
+border-color: red;
+color: red;
+}
 /* Close Button */
 .btn-close {
   background-size: 25%;
@@ -282,7 +325,7 @@ h6 {
 }
 
 .accordion-button:not(.collapsed) {
-  color: #012970;
+  color: #000000;
   background-color: #f6f9ff;
 }
 
@@ -290,16 +333,17 @@ h6 {
   padding: 15px 0;
   background: none;
   border: 0;
+  color: #000000;
 }
 
 .accordion-flush .accordion-button:not(.collapsed) {
   box-shadow: none;
-  color: #4154f1;
+  color: #FFD700;
 }
 
 .accordion-flush .accordion-body {
   padding: 0 0 15px 0;
-  color: #3e4f6f;
+  color: #000000;
   font-size: 15px;
 }
 
@@ -307,25 +351,25 @@ h6 {
 .breadcrumb {
   font-size: 14px;
   font-family: "Nunito", sans-serif;
-  color: #899bbd;
+  color: #000000;
   font-weight: 600;
 }
 
 .breadcrumb a {
-  color: #899bbd;
+  color: #000000;
   transition: 0.3s;
 }
 
 .breadcrumb a:hover {
-  color: #51678f;
+  color: #FFD700;
 }
 
 .breadcrumb .breadcrumb-item::before {
-  color: #899bbd;
+  color: #000000;
 }
 
 .breadcrumb .active {
-  color: #51678f;
+  color: #000000;
   font-weight: 600;
 }
 
@@ -337,7 +381,7 @@ h6 {
 .nav-tabs-bordered .nav-link {
   margin-bottom: -2px;
   border: none;
-  color: #FFD700;
+  color: #000000;
 }
 
 .nav-tabs-bordered .nav-link:hover,
@@ -347,8 +391,8 @@ h6 {
 
 .nav-tabs-bordered .nav-link.active {
   background-color: #fff;
-  color: #f5b400;
-  border-bottom: 2px solid #f5b400;
+  color: #FFD700;
+  border-bottom: 2px solid #FFD700;
 }
 
 /*--------------------------------------------------------------
@@ -365,14 +409,14 @@ h6 {
 }
 
 .logo img {
-  max-height: 26px;
+  max-height: 100px;
   margin-right: 6px;
 }
 
 .logo span {
   font-size: 26px;
   font-weight: 700;
-  color: #012970;
+  color: #000000;
   font-family: "Nunito", sans-serif;
 }
 
@@ -381,16 +425,18 @@ h6 {
   z-index: 997;
   height: 60px;
   box-shadow: 0px 2px 20px rgba(0, 0, 0, 0.1);
-  background-color: #fff;
+  background-color: #ffffff;
   padding-left: 20px;
-  /* Toggle Sidebar Button */
-  /* Search Bar */
 }
 
 .header .toggle-sidebar-btn {
   font-size: 32px;
   padding-left: 10px;
   cursor: pointer;
+  color: #000000;
+}
+
+.header .toggle-sidebar-btn:hover {
   color: #FFD700;
 }
 
@@ -440,7 +486,7 @@ h6 {
 .header .search-form input:hover {
   outline: none;
   box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.15);
-  border: 1px solid #f5b400;
+  border: 1px solid #FFD700;
 }
 
 .header .search-form button {
@@ -451,6 +497,10 @@ h6 {
 }
 
 .header .search-form button i {
+  color: #000000;
+}
+
+.header .search-form button i:hover {
   color: #FFD700;
 }
 
@@ -461,20 +511,28 @@ h6 {
   list-style: none;
 }
 
-.header-nav>ul {
+.header-nav > ul {
   margin: 0;
   padding: 0;
 }
 
 .header-nav .nav-icon {
   font-size: 22px;
-  color: #012970;
+  color: #000000;
   margin-right: 25px;
   position: relative;
 }
 
+.header-nav .nav-icon:hover {
+  color: #FFD700;
+}
+
 .header-nav .nav-profile {
-  color: #012970;
+  color: #000000;
+}
+
+.header-nav .nav-profile:hover {
+  color: #FFD700;
 }
 
 .header-nav .nav-profile img {
@@ -514,6 +572,7 @@ h6 {
   font-size: 16px;
   font-weight: 600;
   margin-bottom: 5px;
+  color: #000000;
 }
 
 .header-nav .notifications .notification-item p {
@@ -548,7 +607,7 @@ h6 {
   font-size: 16px;
   font-weight: 600;
   margin-bottom: 5px;
-  color: #444444;
+  color: #000000;
 }
 
 .header-nav .messages .message-item p {
@@ -565,23 +624,26 @@ h6 {
   min-width: 240px;
   padding-bottom: 0;
   top: 8px !important;
+  background: #ffffff;
 }
 
 .header-nav .profile .dropdown-header h6 {
   font-size: 18px;
   margin-bottom: 0;
   font-weight: 600;
-  color: #444444;
+  color: #000000;
 }
 
 .header-nav .profile .dropdown-header span {
   font-size: 14px;
+  color: #000000;
 }
 
 .header-nav .profile .dropdown-item {
   font-size: 14px;
   padding: 10px 15px;
   transition: 0.3s;
+  color: #000000;
 }
 
 .header-nav .profile .dropdown-item i {
@@ -592,6 +654,7 @@ h6 {
 
 .header-nav .profile .dropdown-item:hover {
   background-color: #f6f9ff;
+  color: #FFD700;
 }
 
 /*--------------------------------------------------------------
@@ -609,8 +672,8 @@ h6 {
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: #aab7cf transparent;
-  box-shadow: 0px 0px 20px rgba(1, 41, 112, 0.1);
-  background-color: #fff;
+  box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
+  background-color: #ffffff;
 }
 
 @media (max-width: 1199px) {
@@ -630,7 +693,6 @@ h6 {
 }
 
 @media (min-width: 1200px) {
-
   #main,
   #footer {
     margin-left: 300px;
@@ -644,7 +706,6 @@ h6 {
 }
 
 @media (min-width: 1200px) {
-
   .toggle-sidebar #main,
   .toggle-sidebar #footer {
     margin-left: 0;
@@ -674,7 +735,7 @@ h6 {
 .sidebar-nav .nav-heading {
   font-size: 11px;
   text-transform: uppercase;
-  color: #899bbd;
+  color: #000000;
   font-weight: 600;
   margin: 10px 0 5px 15px;
 }
@@ -684,9 +745,9 @@ h6 {
   align-items: center;
   font-size: 15px;
   font-weight: 600;
-  color: #4154f1;
+  color: #000000;
   transition: 0.3;
-  background: #f6f9ff;
+  background: #ffffff;
   padding: 10px 15px;
   border-radius: 4px;
 }
@@ -694,25 +755,25 @@ h6 {
 .sidebar-nav .nav-link i {
   font-size: 16px;
   margin-right: 10px;
-  color: #4154f1;
+  color: #000000;
 }
 
 .sidebar-nav .nav-link.collapsed {
-  color: #012970;
-  background: #fff;
+  color: #000000;
+  background: #ffffff;
 }
 
 .sidebar-nav .nav-link.collapsed i {
-  color: #899bbd;
+  color: #000000;
 }
 
 .sidebar-nav .nav-link:hover {
-  color: #4154f1;
+  color: #FFD700;
   background: #f6f9ff;
 }
 
 .sidebar-nav .nav-link:hover i {
-  color: #4154f1;
+  color: #FFD700;
 }
 
 .sidebar-nav .nav-link .bi-chevron-down {
@@ -735,7 +796,7 @@ h6 {
   align-items: center;
   font-size: 14px;
   font-weight: 600;
-  color: #012970;
+  color: #000000;
   transition: 0.3;
   padding: 10px 0 10px 40px;
   transition: 0.3s;
@@ -750,11 +811,11 @@ h6 {
 
 .sidebar-nav .nav-content a:hover,
 .sidebar-nav .nav-content a.active {
-  color: #4154f1;
+  color: #FFD700;
 }
 
 .sidebar-nav .nav-content a.active i {
-  background-color: #4154f1;
+  background-color: #FFD700;
 }
 
 /*--------------------------------------------------------------
@@ -768,7 +829,7 @@ h6 {
 }
 
 .dashboard .filter .icon {
-  color: #aab7cf;
+  color: #000000;
   padding-right: 20px;
   padding-bottom: 5px;
   transition: 0.3s;
@@ -777,7 +838,7 @@ h6 {
 
 .dashboard .filter .icon:hover,
 .dashboard .filter .icon:focus {
-  color: #4154f1;
+  color: #FFD700;
 }
 
 .dashboard .filter .dropdown-header {
@@ -789,13 +850,18 @@ h6 {
   font-size: 14px;
   font-weight: 600;
   letter-spacing: 1px;
-  color: #aab7cf;
+  color: #000000;
   margin-bottom: 0;
   padding: 0;
 }
 
 .dashboard .filter .dropdown-item {
   padding: 8px 15px;
+  color: #000000;
+}
+
+.dashboard .filter .dropdown-item:hover {
+  color: #FFD700;
 }
 
 /* Info Cards */
@@ -805,7 +871,7 @@ h6 {
 
 .dashboard .info-card h6 {
   font-size: 28px;
-  color: #012970;
+  color: #000000;
   font-weight: 700;
   margin: 0;
   padding: 0;
@@ -821,17 +887,17 @@ h6 {
 }
 
 .dashboard .sales-card .card-icon {
-  color: #4154f1;
+  color: #000000;
   background: #f6f6fe;
 }
 
 .dashboard .revenue-card .card-icon {
-  color: #2eca6a;
+  color: #000000;
   background: #e0f8e9;
 }
 
 .dashboard .customers-card .card-icon {
-  color: #ff771d;
+  color: #000000;
   background: #ffecdf;
 }
 
@@ -841,7 +907,7 @@ h6 {
 }
 
 .dashboard .activity .activity-item .activite-label {
-  color: #888;
+  color: #000000;
   position: relative;
   flex-shrink: 0;
   flex-grow: 0;
@@ -872,6 +938,7 @@ h6 {
 .dashboard .activity .activity-item .activity-content {
   padding-left: 10px;
   padding-bottom: 20px;
+  color: #000000;
 }
 
 .dashboard .activity .activity-item:first-child .activite-label::before {
@@ -883,7 +950,7 @@ h6 {
 }
 
 /* News & Updates */
-.dashboard .news .post-item+.post-item {
+.dashboard .news .post-item + .post-item {
   margin-top: 15px;
 }
 
@@ -898,20 +965,21 @@ h6 {
   margin-left: 95px;
   font-weight: bold;
   margin-bottom: 5px;
+  color: #000000;
 }
 
 .dashboard .news h4 a {
-  color: #012970;
+  color: #000000;
   transition: 0.3s;
 }
 
 .dashboard .news h4 a:hover {
-  color: #4154f1;
+  color: #FFD700;
 }
 
 .dashboard .news p {
   font-size: 14px;
-  color: #777777;
+  color: #000000;
   margin-left: 95px;
 }
 
@@ -926,6 +994,7 @@ h6 {
 
 .dashboard .recent-sales .table thead th {
   border: 0;
+  color: #000000;
 }
 
 .dashboard .recent-sales .dataTable-top {
@@ -947,10 +1016,12 @@ h6 {
 
 .dashboard .top-selling .table thead th {
   border: 0;
+  color: #000000;
 }
 
 .dashboard .top-selling .table tbody td {
   vertical-align: middle;
+  color: #000000;
 }
 
 .dashboard .top-selling img {
@@ -973,7 +1044,7 @@ h6 {
   background-color: #fff;
   border-radius: 0.25rem;
   text-align: center;
-  color: #012970;
+  color: #000000;
   padding: 15px 0;
 }
 
@@ -991,7 +1062,7 @@ h6 {
   font-size: 12px;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: #666;
+  color: #000000;
 }
 
 /*--------------------------------------------------------------
@@ -1004,44 +1075,46 @@ h6 {
 .profile .profile-card h2 {
   font-size: 24px;
   font-weight: 700;
-  color: #2c384e;
+  color: #000000;
   margin: 10px 0 0 0;
 }
 
 .profile .profile-card h3 {
   font-size: 18px;
+  color: #000000;
 }
 
 .profile .profile-card .social-links a {
   font-size: 20px;
   display: inline-block;
-  color: rgba(1, 41, 112, 0.5);
+  color: rgba(0, 0, 0, 0.5);
   line-height: 0;
   margin-right: 10px;
   transition: 0.3s;
 }
 
 .profile .profile-card .social-links a:hover {
-  color: #012970;
+  color: #FFD700;
 }
 
 .profile .profile-overview .row {
   margin-bottom: 20px;
   font-size: 15px;
+  color: #000000;
 }
 
 .profile .profile-overview .card-title {
-  color: #012970;
+  color: #000000;
 }
 
 .profile .profile-overview .label {
   font-weight: 600;
-  color: rgba(1, 41, 112, 0.6);
+  color: rgba(0, 0, 0, 0.6);
 }
 
 .profile .profile-edit label {
   font-weight: 600;
-  color: rgba(1, 41, 112, 0.6);
+  color: rgba(0, 0, 0, 0.6);
 }
 
 .profile .profile-edit img {
@@ -1054,11 +1127,11 @@ h6 {
 .faq .basic h6 {
   font-size: 18px;
   font-weight: 600;
-  color: #4154f1;
+  color: #FFD700;
 }
 
 .faq .basic p {
-  color: #6980aa;
+  color: #000000;
 }
 
 /*--------------------------------------------------------------
@@ -1066,17 +1139,18 @@ h6 {
 --------------------------------------------------------------*/
 .contact .info-box {
   padding: 28px 30px;
+  background: #ffffff;
 }
 
 .contact .info-box i {
   font-size: 38px;
   line-height: 0;
-  color: #4154f1;
+  color: #000000;
 }
 
 .contact .info-box h3 {
   font-size: 20px;
-  color: #012970;
+  color: #000000;
   font-weight: 700;
   margin: 20px 0 10px 0;
 }
@@ -1086,6 +1160,7 @@ h6 {
   line-height: 24px;
   font-size: 14px;
   margin-bottom: 0;
+  color: #000000;
 }
 
 .contact .php-email-form .error-message {
@@ -1134,11 +1209,12 @@ h6 {
   box-shadow: none;
   font-size: 14px;
   border-radius: 0;
+  color: #000000;
 }
 
 .contact .php-email-form input:focus,
 .contact .php-email-form textarea:focus {
-  border-color: #4154f1;
+  border-color: #FFD700;
 }
 
 .contact .php-email-form input {
@@ -1150,7 +1226,7 @@ h6 {
 }
 
 .contact .php-email-form button[type=submit] {
-  background: #4154f1;
+  background: #000000;
   border: 0;
   padding: 10px 30px;
   color: #fff;
@@ -1159,14 +1235,13 @@ h6 {
 }
 
 .contact .php-email-form button[type=submit]:hover {
-  background: #5969f3;
+  background: #FFD700;
 }
 
 @keyframes animate-loading {
   0% {
     transform: rotate(0deg);
   }
-
   100% {
     transform: rotate(360deg);
   }
@@ -1182,7 +1257,7 @@ h6 {
 .error-404 h1 {
   font-size: 180px;
   font-weight: 700;
-  color: #4154f1;
+  color: #FFD700;
   margin-bottom: 0;
   line-height: 150px;
 }
@@ -1190,18 +1265,18 @@ h6 {
 .error-404 h2 {
   font-size: 24px;
   font-weight: 700;
-  color: #012970;
+  color: #000000;
   margin-bottom: 30px;
 }
 
 .error-404 .btn {
-  background: #51678f;
+  background: #000000;
   color: #fff;
   padding: 8px 30px;
 }
 
 .error-404 .btn:hover {
-  background: #3e4f6f;
+  background: #FFD700;
 }
 
 @media (min-width: 992px) {
@@ -1218,16 +1293,17 @@ h6 {
   font-size: 14px;
   transition: all 0.3s;
   border-top: 1px solid #cddfff;
+  background: #ffffff;
 }
 
 .footer .copyright {
   text-align: center;
-  color: #012970;
+  color: #000000;
 }
 
 .footer .credits {
   padding-top: 5px;
   text-align: center;
   font-size: 13px;
-  color: #012970;
+  color: #000000;
 }

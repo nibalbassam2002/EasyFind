@@ -190,7 +190,7 @@
 
             <div class="row mt-4">
                 <div class="col-sm-9 offset-sm-3">
-                    <button type="submit" class="btn btn-primary me-2">Create User</button>
+                    <button type="submit" class="btn btn-gold me-2">Create User</button>
                     <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">Cancel</a>
                 </div>
             </div>

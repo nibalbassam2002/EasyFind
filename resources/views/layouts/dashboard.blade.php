@@ -26,6 +26,12 @@
 
   <!-- Template Main CSS File -->
   <link href="{{asset('assets/css/style.css')}}" rel="stylesheet">
+  <style> 
+  .bg-gold {
+    background-color: #FFD700;
+  }
+  
+   </style>
 </head>
 
 <body>
@@ -35,8 +41,8 @@
 
     <div class="d-flex align-items-center justify-content-between">
       <a href="index.html" class="logo d-flex align-items-center">
-        <img src="{{asset('assets/img/logo.png')}}" alt="">
-        <span class="d-none d-lg-block">EasyFind</span>
+        <img src="{{ asset('assets/img/شعار مفرغ 2.png') }}" alt=""  height="100px">
+        
       </a>
       <i class="bi bi-list toggle-sidebar-btn"></i>
     </div><!-- End Logo -->
@@ -61,7 +67,7 @@
 
           <a class="nav-link nav-icon" href="#" data-bs-toggle="dropdown">
             <i class="bi bi-bell"></i>
-            <span class="badge bg-primary badge-number">4</span>
+            <span class="badge bg-gold badge-number">4</span>
           </a><!-- End Notification Icon -->
 
           <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow notifications">

@@ -8,10 +8,10 @@
 @endsection
 
 @section('contant')
-    <div class="card shadow-sm mb-4"> 
+    <div class="card shadow mb-4"> 
         <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
             <h5 class="card-title mb-0 fw-bold"><i class="bi bi-building me-2"></i>My Listed Properties</h5>
-            <a href="{{ route('lister.properties.create') }}" class="btn btn-primary btn-sm">
+            <a href="{{ route('lister.properties.create') }}" class="btn btn-gold btn-sm">
                 <i class="bi bi-plus-lg me-1"></i> Add New Property
             </a>
         </div>
@@ -124,7 +124,7 @@
                                             It looks like you haven't added any properties.<br>
                                             Click the button below to list your first property and reach potential clients.
                                         </p>
-                                        <a href="{{ route('lister.properties.create') }}" class="btn btn-primary btn-lg">
+                                        <a href="{{ route('lister.properties.create') }}" class="btn btn-gold btn-lg">
                                             <i class="bi bi-plus-circle me-1"></i> Add Your First Property
                                         </a>
                                     </div>

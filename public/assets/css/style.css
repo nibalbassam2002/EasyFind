@@ -98,6 +98,14 @@ h1, h2, h3, h4, h5, h6 {
 /*--------------------------------------------------------------
 # Override some default Bootstrap stylings
 --------------------------------------------------------------*/
+.form-control:focus {
+  border-color: #FFD700 !important; /* ذهبـي */
+  box-shadow: 0 0 0 0.25rem rgba(255, 215, 0, 0.4); /* ظلّ ذهبـي */
+}
+.form-select:focus {
+   border-color: #FFD700 !important; /* ذهبـي */
+  box-shadow: 0 0 0 0.25rem rgba(255, 215, 0, 0.4); /* ظلّ ذهبـي */
+}
 /* Dropdown menus */
 .dropdown-menu {
   border-radius: 4px;

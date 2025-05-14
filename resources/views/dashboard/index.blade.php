@@ -81,7 +81,7 @@
              @if ($role === 'content_moderator')
                  <div class="row">
                      <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
-                         <div class="card h-100 shadow-sm border-start border-danger border-4">
+                         <div class="card h-100 shadow border-start border-danger border-4">
                              <div class="card-body d-flex align-items-center">
                                   <div class="flex-shrink-0 me-3"><i class="bi bi-hourglass-split text-danger fs-2"></i></div>
                                  <div class="flex-grow-1">
@@ -181,7 +181,7 @@
 
                 <!-- Active Listings Card -->
                 <div class="col-lg-4 col-md-6 col-sm-6 mb-4">
-                    <div class="card h-100 shadow-sm border-start border-primary border-4">
+                    <div class="card h-100 shadow border-start border-primary border-4">
                         <div class="card-body d-flex align-items-center">
                             <div class="flex-shrink-0 me-3">
                                 <i class="bi bi-building-check text-primary fs-2"></i>
@@ -198,7 +198,7 @@
 
                 <!-- Pending Submissions Card -->
                 <div class="col-lg-4 col-md-6 col-sm-6 mb-4">
-                    <div class="card h-100 shadow-sm border-start border-warning border-4">
+                    <div class="card h-100 shadow border-start border-warning border-4">
                         <div class="card-body d-flex align-items-center">
                             <div class="flex-shrink-0 me-3">
                                 <i class="bi bi-hourglass-split text-warning fs-2"></i>
@@ -215,7 +215,7 @@
 
                 <!-- Total Earnings Card -->
                 <div class="col-lg-4 col-md-6 col-sm-6 mb-4">
-                    <div class="card h-100 shadow-sm border-start border-success border-4">
+                    <div class="card h-100 shadow border-start border-success border-4">
                         <div class="card-body d-flex align-items-center">
                             <div class="flex-shrink-0 me-3">
                                 <i class="bi bi-cash-coin text-success fs-2"></i>
@@ -234,7 +234,7 @@
             <div class="row mt-2">
                 <!-- مخطط حالة عقارات Lister (دائري) -->
                 <div class="col-lg-6 mb-4">
-                    <div class="card h-100 shadow-sm">
+                    <div class="card-1 h-100 ">
                          <div class="card-body d-flex flex-column">
                              <h5 class="card-title fw-bold text-center mb-3">My Property Statuses</h5>
                              <div class="flex-grow-1 d-flex justify-content-center align-items-center" style="position: relative; min-height: 250px;">
@@ -246,7 +246,7 @@
                 </div>
                  <!-- مخطط معاملات Lister الشهرية (خطي) -->
                 <div class="col-lg-6 mb-4">
-                     <div class="card h-100 shadow-sm">
+                     <div class="card-1 h-100 ">
                          <div class="card-body">
                              <h5 class="card-title fw-bold text-center mb-3">My Monthly Transactions (Last 12 Months)</h5>
                              <div style="min-height: 300px; position: relative;">
@@ -260,7 +260,7 @@
 
             <div class="row">
                 <div class="col-12">
-                     <div class="card recent-activity shadow-sm">
+                     <div class="card recent-activity shadow">
                    
                          <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
                              <h5 class="mb-0 fw-bold card-title">Recent Activity</h5> 

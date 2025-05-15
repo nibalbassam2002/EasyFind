@@ -1,12 +1,9 @@
 <ul class="sidebar-nav" id="sidebar-nav">
 
-<<<<<<< HEAD
-  {{-- قسم لوحة التحكم (للجميع) --}}
-  <li class="nav-item">
-=======
+
   {{-- === قسم لوحة التحكم (للجميع) === --}}
   <li class="nav>
->>>>>>> a494bf00bd34eff67e38127b8146643789ed5d85
+
     <a class="nav-link {{ request()->routeIs('dashboard') ? '' : 'collapsed' }}" href="{{ route('dashboard') }}">
       <i class="bi bi-grid"></i>
       <span >Dashboard</span>

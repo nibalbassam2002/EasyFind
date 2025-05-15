@@ -373,7 +373,98 @@
         <div class="row gx-lg-4">
             <!--  Sidebar -->
             <div class="col-md-3 col-lg-3 mb-4 mb-md-0 account-sidebar">
-                <div class="filter-section">
+                      <!-- زر برجر لفتح السايدبار (للشاشات الصغيرة فقط) -->
+
+      <div class="d-md-none p-2">
+        <button class="btn btn-outline-secondary" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas">
+          <i class="bi bi-list "></i>
+        </button>
+      </div>
+        <!-- Offcanvas للهواتف -->
+      <div class="offcanvas offcanvas-start d-md-none" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel">
+        <div class="offcanvas-header">
+          <h5 class="offcanvas-title" id="sidebarOffcanvasLabel">Menu</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+          <div class="offcanvas-body">
+       <!-- محتوى السايدبار -->
+            <a href="#" class=" nav-link">
+                        <p><img src="{{ Auth::user()->profile_image ? asset('storage/images/' . Auth::user()->profile_image) : asset('assets/img/profile.jpg') }}"
+                                alt="{{ Auth::user()->name }}" class="rounded-circle" width="30px" height="30px"
+                                style="border-radius: 50px;">{{ Auth::user()->name }}</p>
+                        
+                    </a>
+                    <!-- account details -->
+                    <div class="mb-3 a-gold1">
+                        <a href="{{ route('frontend.account') }}"
+                            class="  list-group-item list-group-item-action {{ request()->routeIs('frontend.account') ? 'active' : '' }}">
+                            <i class="bi bi-person-fill" style="font-size: 20px;"></i> Account Details</a>
+
+                    </div>
+                    <!-- favourites -->
+                    <div class="mb-3 a-gold">
+                        <a href="{{ route('frontend.favorites') }}"
+                            class="list-group-item list-group-item-action {{ request()->routeIs('frontend.favorites') ? 'active' : '' }}"><i
+                                class="bi bi-heart" style="font-size: 15px;"></i>
+                            Favourites</a>
+
+                    </div>
+
+                    <!-- Chats -->
+                    <div class="mb-3 a-gold">
+                        <a href="./chat.html" class="nav-link"><i class="bi bi-chat-dots	" style="font-size: 15px;"></i>
+                            Chats</a>
+                    </div>
+                    <!-- notification -->
+                    <div class="mb-3 a-gold">
+                        <!-- زر الإشعارات كأنه نص -->
+                        <button id="notificationBtn2" style="all: unset; cursor: pointer;">
+                            <i class="bi bi-bell	" style="font-size: 15px;"></i> Notifications
+                        </button>
+                    </div>
+
+                    <!-- refer friend -->
+                    <div class="mb-3 a-gold">
+                        <a href="#" class="nav-link" onclick="copyReferralLink()">
+                            <i class="bi bi-person-plus" style="font-size: 15px;"></i> Refer friend
+                        </a>
+                    </div>
+                    <div class="mb-3 " style="height: 40px;">
+
+                    </div>
+                    <!--break line -->
+                    <div class="mb-3 ">
+                        <hr>
+                    </div>
+
+                    <!-- Setting -->
+                    <div class="mb-3 a-gold">
+                        <a href="#" class="nav-link"><i class="bi bi-gear" style="font-size: 20px;"></i> Settings</a>
+                    </div>
+                    <!-- Help center -->
+                    <div class="mb-3 a-gold">
+                        <a href="#" class="nav-link"><i class="bi bi-question-circle	" style="font-size: 20px;"></i>
+                            Help center</a>
+                    </div>
+                    <!-- Log out -->
+                    <div class="mb-3 a-gold">
+                        <a href="#" class="list-group-item list-group-item-action text-danger"
+                            onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                            <i class="bi bi-box-arrow-right"></i>
+                            <span>Logout</span>
+                        </a>
+                        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                            @csrf
+                        </form>
+                    </div>
+          </div>
+    </div>
+          
+    
+     
+
+              <!--  Sidebar for big screen -->
+               <div class="filter-section d-none d-md-block p-3 border">
                     <a href="#" class=" nav-link">
                         <p><img src="{{ Auth::user()->profile_image ? asset('storage/images/' . Auth::user()->profile_image) : asset('assets/img/profile.jpg') }}"
                                 alt="{{ Auth::user()->name }}" class="rounded-circle" width="30px" height="30px"
@@ -444,10 +535,10 @@
                         </form>
                     </div>
                 </div>
-
+    
             </div>
             <!-- main Section -->
-            <div class="col-md-8 col-lg-9 account-content">
+            <div class="col-md-9 col-lg-9 account-content">
 
                 <section class="section profile">
                     <div class="row">
@@ -843,30 +934,37 @@
                         </div>
 
                     </div>
-            </div>
+            
 
 
         @endsection
         @push('scripts')
-            <script>
-                const modal = document.getElementById('notificationModal');
-                const btn = document.getElementById('notificationBtn');
-                const close = document.getElementById('closeModal');
+       <script>
+        const modal = document.getElementById('notificationModal');
+        const btn1 = document.getElementById('notificationBtn');
+        const btn2 = document.getElementById('notificationBtn2');
+        const close = document.getElementById('closeModal');
 
-                btn.onclick = () => {
-                    modal.style.display = 'flex';
-                }
+        function openModal() {
+        modal.style.display = 'flex';
+                     }
 
-                close.onclick = () => {
-                    modal.style.display = 'none';
-                }
+        if (btn1) btn1.onclick = openModal;
+        if (btn2) btn2.onclick = openModal;
 
-                window.onclick = (e) => {
-                    if (e.target === modal) {
-                        modal.style.display = 'none';
-                    }
-                }
-            </script>
+        if (close) {
+        close.onclick = () => {
+        modal.style.display = 'none';
+                     };
+                       }
+
+         window.onclick = (e) => {
+         if (e.target === modal) {
+         modal.style.display = 'none';
+                     }
+                       };
+           </script>
+
             <script>
                 function toggleEdit(icon) {
                     const box = icon.closest('.rounded-box');
@@ -894,6 +992,16 @@
                     reader.readAsDataURL(input.files[0]);
                 }
             </script>
+            <script>
+  function copyReferralLink() {
+    const link = "https://amirkehail1.github.io/EasyFind/";
+    navigator.clipboard.writeText(link).then(function () {
+      alert("Referral link copied to clipboard!");
+    }, function (err) {
+      alert("Failed to copy the link: " + err);
+    });
+  }
+</script>
             <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
             <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
             <script>

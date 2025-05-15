@@ -259,7 +259,7 @@
 
 
                                     <div class="text-center">
-                                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                                        <button type="submit" class="btn btn-gold">Save Changes</button>
                                     </div>
                                 </form><!-- End Profile Edit Form -->
 
@@ -303,7 +303,7 @@
                                     </div>
 
                                     <div class="text-center">
-                                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                                        <button type="submit" class="btn btn-gold">Save Changes</button>
                                     </div>
                                 </form><!-- End settings Form -->
 
@@ -350,7 +350,7 @@
                                     </div>
                             
                                     <div class="text-center">
-                                        <button type="submit" class="btn btn-primary">Change Password</button>
+                                        <button type="submit" class="btn btn-gold">Change Password</button>
                                     </div>
                                 </form>
                             </div>

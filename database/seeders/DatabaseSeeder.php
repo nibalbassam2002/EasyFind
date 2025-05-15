@@ -17,7 +17,8 @@ class DatabaseSeeder extends Seeder
             GovernorateSeeder::class,
             AreaSeeder::class,
             UserSeeder::class,
-            CategorySeeder::class
+            CategorySeeder::class,
+            PlanSeeder::class
             
             
         ]);

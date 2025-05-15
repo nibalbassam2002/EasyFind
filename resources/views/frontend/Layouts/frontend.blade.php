@@ -62,7 +62,13 @@
                                 class="nav-link {{ request()->routeIs('frontend.properties') && request('purpose') == 'rent' ? 'active' : '' }}">Rent</a>
                         @endauth
                     </li>
-                    <li class="nav-item"><a href="#" class="nav-link">Chats</a></li>
+                    <li class="nav-item">
+                        @auth
+                            <a href="{{ route('chat.index') }}"
+                                class="nav-link {{ request()->routeIs('chat.*') ? 'active' : '' }}">Chats</a>
+                        @endauth
+                        @guest <a href="{{ route('login') }}" class="nav-link">Chats</a> @endguest
+                    </li>
 
                     <li class="nav-item"><a href="{{ route('frontend.favorites') }}"
                             class="nav-link {{ request()->routeIs('frontend.favorites') ? 'active' : '' }}">Favourites</a>
@@ -377,24 +383,25 @@
     </script>
 
     @stack('scripts')
-    <div class="modal fade" id="subscribeModal" tabindex="-1" aria-labelledby="subscribeModalLabel" aria-hidden="true">
+    <div class="modal fade" id="subscribeModal" tabindex="-1" aria-labelledby="subscribeModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content">
-            <div class="modal-header border-0">
-              {{-- <h5 class="modal-title" id="subscribeModalLabel">Subscription Required</h5> --}}
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    {{-- <h5 class="modal-title" id="subscribeModalLabel">Subscription Required</h5> --}}
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <i class="bi bi-exclamation-circle-fill text-warning fs-1 mb-3"></i>
+                    <p class="lead">You cannot sell or rent before subscribing to EasyFind Plus.</p>
+                </div>
+                <div class="modal-footer justify-content-center border-0 pb-4">
+                    {{-- هذا الزر سيوجه لصفحة الخطط --}}
+                    <a href="{{ route('frontend.pricing') }}" class="btn btn-primary btn-lg">Subscribe Now</a>
+                </div>
             </div>
-            <div class="modal-body text-center py-4">
-              <i class="bi bi-exclamation-circle-fill text-warning fs-1 mb-3"></i>
-              <p class="lead">You cannot sell or rent before subscribing to EasyFind Plus.</p>
-            </div>
-            <div class="modal-footer justify-content-center border-0 pb-4">
-               {{-- هذا الزر سيوجه لصفحة الخطط --}}
-              <a href="{{ route('frontend.pricing') }}" class="btn btn-primary btn-lg">Subscribe Now</a>
-            </div>
-          </div>
         </div>
-      </div>
+    </div>
 
 </body>
 

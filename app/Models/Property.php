@@ -67,8 +67,8 @@ class Property extends Model
         return $this->belongsTo(Category::class, 'sub_category_id');
     }
 
-    public function area()
+    public function listarea()
      {
-    return $this->belongsTo(Area::class);
+    return $this->belongsTo(Area::class, 'area_id');
      }
 }

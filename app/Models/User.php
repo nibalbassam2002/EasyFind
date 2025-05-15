@@ -2,22 +2,18 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Conversation; 
+use App\Models\Message;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
+
     protected $fillable = [
         'name',
         'email',
@@ -31,21 +27,12 @@ class User extends Authenticatable
         'description'
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
+
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -95,4 +82,52 @@ public function activePlan() {
                     $query->whereNull('subscriptions.ends_at')->orWhere('subscriptions.ends_at', '>', now());
                 });
 }
+public function conversations()
+    {
+        return $this->belongsToMany(Conversation::class, 'conversation_user')
+                    ->withTimestamps() 
+                    ->withPivot('last_read_at', 'joined_at')
+                    ->latest('updated_at'); 
+    }
+
+   
+    public function messages()
+    {
+        return $this->hasMany(Message::class);
+    }
+    public function unreadMessagesCount(): int
+    {
+        if (!$this->relationLoaded('conversations')) {
+            $this->load('conversations'); 
+        }
+
+        $unreadCount = 0;
+        foreach ($this->conversations as $conversation) {
+            $pivotData = $conversation->users()->where('users.id', $this->id)->first()?->pivot;
+            $lastReadAt = $pivotData ? $pivotData->last_read_at : null;
+
+            $unreadInConversation = $conversation->messages()
+                                    ->where('user_id', '!=', $this->id) 
+                                    ->when($lastReadAt, function ($query) use ($lastReadAt) {
+                                        return $query->where('messages.created_at', '>', $lastReadAt);
+                                    })
+                                    ->when(!$lastReadAt, function ($query) { 
+                                        return $query; 
+                                    })
+                                    ->count();
+            $unreadCount += $unreadInConversation;
+        }
+        return $unreadCount;
+    }
+    public function unreadMessagesCountAlternative(): int
+    {
+        return Message::whereIn('conversation_id', $this->conversations()->pluck('conversations.id')) 
+                        ->where('user_id', '!=', $this->id)
+                        ->whereNull('read_at') 
+                        ->count();
+    }
+        public function feedbacks()
+    {
+        return $this->hasMany(Feedback::class);
+    }
 }

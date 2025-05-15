@@ -68,7 +68,7 @@
                                         {{ $property->title }}
                                    
                                 </td>
-                                <td>{{ $property->area?->name ?? 'N/A' }}</td>
+                                <td>{{ $property->listarea?->name ?? 'N/A' }}</td>
                                 <td class="text-end">{{ number_format($property->price, 0) }} {{ $property->currency }}</td>
                                 <td>
                                      @php

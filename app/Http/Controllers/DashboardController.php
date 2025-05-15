@@ -35,7 +35,6 @@ class DashboardController extends Controller
             'role' => $role,
             'period' => $period,
             'type' => $type,
-
             'totalUsers' => 0,
             'totalProperties' => 0,
             'totalRequests' => 0,

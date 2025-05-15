@@ -49,8 +49,8 @@ class AuthController extends Controller
             switch ($user->role) {
                 case 'admin':
                 case 'content_moderator':
-                case 'property_lister':
                     return redirect()->route('dashboard');
+                case 'property_lister':
                 case 'customer':
                     return redirect()->route('frontend.home'); 
 

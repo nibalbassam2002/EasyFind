@@ -95,7 +95,7 @@
             <div class="price-new">{{ $property->currency }} {{ number_format($property->price) }}</div>
             <div class="small text-muted">
                 <i class="bi bi-geo-alt-fill me-1"></i>
-                {{ $property->area?->name ?? 'N/A' }}, {{ $property->area?->governorate?->name ?? 'N/A' }}
+                {{ $property->listarea?->name ?? 'N/A' }}, {{ $property->listarea?->governorate?->name ?? 'N/A' }}
             </div>
              <a href="{{ route('frontend.property.show', $property->id) }}" class="text-dark fw-semibold text-decoration-none d-block mt-1">{{ Str::limit($property->title, 50) }}</a>
           </div>
@@ -155,7 +155,7 @@
                       </div>
                       <div class="property-address text-muted small mt-auto">
                           <i class="bi bi-geo-alt-fill me-1"></i>
-                          {{ Str::limit($property->address ?? 'Address N/A', 25) }}, {{ $property->area?->name ?? 'N/A' }}
+                          {{ Str::limit($property->address ?? 'Address N/A', 25) }}, {{ $property->listarea?->name ?? 'N/A' }}
                       </div>
                   </div>
               </div>

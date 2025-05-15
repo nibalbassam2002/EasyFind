@@ -1,4 +1,3 @@
-{{-- resources/views/dashboard/property_lister/create.blade.php --}}
 @extends('layouts.dashboard')
 
 @section('title', 'Add New Property')
@@ -29,9 +28,8 @@
             <form action="{{ route('lister.properties.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
 
-                {{-- تضمين النموذج المشترك مع تمرير المتغيرات الصحيحة --}}
                 @include('dashboard.property_lister._form', [
-                    'property' => new \App\Models\Property(), // كائن فارغ للإضافة
+                    'property' => new \App\Models\Property(), 
                     'categories' => $categories ?? [],
                     'subCategories' => $subCategories ?? [],
                     'governorates' => $governorates ?? [],
@@ -49,18 +47,14 @@
     </div>
 @endsection
 
-{{-- ================================================ --}}
-{{--                 قسم السكريبتات                    --}}
-{{-- ================================================ --}}
-@section('script') {{-- <-- استخدام @section بدلاً من @push --}}
 
-    {{-- 1. كود JS لقوائم المحافظات والمناطق المترابطة --}}
+@section('script')
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // ***** تأكد من أن هذه الـ IDs تطابق ما في _form.blade.php *****
             const governorateSelect = document.getElementById('governorate_id');
             const areaSelect = document.getElementById('area_id');
-            // *********************************************************
+            
 
             function updateAreaOptions() {
                 if (!governorateSelect || !areaSelect) {
@@ -69,8 +63,8 @@
                 }
 
                 const selectedGovOption = governorateSelect.options[governorateSelect.selectedIndex];
-                const oldAreaId = "{{ old('area_id', '') }}"; // قيمة قديمة (فارغة في create)
-                areaSelect.innerHTML = ''; // إفراغ
+                const oldAreaId = "{{ old('area_id', '') }}"; 
+                areaSelect.innerHTML = ''; 
 
                 let defaultOption = new Option('Select Governorate First...', '');
                 defaultOption.disabled = true;
@@ -85,7 +79,6 @@
                     let areas = {};
                     try {
                         areas = JSON.parse(selectedGovOption.dataset.areas);
-                        // console.log("Parsed areas:", areas); // للتصحيح
                     } catch (e) {
                         console.error("Error parsing areas data:", e, selectedGovOption.dataset.areas);
                         areaSelect.innerHTML = '<option value="">Error loading areas</option>';
@@ -102,16 +95,16 @@
                         }
                     }
                     if (oldAreaId && !areaSelect.value) {
-                        areaSelect.value = oldAreaId; // محاولة التحديد مرة أخرى
+                        areaSelect.value = oldAreaId;
                     } else if (!oldAreaId) {
-                        areaSelect.value = ""; // التأكد من اختيار "Select Area"
+                        areaSelect.value = ""; 
                     }
                 }
             }
 
             if (governorateSelect) {
                 governorateSelect.addEventListener('change', updateAreaOptions);
-                if (governorateSelect.value) { // معالجة القيمة القديمة للمحافظة
+                if (governorateSelect.value) { 
                     updateAreaOptions();
                 }
             } else {
@@ -126,39 +119,33 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-
-            // --- العناصر الأساسية ---
-            const governorateSelect = document.getElementById('governorate_id');
-            const areaSelect = document.getElementById('area_id');
+            const governorateSelect = document.getElementById('governorate_id_form');
+            const areaSelect = document.getElementById('area_id_form');
             const categorySelect = document.getElementById('property_category_id');
-            const subCategoryWrapper = document.getElementById('sub-category-wrapper'); // حاوية التصنيف الفرعي
-            const subCategorySelect = document.getElementById('sub_category_id'); // قائمة التصنيف الفرعي
+            const subCategoryWrapper = document.getElementById('sub-category-wrapper'); 
+            const subCategorySelect = document.getElementById('sub_category_id'); 
             const specificFieldContainers = document.querySelectorAll(
-            '.category-specific-fields'); // كل حاويات الحقول الخاصة
-            const apartmentFloorField = document.getElementById('apartment-floor-number'); // حقل طابق الشقة
+            '.category-specific-fields'); 
+            const apartmentFloorField = document.getElementById('apartment-floor-number'); 
 
-            // --- IDs التصنيفات (مهم جداً: تأكد من مطابقتها لقاعدة بياناتك!) ---
             const houseId = 3;
             const apartmentId = 2;
             const landId = 1;
-            const commercialId = 5; // ID التجاري الرئيسي
+            const commercialId = 5; 
             const tentId = 6;
             const caravanId = 7;
             const villaId = 4;
-            // مصفوفة IDs السكنية (للحقول المشتركة)
             const residentialCategoryIds = [houseId, apartmentId, villaId];
-            // ---------------------------------------------------------------
 
-            // --- دالة تحديث المناطق ---
             function updateAreaOptions() {
                 if (!governorateSelect || !areaSelect) {
-                    // console.error("Governorate or Area select element not found!");
+                    
                     return;
                 }
-                // ... (نفس كود updateAreaOptions من الإجابات السابقة) ...
+                
                 const selectedGovOption = governorateSelect.options[governorateSelect.selectedIndex];
                 const currentSelectedArea = areaSelect.dataset.currentValue ||
-                    "{{ old('area_id', $property->area_id ?? '') }}"; // استخدام dataset
+                    "{{ old('area_id', $property->area_id ?? '') }}";
                 areaSelect.innerHTML = '';
 
                 let defaultOptionGov = new Option('Select Governorate First...', '');
@@ -193,12 +180,11 @@
                         }
                     }
                     if (!areaFound) {
-                        areaSelect.value = ""; // تحديد الخيار الافتراضي إذا لم يتم العثور على القيمة القديمة
+                        areaSelect.value = ""; 
                     }
                 }
             }
 
-            // --- دالة التحكم بالحقول الديناميكية ---
             function togglePropertyFields() {
                 if (!categorySelect) {
                     console.error("Category select element not found.");
@@ -206,13 +192,10 @@
                 }
                 const selectedCategoryId = parseInt(categorySelect.value);
 
-                // 1. إخفاء كل الحقول الخاصة + حاوية التصنيف الفرعي
                 specificFieldContainers.forEach(container => container.style.display = 'none');
                 if (apartmentFloorField) apartmentFloorField.style.display = 'none';
                 if (subCategoryWrapper) subCategoryWrapper.style.display = 'none';
-                if (subCategorySelect) subCategorySelect.required = false; // إلغاء تطلبه مبدئياً
-
-                // 2. تحديد وإظهار الحاوية المناسبة
+                if (subCategorySelect) subCategorySelect.required = false; 
                 let containerToShowId = null;
                 switch (selectedCategoryId) {
                     case houseId:
@@ -228,9 +211,9 @@
                         break;
                     case commercialId:
                         containerToShowId = 'commercial-fields';
-                        // **إظهار حاوية التصنيف الفرعي هنا**
-                        if (subCategoryWrapper) subCategoryWrapper.style.display = 'block'; // أو 'flex'
-                        if (subCategorySelect) subCategorySelect.required = true; // جعله مطلوباً
+                       
+                        if (subCategoryWrapper) subCategoryWrapper.style.display = 'block'; 
+                        if (subCategorySelect) subCategorySelect.required = true; 
                         break;
                     case tentId:
                         containerToShowId = 'tent-fields';
@@ -240,26 +223,26 @@
                         break;
                 }
 
-                // إظهار الحاوية المحددة
+              
                 if (containerToShowId) {
                     const container = document.getElementById(containerToShowId);
                     if (container) {
-                        container.style.display = 'flex'; // استخدام flex للعرض
+                        container.style.display = 'flex';
                     } else {
                         console.error(`Container with ID '${containerToShowId}' not found.`);
                     }
                 }
 
-                // 3. (اختياري) فلترة خيارات التصنيف الفرعي (فقط إذا كانت حاويته ظاهرة)
+                
                 if (subCategorySelect && selectedCategoryId === commercialId) {
-                    subCategorySelect.value = ""; // إعادة تعيين القيمة
+                    subCategorySelect.value = "";
                     const currentSubCategoryId = subCategorySelect.dataset.currentValue ||
                         "{{ old('sub_category_id', $property->sub_category_id ?? '') }}";
                     let subCategoryFound = false;
 
                     Array.from(subCategorySelect.options).forEach(option => {
-                        if (option.value !== "") { // تجاهل الخيار الافتراضي
-                            // إظهار الخيار فقط إذا كان parent_id يطابق ID التجاري
+                        if (option.value !== "") { 
+                         
                             if (parseInt(option.dataset.parentId) === commercialId) {
                                 option.style.display = 'block';
                                 if (String(option.value) === String(currentSubCategoryId)) {
@@ -267,20 +250,20 @@
                                     subCategoryFound = true;
                                 }
                             } else {
-                                option.style.display = 'none'; // إخفاء الخيارات غير التجارية
+                                option.style.display = 'none'; 
                                 option.selected = false;
                             }
                         } else {
                             option.selected = !
-                            subCategoryFound; // تحديد الخيار الافتراضي إذا لم يتم تحديد شيء آخر
+                            subCategoryFound; 
                         }
                     });
-                    // إذا لم يتم تحديد قيمة بعد الفلترة، تأكد من اختيار القيمة الافتراضية
+                  
                     if (!subCategorySelect.value) {
                         subCategorySelect.value = "";
                     }
                 } else if (subCategorySelect) {
-                    // إذا لم يكن التصنيف تجارياً، أخفِ كل الخيارات ما عدا الافتراضي
+                   
                     Array.from(subCategorySelect.options).forEach(option => {
                         if (option.value !== "") {
                             option.style.display = 'none';
@@ -290,38 +273,36 @@
                         }
                     });
                 }
-            } // نهاية togglePropertyFields
+            } 
 
-            // --- ربط الأحداث والتشغيل الأولي ---
 
-            // المحافظات والمناطق
             if (governorateSelect && areaSelect) {
-                // إضافة قيمة قديمة/حالية كـ dataset للمساعدة في الاسترجاع
+            
                 if ("{{ old('area_id', $property->area_id ?? '') }}") {
                     areaSelect.dataset.currentValue = "{{ old('area_id', $property->area_id ?? '') }}";
                 }
                 governorateSelect.addEventListener('change', updateAreaOptions);
                 if (governorateSelect.value) {
                     updateAreaOptions();
-                } // التشغيل الأولي
+                } 
             } else {
                 console.error("Governorate or Area select elements not found.");
             }
 
-            // التصنيفات والحقول الخاصة
+           
             if (categorySelect) {
-                // إضافة قيمة قديمة/حالية كـ dataset للمساعدة في الاسترجاع
+                
                 if (subCategorySelect && "{{ old('sub_category_id', $property->sub_category_id ?? '') }}") {
                     subCategorySelect.dataset.currentValue =
                         "{{ old('sub_category_id', $property->sub_category_id ?? '') }}";
                 }
                 categorySelect.addEventListener('change', togglePropertyFields);
-                togglePropertyFields(); // التشغيل الأولي
+                togglePropertyFields(); 
             } else {
                 console.error("Category select element not found.");
             }
 
-        }); // نهاية DOMContentLoaded
+        }); 
     </script>
 
-@endsection {{-- <-- إغلاق @section('script') --}}
+@endsection 

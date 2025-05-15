@@ -11,13 +11,14 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\Favorite;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Plan;
 class FrontendController extends Controller
 {
     
     public function index()
 {
     $latestProperties = Property::where('status', 'approved')
-                              ->with('area.governorate')
+                              ->with('listarea')
                               ->latest()
                               ->take(8)
                               ->get();
@@ -52,7 +53,7 @@ class FrontendController extends Controller
 public function properties(Request $request)
 {
     $query = Property::query()->where('status', 'approved')
-                       ->with(['area.governorate', 'category']);
+                       ->with(['listarea', 'category']);
 
     $properties = $query->latest()->paginate(12)->withQueryString();
 
@@ -90,7 +91,7 @@ public function showProperty(Property $property)
     if ($property->status !== 'approved') {
         abort(404);
     }
-    $property->load(['user', 'area.governorate', 'category', 'subCategory']);
+    $property->load(['user', 'listarea', 'category', 'subCategory']);
     $property->increment('views_count');
 
     $userId = Auth::id();
@@ -103,7 +104,7 @@ public function showProperty(Property $property)
     }
     $similarProperties = Property::where('status', 'approved')
                                  ->where('id', '!=', $property->id)
-                                 ->with('area.governorate')
+                                 ->with('listarea')
                                  ->inRandomOrder()
                                  ->take(4)
                                  ->get();
@@ -136,7 +137,7 @@ public function favorites()
 
     $favoriteProperties = $user->favoriteProperties()
                               ->where('status', 'approved')
-                              ->with('area.governorate')
+                              ->with('listarea')
                               ->latest('favorites.created_at')
                               ->paginate(10);
 
@@ -146,7 +147,7 @@ public function favorites()
 
     $recommendedProperties = Property::where('status', 'approved')
                                  ->whereNotIn('id', $user->favoriteProperties()->pluck('properties.id'))
-                                 ->with('area.governorate')
+                                 ->with('listarea')
                                  ->inRandomOrder()
                                  ->take(4)
                                  ->get();
@@ -168,6 +169,15 @@ public function favorites()
 
 
     return view('frontend.favorites', compact('favoriteProperties', 'recommendedProperties'));
+}
+public function showPricingPlans()
+{
+
+    $plans = Plan::where('is_active', true)
+                 ->orderBy('price', 'asc') 
+                 ->get();
+
+    return view('frontend.pricing', compact('plans'));
 }
     
 }

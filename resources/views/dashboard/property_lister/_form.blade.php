@@ -1,4 +1,3 @@
-{{-- resources/views/dashboard/property_lister/_form.blade.php --}}
 <div class="row g-3">
     {{-- Title --}}
     <div class="col-md-12">
@@ -69,8 +68,16 @@
     {{-- Price & Currency --}}
     <div class="col-md-4">
          <label for="price" class="form-label required">Price</label>
-        <input type="number" step="0.01" class="form-control @error('price') is-invalid @enderror" id="price" name="price" value="{{ old('price', $property->price ?? '') }}" required min="0">
-        @error('price') <div class="invalid-feedback">{{ $message }}</div> @enderror
+         {{-- ***** بداية التعديل ***** --}}
+         <input type="number" step="1" {{-- أو 100 أو أي قيمة منطقية لخطوة السعر --}}
+                class="form-control @error('price') is-invalid @enderror"
+                id="price" name="price"
+                value="{{ old('price', $property->price ?? '') }}"
+                required
+                min="50" {{-- حد أدنى منطقي للسعر (عدّله حسب عملتك) --}}
+                placeholder="e.g., 150000">
+         {{-- ***** نهاية التعديل ***** --}}
+         @error('price') <div class="invalid-feedback">{{ $message }}</div> @enderror
     </div>
      <div class="col-md-4">
         <label for="currency" class="form-label required">Currency</label>
@@ -99,7 +106,7 @@
                 @endforeach
             @endisset
         </select>
-        {{-- لا يوجد خطأ هنا --}}
+     
     </div>
     <div class="col-md-6">
         <label for="area_id" class="form-label required">Area</label>
@@ -136,9 +143,6 @@
          @error('address') <div class="invalid-feedback">{{ $message }}</div> @enderror
     </div>
 
-    {{-- ================================================ --}}
-    {{--        الحقول الأساسية المشتركة نوعاً ما         --}}
-    {{-- ================================================ --}}
     <div class="col-md-3">
         <label for="area" class="form-label required">Area (sqm)</label>
         <input type="number" class="form-control @error('area') is-invalid @enderror" id="area" name="area" value="{{ old('area', $property->area ?? '') }}" required min="1" placeholder="Total/Built Area">
@@ -170,15 +174,11 @@
         @error('finishing_type') <div class="invalid-feedback">{{ $message }}</div> @enderror
     </div>
 
-    {{-- ================================================ --}}
-    {{--        الحقول المعتمدة على التصنيف              --}}
-    {{-- ================================================ --}}
 
-    {{-- حاوية لكل مجموعة حقول خاصة بنوع --}}
     <div class="col-12">
         <div id="specific-fields-container">
 
-            {{-- 1. الحقول السكنية والشقق (نفس الشيء تقريباً + الطابق للشقق) --}}
+    
             <div id="residential-fields" class="row g-3 category-specific-fields" style="display: none;">
                 <hr class="my-3"> <h6 class="text-muted">Residential Details</h6>
                 <div class="col-md-3">
@@ -216,10 +216,10 @@
                     <input type="text" class="form-control @error('land_type') is-invalid @enderror" id="land_type" name="land_type" value="{{ old('land_type', $property->land_type ?? '') }}" placeholder="e.g., Agricultural, Residential Plot">
                     @error('land_type') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
-                {{-- يمكن إضافة حقل حالة الأرض هنا أو في التفاصيل الإضافية --}}
+            
             </div>
 
-            {{-- 3. حقل نوع العقار التجاري والغرض منه --}}
+            
             <div id="commercial-fields" class="row g-3 category-specific-fields" style="display: none;">
                  <hr class="my-3"> <h6 class="text-muted">Commercial Details</h6>
                 <div class="col-md-4">
@@ -239,7 +239,6 @@
                 </div>
             </div>
 
-             {{-- 4. حقل نوع الخيمة --}}
             <div id="tent-fields" class="row g-3 category-specific-fields" style="display: none;">
                 <hr class="my-3"> <h6 class="text-muted">Tent Details</h6>
                 <div class="col-md-4">
@@ -249,7 +248,7 @@
                 </div>
             </div>
 
-             {{-- 5. حقل نوع الكرفان --}}
+
             <div id="caravan-fields" class="row g-3 category-specific-fields" style="display: none;">
                 <hr class="my-3"> <h6 class="text-muted">Caravan Details</h6>
                  <div class="col-md-4">
@@ -259,21 +258,15 @@
                 </div>
             </div>
 
-        </div> {{-- نهاية #specific-fields-container --}}
-    </div> {{-- نهاية .col-12 الحاوية --}}
+        </div> 
+    </div>
 
-
-    {{-- ================================================ --}}
-    {{--            حقول مشتركة أخرى                     --}}
-    {{-- ================================================ --}}
-
-    {{-- حقل المرافق/الخدمات (Checkboxes) --}}
      <div class="col-12">
         <hr class="my-3">
         <label class="form-label mb-2 fw-semibold">Amenities & Features:</label>
         <div class="row">
             @php
-                // قائمة بكل المرافق الممكنة
+               
                 $possible_amenities = [
                     'elevator' => 'Elevator',
                     'parking' => 'Parking',
@@ -286,9 +279,9 @@
                     'water' => 'Water Available',       // للأراضي
                     'sewage' => 'Sewage Available'       // للأراضي
                 ];
-                // المرافق المختارة حالياً (من قاعدة البيانات أو old input)
+                
                 $selected_amenities = old('amenities', $property->amenities ?? []);
-                // التأكد من أنها مصفوفة
+               
                 if (!is_array($selected_amenities)) {
                     $selected_amenities = json_decode($selected_amenities, true) ?? [];
                 }

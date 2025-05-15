@@ -194,7 +194,7 @@
                         </div>
                         <div class="property-address text-muted small mt-auto"> {{-- mt-auto لدفع العنوان للأسفل --}}
                             <i class="bi bi-geo-alt-fill me-1"></i>
-                            {{ Str::limit($property->address ?? 'Address not available', 25) }}, {{ $property->area?->name ?? 'N/A' }}
+                            {{ Str::limit($property->address ?? 'Address not available', 25) }}, {{ $property->listarea?->name ?? 'N/A' }}
                         </div>
                     </div>
                 </div>

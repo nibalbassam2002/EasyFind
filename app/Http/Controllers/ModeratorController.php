@@ -11,7 +11,7 @@ class ModeratorController extends Controller
     {
         // جلب العقارات التي حالتها pending مع تحميل بعض العلاقات المفيدة
         $pendingProperties = Property::where('status', 'pending')
-                                    ->with(['user', 'category', 'area.governorate']) // جلب المستخدم، التصنيف، الموقع
+                                    ->with(['user', 'category', 'listarea']) // جلب المستخدم، التصنيف، الموقع
                                     ->latest() // عرض الأحدث أولاً
                                     ->paginate(15); // الترقيم
 

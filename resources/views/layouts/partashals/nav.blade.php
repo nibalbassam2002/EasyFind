@@ -1,11 +1,16 @@
-{{-- resources/views/layouts/partashals/nav.blade.php --}}
 <ul class="sidebar-nav" id="sidebar-nav">
 
-  {{-- === قسم لوحة التحكم (للجميع) === --}}
+  {{-- قسم لوحة التحكم (للجميع) --}}
   <li class="nav-item">
     <a class="nav-link {{ request()->routeIs('dashboard') ? '' : 'collapsed' }}" href="{{ route('dashboard') }}">
       <i class="bi bi-grid"></i>
       <span>Dashboard</span>
+    </a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link collapsed" href="{{ route('frontend.home') }}" target="_blank"> {{-- target="_blank" لفتحه في تبويب جديد (اختياري) --}}
+      <i class="bi bi-box-arrow-up-right"></i>
+      <span>View Site</span>
     </a>
   </li><!-- End Dashboard Nav -->
 
@@ -18,16 +23,19 @@
     <ul id="admin-nav" class="nav-content collapse {{ request()->routeIs('admin.*') || request()->routeIs('moderator.*') ? 'show' : '' }}" data-bs-parent="#sidebar-nav"> {{-- تعديل: تضمين moderator.* للإبقاء مفتوحاً --}}
       <li>
         <a href="{{ route('admin.users.index') }}" class="{{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
-          <i class="bi bi-circle"></i><span>User Management</span> {{-- تغيير الأيقونة --}}
+          <i class="bi bi-circle"></i><span>User Management</span>
         </a>
       </li>
-      {{-- ▼▼▼ إضافة رابط مراجعة العقارات للأدمن أيضاً ▼▼▼ --}}
        <li>
         <a href="{{ route('moderator.properties.pending') }}" class="{{ request()->routeIs('moderator.properties.pending') ? 'active' : '' }}">
           <i class="bi bi-circle"></i><span>Pending Properties</span>
         </a>
       </li>
-       {{-- ▲▲▲ نهاية الإضافة ▲▲▲ --}}
+     <li>
+        <a href="{{ route('moderator.feedback.index') }}" class="{{ request()->routeIs('moderator.feedback.*') ? 'active' : '' }}">
+          <i class="bi bi-circle"></i><span>Manage Feedback</span>
+        </a>
+      </li>
       <li>
         <a href="#"> {{-- TODO: Add route for admin property management --}}
           <i class="bi bi-circle"></i><span>All Properties</span>
@@ -80,7 +88,13 @@
         {{-- @if(isset($pendingCount) && $pendingCount > 0) <span class="badge bg-warning ms-auto">{{ $pendingCount }}</span> @endif --}}
       </a>
     </li>
-     {{-- يمكنك إضافة روابط أخرى للمشرف هنا --}}
+    <li class="nav-item">
+      <a class="nav-link {{ request()->routeIs('moderator.feedback.*') ? '' : 'collapsed' }}" href="{{ route('moderator.feedback.index') }}">
+        <i class="bi bi-chat-left-text"></i> {{-- أيقونة مناسبة للملاحظات --}}
+        <span>Manage Feedback</span>
+      </a>
+    </li>
+     
   @endif
   {{-- ▲▲▲ نهاية قسم مشرف المحتوى ▲▲▲ --}}
 

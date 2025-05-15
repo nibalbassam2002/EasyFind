@@ -32,7 +32,7 @@
   }
   
    </style>
->>>>>>> a494bf00bd34eff67e38127b8146643789ed5d85
+
 </head>
 
 <body>

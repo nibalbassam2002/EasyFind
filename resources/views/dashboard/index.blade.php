@@ -277,7 +277,7 @@
                                      @if ($type ?? null)
                                          <a href="{{ request()->fullUrlWithQuery(['type' => null]) }}" class="btn btn-outline-secondary">Reset Type</a>
                                      @endif
-                                     <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button> --}}
+                                     <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button> 
                                  </div>
                              </form>
                          </div>

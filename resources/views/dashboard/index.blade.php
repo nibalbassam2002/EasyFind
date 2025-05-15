@@ -14,10 +14,10 @@
                 <div class="col-12 d-flex justify-content-end align-items-center">
                     <span class="me-3 text-muted small fw-bold">Filter Period:</span>
                     <div class="btn-group btn-group-sm" role="group" aria-label="Time Period Filter">
-                        <a href="{{ request()->fullUrlWithQuery(['period' => 'today']) }}" class="btn {{ ($period ?? 'all') == 'today' ? 'btn-primary' : 'btn-outline-secondary' }}">Today</a>
-                        <a href="{{ request()->fullUrlWithQuery(['period' => 'week']) }}" class="btn {{ ($period ?? 'all') == 'week' ? 'btn-primary' : 'btn-outline-secondary' }}">Week</a>
-                        <a href="{{ request()->fullUrlWithQuery(['period' => 'month']) }}" class="btn {{ ($period ?? 'all') == 'month' ? 'btn-primary' : 'btn-outline-secondary' }}">Month</a>
-                        <a href="{{ request()->fullUrlWithQuery(['period' => 'all']) }}" class="btn {{ !isset($period) || $period == 'all' ? 'btn-primary' : 'btn-outline-secondary' }}">All Time</a>
+                        <a href="{{ request()->fullUrlWithQuery(['period' => 'today']) }}" class="btn {{ ($period ?? 'all') == 'today' ? 'btn-gold' : 'btn-outline-gold1' }}">Today</a>
+                        <a href="{{ request()->fullUrlWithQuery(['period' => 'week']) }}" class="btn {{ ($period ?? 'all') == 'week' ? 'btn-gold' : 'btn-outline-gold1' }}">Week</a>
+                        <a href="{{ request()->fullUrlWithQuery(['period' => 'month']) }}" class="btn {{ ($period ?? 'all') == 'month' ? 'btn-gold' : 'btn-outline-gold1' }}">Month</a>
+                        <a href="{{ request()->fullUrlWithQuery(['period' => 'all']) }}" class="btn {{ !isset($period) || $period == 'all' ? 'btn-gold' : 'btn-outline-gold1' }}">All Time</a>
                     </div>
                 </div>
             </div>
@@ -29,7 +29,7 @@
             <div class="row">
                 <!-- Total Users Card -->
                 <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
-                    <div class="card h-100 shadow-sm border-start border-primary border-4">
+                    <div class="card h-100 shadow border-start border-primary border-4">
                         <div class="card-body d-flex align-items-center">
                             <div class="flex-shrink-0 me-3"><i class="bi bi-people text-primary fs-2"></i></div>
                             <div class="flex-grow-1">
@@ -41,7 +41,7 @@
                 </div>
                 <!-- Total Properties Card -->
                 <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
-                    <div class="card h-100 shadow-sm border-start border-success border-4">
+                    <div class="card h-100 shadow border-start border-success border-4">
                         <div class="card-body d-flex align-items-center">
                             <div class="flex-shrink-0 me-3"><i class="bi bi-house text-success fs-2"></i></div>
                             <div class="flex-grow-1">
@@ -53,7 +53,7 @@
                 </div>
                 <!-- Total Requests Card -->
                  <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
-                    <div class="card h-100 shadow-sm border-start border-info border-4">
+                    <div class="card h-100 shadow border-start border-info border-4">
                         <div class="card-body d-flex align-items-center">
                             <div class="flex-shrink-0 me-3"><i class="bi bi-envelope text-info fs-2"></i></div>
                             <div class="flex-grow-1">
@@ -65,7 +65,7 @@
                 </div>
                  <!-- Completed Transactions Card -->
                 <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
-                    <div class="card h-100 shadow-sm border-start border-warning border-4">
+                    <div class="card h-100 shadow border-start border-warning border-4">
                         <div class="card-body d-flex align-items-center">
                             <div class="flex-shrink-0 me-3"><i class="bi bi-check-circle text-warning fs-2"></i></div>
                             <div class="flex-grow-1">
@@ -81,7 +81,7 @@
              @if ($role === 'content_moderator')
                  <div class="row">
                      <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
-                         <div class="card h-100 shadow-sm border-start border-danger border-4">
+                         <div class="card h-100 shadow border-start border-danger border-4">
                              <div class="card-body d-flex align-items-center">
                                   <div class="flex-shrink-0 me-3"><i class="bi bi-hourglass-split text-danger fs-2"></i></div>
                                  <div class="flex-grow-1">
@@ -99,29 +99,29 @@
             <div class="row mt-2">
                 {{-- مخططات Admin/Moderator --}}
                 <div class="col-lg-4 col-md-6 mb-4">
-                    <div class="card h-100 shadow-sm"> <div class="card-body d-flex flex-column"> <h5 class="card-title fw-bold text-center mb-3">Users Status</h5> <div class="flex-grow-1 d-flex justify-content-center align-items-center" style="position: relative; min-height: 250px;"> <canvas id="usersStatusChart"></canvas> <div id="usersStatusChartNoData" class="no-data-message text-muted" style="display: none; position: absolute;">No user data available</div> </div> </div> </div>
+                    <div class="card-1 h-100"> <div class="card-body d-flex flex-column"> <h5 class="card-title fw-bold text-center mb-3">Users Status</h5> <div class="flex-grow-1 d-flex justify-content-center align-items-center" style="position: relative; min-height: 250px;"> <canvas id="usersStatusChart"></canvas> <div id="usersStatusChartNoData" class="no-data-message text-muted" style="display: none; position: absolute;">No user data available</div> </div> </div> </div>
                 </div>
                 <div class="col-lg-4 col-md-6 mb-4">
-                    <div class="card h-100 shadow-sm"> <div class="card-body d-flex flex-column"> <h5 class="card-title fw-bold text-center mb-3">Property Types</h5> <div class="flex-grow-1 d-flex justify-content-center align-items-center" style="position: relative; min-height: 250px;"> <canvas id="propertyTypesChart"></canvas> <div id="propertyTypesChartNoData" class="no-data-message text-muted" style="display: none; position: absolute;">No property data available</div> </div> </div> </div>
+                    <div class="card-1 h-100 "> <div class="card-body d-flex flex-column"> <h5 class="card-title fw-bold text-center mb-3">Property Types</h5> <div class="flex-grow-1 d-flex justify-content-center align-items-center" style="position: relative; min-height: 250px;"> <canvas id="propertyTypesChart"></canvas> <div id="propertyTypesChartNoData" class="no-data-message text-muted" style="display: none; position: absolute;">No property data available</div> </div> </div> </div>
                 </div>
                  <div class="col-lg-4 col-md-6 mb-4">
-                    <div class="card h-100 shadow-sm"> <div class="card-body d-flex flex-column"> <h5 class="card-title fw-bold text-center mb-3">Transactions Status</h5> <div class="flex-grow-1 d-flex justify-content-center align-items-center" style="position: relative; min-height: 250px;"> <canvas id="transactionsStatusChart"></canvas> <div id="transactionsStatusChartNoData" class="no-data-message text-muted" style="display: none; position: absolute;">No transaction data available</div> </div> </div> </div>
+                    <div class="card-1 h-100 "> <div class="card-body d-flex flex-column"> <h5 class="card-title fw-bold text-center mb-3">Transactions Status</h5> <div class="flex-grow-1 d-flex justify-content-center align-items-center" style="position: relative; min-height: 250px;"> <canvas id="transactionsStatusChart"></canvas> <div id="transactionsStatusChartNoData" class="no-data-message text-muted" style="display: none; position: absolute;">No transaction data available</div> </div> </div> </div>
                 </div>
                  <div class="col-lg-12 mb-4">
-                    <div class="card h-100 shadow-sm"> <div class="card-body"> <h5 class="card-title fw-bold text-center mb-3">Monthly Transactions (Last 12 Months)</h5> <div style="min-height: 300px; position: relative;"> <canvas id="monthlyTransactionsChart"></canvas> <div id="monthlyTransactionsChartNoData" class="no-data-message text-muted" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">No transaction data for this period</div> </div> </div> </div>
+                    <div class="card-1 h-100 "> <div class="card-body"> <h5 class="card-title fw-bold text-center mb-3">Monthly Transactions (Last 12 Months)</h5> <div style="min-height: 300px; position: relative;"> <canvas id="monthlyTransactionsChart"></canvas> <div id="monthlyTransactionsChartNoData" class="no-data-message text-muted" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">No transaction data for this period</div> </div> </div> </div>
                 </div>
             </div> <!-- نهاية صف الرسوم البيانية العامة -->
 
             <!-- جدول العمليات الأخيرة العام -->
             <div class="row">
                 <div class="col-12">
-                    <div class="card recent-sales shadow-sm">
+                    <div class="card-1 recent-sales ">
                         {{-- Card Header with filter --}}
                         <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
                             <h5 class="mb-0 fw-bold card-title">Latest Transactions</h5>
                              <form method="GET" class="mb-0" action="{{ route('dashboard') }}">
                                 <div class="input-group input-group-sm">
-                                    <select name="type" class="form-select" onchange="this.form.submit()" aria-label="Filter by type">
+                                    <select name="type" class="form-select  select-g " onchange="this.form.submit()" aria-label="Filter by type">
                                         <option value="">All Types</option>
                                         <option value="sale" {{ ($type ?? null) == 'sale' ? 'selected' : '' }}>Sales</option>
                                         <option value="rent" {{ ($type ?? null) == 'rent' ? 'selected' : '' }}>Rentals</option>
@@ -181,7 +181,7 @@
 
                 <!-- Active Listings Card -->
                 <div class="col-lg-4 col-md-6 col-sm-6 mb-4">
-                    <div class="card h-100 shadow-sm border-start border-primary border-4">
+                    <div class="card h-100 shadow border-start border-primary border-4">
                         <div class="card-body d-flex align-items-center">
                             <div class="flex-shrink-0 me-3">
                                 <i class="bi bi-building-check text-primary fs-2"></i>
@@ -198,7 +198,7 @@
 
                 <!-- Pending Submissions Card -->
                 <div class="col-lg-4 col-md-6 col-sm-6 mb-4">
-                    <div class="card h-100 shadow-sm border-start border-warning border-4">
+                    <div class="card h-100 shadow border-start border-warning border-4">
                         <div class="card-body d-flex align-items-center">
                             <div class="flex-shrink-0 me-3">
                                 <i class="bi bi-hourglass-split text-warning fs-2"></i>
@@ -215,7 +215,7 @@
 
                 <!-- Total Earnings Card -->
                 <div class="col-lg-4 col-md-6 col-sm-6 mb-4">
-                    <div class="card h-100 shadow-sm border-start border-success border-4">
+                    <div class="card h-100 shadow border-start border-success border-4">
                         <div class="card-body d-flex align-items-center">
                             <div class="flex-shrink-0 me-3">
                                 <i class="bi bi-cash-coin text-success fs-2"></i>
@@ -234,7 +234,7 @@
             <div class="row mt-2">
                 <!-- مخطط حالة عقارات Lister (دائري) -->
                 <div class="col-lg-6 mb-4">
-                    <div class="card h-100 shadow-sm">
+                    <div class="card-1 h-100 ">
                          <div class="card-body d-flex flex-column">
                              <h5 class="card-title fw-bold text-center mb-3">My Property Statuses</h5>
                              <div class="flex-grow-1 d-flex justify-content-center align-items-center" style="position: relative; min-height: 250px;">
@@ -246,7 +246,7 @@
                 </div>
                  <!-- مخطط معاملات Lister الشهرية (خطي) -->
                 <div class="col-lg-6 mb-4">
-                     <div class="card h-100 shadow-sm">
+                     <div class="card-1 h-100 ">
                          <div class="card-body">
                              <h5 class="card-title fw-bold text-center mb-3">My Monthly Transactions (Last 12 Months)</h5>
                              <div style="min-height: 300px; position: relative;">
@@ -260,7 +260,7 @@
 
             <div class="row">
                 <div class="col-12">
-                     <div class="card recent-activity shadow-sm">
+                     <div class="card recent-activity shadow">
                    
                          <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
                              <h5 class="mb-0 fw-bold card-title">Recent Activity</h5> 

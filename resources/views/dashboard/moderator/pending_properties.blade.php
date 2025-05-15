@@ -11,9 +11,9 @@
 
 @section('contant')
 
-    <div class="card">
+    <div class="card-1">
         <div class="card-header">
-            <h5 class="card-title mb-0">Properties Awaiting Approval</h5>
+            <h5 class="card-title mb-0">Properties waiting Approval</h5>
         </div>
         <div class="card-body">
 

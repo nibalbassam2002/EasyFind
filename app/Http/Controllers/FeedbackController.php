@@ -48,7 +48,7 @@ class FeedbackController extends Controller
         }
 
         $feedbacks = Feedback::with('user')->latest()->paginate(15);
-        return view('admin.feedback.index', compact('feedbacks')); 
+        return view('dashboard.usermanagement.feedback.index', compact('feedbacks')); 
     }
 
    
@@ -62,7 +62,7 @@ class FeedbackController extends Controller
             $feedback->update(['status' => 'seen']);
         }
         $feedback->load('user', 'replier');
-        return view('admin.feedback.show', compact('feedback')); 
+        return view('dashboard.usermanagement.feedback.show', compact('feedback')); 
     }
 
     

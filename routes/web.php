@@ -12,6 +12,7 @@ use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\ChatController;
 use App\Models\Governorate; 
 use App\Http\Controllers\FeedbackController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Auth;
 
 
@@ -130,6 +131,8 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('properties/{property}/reject', [ModeratorController::class, 'rejectProperty'])->name('properties.reject');
         
     });
+
+    
 });
 Route::middleware(['auth', 'role:admin,content_moderator']) 
     ->prefix('dashboard/moderator')
@@ -142,7 +145,10 @@ Route::middleware(['auth', 'role:admin,content_moderator'])
         Route::patch('feedback/{feedback}/status', [FeedbackController::class, 'updateFeedbackStatus'])->name('feedback.updateStatus');
     });
 
-
+    Route::patch('/notifications/{notification}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread.count'); // لجلب عدد الإشعارات غير المقروءة
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index'); 
+    Route::get('/my-notifications', [NotificationController::class, 'index'])->name('frontend.notifications.index')->defaults('view_path', 'frontend.notifications.index');
 Route::fallback(function () {
     return response()->view('errors.404', [], 404);
 });

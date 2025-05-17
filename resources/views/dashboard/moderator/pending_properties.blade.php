@@ -5,7 +5,20 @@
 
 @section('breadcrumb-items')
     @parent
-    <li class="breadcrumb-item">Moderation</li>
+    <li class="breadcrumb-item">
+        @auth
+            @switch(auth()->user()->role)
+                @case('admin')
+                    Admin
+                    @break
+                @case('moderator')
+                    Moderation
+                    @break
+                @default
+                    Dashboard
+            @endswitch
+        @endauth
+    </li>
     <li class="breadcrumb-item active">Pending Properties</li>
 @endsection
 

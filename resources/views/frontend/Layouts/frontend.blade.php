@@ -9,7 +9,7 @@
 
     <title>@yield('title', 'EasyFind - Real Estate')</title>
 
-    <link rel="icon" type="image/x-icon" href="{{asset('assets/img/logo for tab.png')}}">
+    <link rel="icon" type="image/x-icon" href="{{ asset('assets/img/logo for tab.png') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -73,74 +73,153 @@
                     <li class="nav-item"><a href="{{ route('frontend.favorites') }}"
                             class="nav-link {{ request()->routeIs('frontend.favorites') ? 'active' : '' }}">Favourites</a>
                     </li>
-
-
                 </ul>
-
-                <!-- أزرار المصادقة الديناميكية -->
-                <div class="d-flex align-items-center">
-                    @guest
-                        <a href="{{ route('login') }}" class="btn btn-light me-2">Log in</a>
-
-                        @if (Route::has('register'))
-                            <a href="{{ route('register') }}" class="btn btn-outline-gold">Sign Up</a>
-                        @endif
-                    @endguest
-
+                <ul class="navbar-nav ms-auto mb-2 mb-xl-0 d-flex align-items-center">
                     @auth
-                        <div class="nav-item dropdown">
-                            <a class="btn btn-light dropdown-toggle d-flex align-items-center" href="#"
-                                id="navbarUserDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <img src="{{ Auth::user()->profile_image ? asset('storage/images/' . Auth::user()->profile_image) : asset('assets/img/profile.jpg') }}"
-                                    width="28" height="28" class="rounded-circle me-2 object-fit-cover">
-                                <span class="user-dropdown-name">{{ Str::words(Auth::user()->name, 1, '') }}</span>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarUserDropdown">
-                                <li>
-                                    @if (Auth::user()->role === 'customer')
-                                        <a class="dropdown-item d-flex align-items-center"
-                                            href="{{ route('frontend.account') }}">
-                                            <i class="bi bi-person-circle me-2"></i><span>My Account</span>
-                                        </a>
-                                    @else
-                                        <a class="dropdown-item d-flex align-items-center"
-                                            href="{{ route('profile.index') }}">
-                                            <i class="bi bi-person-circle me-2"></i><span>My Profile</span>
-                                        </a>
-                                    @endif
-                                </li>
-
-
-                                <li>
-                                    @if (Auth::user()->role === 'customer')
-                                        <a class="dropdown-item d-flex align-items-center"
-                                            href="{{ route('frontend.account') }}">
-                                            <i class="bi bi-gear me-2"></i><span>Settings</span>
-                                        </a>
-                                    @else
-                                        <a class="dropdown-item d-flex align-items-center"
-                                            href="{{ route('profile.index') }}#profile-settings"> {{-- توجيه مباشر لتبويب الإعدادات --}}
-                                            <i class="bi bi-gear me-2"></i><span>Account Settings</span>
-                                        </a>
-                                    @endif
-                                </li>
-                                @if (Auth::check() && Auth::user()->role != 'customer')
-                                    <li><a class="dropdown-item d-flex align-items-center"
-                                            href="{{ route('dashboard') }}"><i
-                                                class="bi bi-speedometer2 me-2"></i><span>Dashboard</span></a></li>
+                        @php
+                            $unreadFrontendNotifications = Auth::user()->unreadNotifications;
+                            $latestFrontendNotifications = Auth::user()->notifications()->take(5)->get();
+                        @endphp
+                        <li class="nav-item dropdown me-xl-2"> {{-- مسافة لليمين على الشاشات الكبيرة --}}
+                            <a class="nav-link" href="#" id="navbarDropdownNotifications" role="button"
+                                data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
+                                <i class="bi bi-bell"></i>
+                                @if ($unreadFrontendNotifications->count() > 0)
+                                    <span
+                                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-count">
+                                        {{ $unreadFrontendNotifications->count() }}
+                                        <span class="visually-hidden">unread messages</span>
+                                    </span>
                                 @endif
-                                <li>
-                                    <hr class="dropdown-divider">
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-lg"
+                                aria-labelledby="navbarDropdownNotifications"
+                                style="min-width: 320px; max-height: 400px; overflow-y: auto;">
+                                <li class="dropdown-header px-3 py-2">
+                                    @if ($unreadFrontendNotifications->count() > 0)
+                                        لديك {{ $unreadFrontendNotifications->count() }}
+                                        {{ trans_choice('إشعار|إشعاران|إشعارات', $unreadFrontendNotifications->count(), [], 'ar') }}
+                                        جديدة
+                                    @else
+                                        لا توجد إشعارات جديدة
+                                    @endif
+                                    <a href="{{ route('frontend.notifications.index') }}" class="float-end small">عرض
+                                        الكل</a>
                                 </li>
                                 <li>
-                                    <form method="POST" action="{{ route('logout') }}" class="mb-0"> @csrf <button
-                                            type="submit" class="dropdown-item d-flex align-items-center text-danger"><i
-                                                class="bi bi-box-arrow-right me-2"></i><span>Log out</span></button></form>
+                                    <hr class="dropdown-divider my-1">
                                 </li>
+
+                                @forelse ($latestFrontendNotifications as $notification)
+                                    <li>
+                                        <a class="dropdown-item notification-item-frontend {{ $notification->unread() ? 'bg-light-subtle' : '' }}"
+                                            href="{{ $notification->data['url'] ?? '#' }}"
+                                            data-notification-id-frontend="{{ $notification->id }}"
+                                            onclick="markFrontendNotificationAsRead(this, event)">
+                                            <div class="d-flex align-items-start">
+                                                <i
+                                                    class="{{ $notification->data['icon'] ?? 'bi bi-info-circle' }} me-2 mt-1 fs-5 {{ $notification->unread() ? 'text-primary' : 'text-muted' }}"></i>
+                                                <div class="notification-content">
+                                                    <p class="mb-0 small">{{ $notification->data['message'] }}</p>
+                                                    <small
+                                                        class="text-muted">{{ $notification->created_at->diffForHumans() }}</small>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    @if (!$loop->last)
+                                        <li>
+                                            <hr class="dropdown-divider my-1">
+                                        </li>
+                                    @endif
+                                @empty
+                                    <li>
+                                        <p class="dropdown-item text-center text-muted small py-3">لا توجد إشعارات لعرضها.
+                                        </p>
+                                    </li>
+                                @endforelse
+
+                                @if ($latestFrontendNotifications->count() > 0)
+                                    <li>
+                                        <hr class="dropdown-divider my-1">
+                                    </li>
+                                    <li class="dropdown-footer text-center py-2">
+                                        <a href="{{ route('frontend.notifications.index') }}" class="small">عرض جميع
+                                            الإشعارات</a>
+                                    </li>
+                                @endif
                             </ul>
-                        </div>
+                        </li>
                     @endauth
-                </div>
+
+                    <!-- أزرار المصادقة الديناميكية -->
+                    <div class="d-flex align-items-center">
+                        @guest
+                            <a href="{{ route('login') }}" class="btn btn-light me-2">Log in</a>
+
+                            @if (Route::has('register'))
+                                <a href="{{ route('register') }}" class="btn btn-outline-gold">Sign Up</a>
+                            @endif
+                        @endguest
+
+                        @auth
+                            <div class="nav-item dropdown">
+                                <a class="btn btn-light dropdown-toggle d-flex align-items-center" href="#"
+                                    id="navbarUserDropdown" role="button" data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                    <img src="{{ Auth::user()->profile_image ? asset('storage/images/' . Auth::user()->profile_image) : asset('assets/img/profile.jpg') }}"
+                                        width="28" height="28" class="rounded-circle me-2 object-fit-cover">
+                                    <span class="user-dropdown-name">{{ Str::words(Auth::user()->name, 1, '') }}</span>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarUserDropdown">
+                                    <li>
+                                        @if (Auth::user()->role === 'customer')
+                                            <a class="dropdown-item d-flex align-items-center"
+                                                href="{{ route('frontend.account') }}">
+                                                <i class="bi bi-person-circle me-2"></i><span>My Account</span>
+                                            </a>
+                                        @else
+                                            <a class="dropdown-item d-flex align-items-center"
+                                                href="{{ route('profile.index') }}">
+                                                <i class="bi bi-person-circle me-2"></i><span>My Profile</span>
+                                            </a>
+                                        @endif
+                                    </li>
+
+
+                                    <li>
+                                        @if (Auth::user()->role === 'customer')
+                                            <a class="dropdown-item d-flex align-items-center"
+                                                href="{{ route('frontend.account') }}">
+                                                <i class="bi bi-gear me-2"></i><span>Settings</span>
+                                            </a>
+                                        @else
+                                            <a class="dropdown-item d-flex align-items-center"
+                                                href="{{ route('profile.index') }}#profile-settings">
+                                                {{-- توجيه مباشر لتبويب الإعدادات --}}
+                                                <i class="bi bi-gear me-2"></i><span>Account Settings</span>
+                                            </a>
+                                        @endif
+                                    </li>
+                                    @if (Auth::check() && Auth::user()->role != 'customer')
+                                        <li><a class="dropdown-item d-flex align-items-center"
+                                                href="{{ route('dashboard') }}"><i
+                                                    class="bi bi-speedometer2 me-2"></i><span>Dashboard</span></a></li>
+                                    @endif
+                                    <li>
+                                        <hr class="dropdown-divider">
+                                    </li>
+                                    <li>
+                                        <form method="POST" action="{{ route('logout') }}" class="mb-0"> @csrf
+                                            <button type="submit"
+                                                class="dropdown-item d-flex align-items-center text-danger"><i
+                                                    class="bi bi-box-arrow-right me-2"></i><span>Log out</span></button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        @endauth
+                    </div>
             </div>
         </div>
     </nav>
@@ -381,6 +460,84 @@
             });
         });
     </script>
+    @auth
+    <script>
+        // ... (دوال JavaScript: markFrontendNotificationAsRead, updateFrontendNotificationBadge, getTransChoice) ...
+        // التي قدمتها لك في الردود السابقة
+    function markFrontendNotificationAsRead(element, event) {
+        // event.preventDefault(); // أزل التعليق إذا كنت لا تريد الانتقال للرابط فوراً وتريد التحكم به
+        let notificationId = element.dataset.notificationIdFrontend;
+        let targetUrl = element.href;
+
+        if (notificationId) {
+            fetch(`/notifications/${notificationId}/mark-as-read`, { // نفس المسار الذي يستخدمه الداشبورد
+                method: 'PATCH',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    element.classList.remove('bg-light-subtle');
+                    const iconElement = element.querySelector('i');
+                    if (iconElement) {
+                        iconElement.classList.remove('text-primary');
+                        iconElement.classList.add('text-muted');
+                    }
+                    updateFrontendNotificationBadge();
+                }
+            })
+            .catch(error => {
+                console.error('Error marking notification as read:', error);
+            });
+        }
+        // ... (updateFrontendNotificationBadge و getTransChoice) ...
+        function updateFrontendNotificationBadge() {
+            fetch('{{ route("notifications.unread.count") }}')
+                .then(response => response.json())
+                .then(data => {
+                    const badge = document.querySelector('.navbar .notification-count');
+                    const dropdownHeaderTextElement = document.querySelector('#navbarDropdownNotifications + .dropdown-menu .dropdown-header');
+
+                    if (badge) {
+                        if (data.count > 0) {
+                            badge.textContent = data.count;
+                            badge.style.display = 'inline-block';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    }
+                    if(dropdownHeaderTextElement) {
+                        let textNode = Array.from(dropdownHeaderTextElement.childNodes).find(node => node.nodeType === Node.TEXT_NODE);
+                        if (textNode) {
+                            if (data.count > 0) {
+                                textNode.textContent = ` لديك ${data.count} ${getTransChoice('إشعار|إشعاران|إشعارات', data.count)} جديدة `;
+                            } else {
+                                textNode.textContent = ' لا توجد إشعارات جديدة ';
+                            }
+                        }
+                    }
+                })
+                .catch(error => console.error('Error fetching unread count:', error));
+        }
+
+        function getTransChoice(key, number) {
+            const parts = key.split('|');
+            if (number === 1) return parts[0];
+            if (number === 2 && parts.length > 1) return parts[1];
+            return parts[parts.length - 1];
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (document.querySelector('.navbar .notification-count') || document.querySelector('#navbarDropdownNotifications')) {
+                updateFrontendNotificationBadge();
+            }
+        });
+    </script>
+    @endauth
 
     @stack('scripts')
     <div class="modal fade" id="subscribeModal" tabindex="-1" aria-labelledby="subscribeModalLabel"

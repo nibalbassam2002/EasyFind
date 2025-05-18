@@ -29,7 +29,7 @@
                 <h5 class="card-title">Feedback List</h5>
 
                 <div class="table-responsive">
-                    <table class="table datatable"> {{-- You can use datatable class if you're using a table library --}}
+                    <table class="table "> {{-- You can use datatable class if you're using a table library --}}
                         <thead>
                             <tr>
                                 <th scope="col">ID</th>
@@ -73,7 +73,7 @@
                                 </td>
                                 <td>{{ $feedback->created_at->format('Y-m-d H:i') }}</td>
                                 <td>
-                                    <a href="{{ route('moderator.feedback.show', $feedback->id) }}" class="btn btn-sm btn-outline-primary">
+                                    <a href="{{ route('moderator.feedback.show', $feedback->id) }}" class="btn btn-sm btn-outline-gold1">
                                         <i class="bi bi-eye"></i> View
                                     </a>
                                 </td>
@@ -98,4 +98,5 @@
 
 @section('script')
     {{-- Any scripts would go here --}}
+    
 @endsection

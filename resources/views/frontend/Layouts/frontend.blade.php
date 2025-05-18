@@ -233,7 +233,7 @@
 
     <div class="container">
         <footer class="row row-cols-1 row-cols-sm-2 row-cols-md-5 py-5 my-5 border-top">
-            <div class="col mb-3">
+            <div class="col mb-3"> <!-- Logo & Copyright -->
                 <a href="{{ route('frontend.home') }}"
                     class="d-flex align-items-center mb-3 link-body-emphasis text-decoration-none"
                     aria-label="EasyFind">
@@ -242,27 +242,41 @@
                 </a>
                 <p class="text-muted">© {{ date('Y') }} EasyFind. All rights reserved.</p>
             </div>
+
+
             <div class="col mb-3">
+                
+            </div>
+         
+
+            <div class="col mb-3"> <!-- Company -->
                 <h5>Company</h5>
                 <ul class="nav flex-column">
                     <li class="nav-item mb-2"><a href="{{ route('frontend.home') }}"
                             class="nav-link p-0 text-muted">Home</a></li>
                     <li class="nav-item mb-2"><a href="#" class="nav-link p-0 text-muted">About Us</a></li>
-                    <li class="nav-item mb-2"><a href="#" class="nav-link p-0 text-muted">FAQs</a></li>
+                    <li class="nav-item mb-2">
+                        <a href="{{ route('frontend.help_center') }}#faq-getting-started"
+                            class="nav-link p-0 text-muted footer-link {{ request()->routeIs('frontend.help_center') ? 'active' : '' }}">
+                            FAQs
+                        </a>
+                    </li>
                 </ul>
             </div>
-            <div class="col mb-3">
+            <div class="col mb-3"> <!-- Support -->
                 <h5>Support</h5>
                 <ul class="nav flex-column">
-                    <li class="nav-item mb-2"><a href="#" class="nav-link p-0 text-muted">Help Center</a></li>
-                    <li class="nav-item mb-2"><a href="#" class="nav-link p-0 text-muted">Contact Us</a></li>
+                    <li class="nav-item mb-2"><a href="{{ route('frontend.help_center') }}"
+                            class="nav-link p-0 text-muted">Help Center</a></li>
+                    <li class="nav-item mb-2"><a href="{{ route('frontend.home') }}#feedback-section"
+                            class="nav-link p-0 text-muted">Contact Us</a></li>
                     <li class="nav-item mb-2"><a href="#" class="nav-link p-0 text-muted">Terms &
                             Conditions</a></li>
                     <li class="nav-item mb-2"><a href="#" class="nav-link p-0 text-muted">Privacy Policy</a>
                     </li>
                 </ul>
             </div>
-            <div class="col mb-3">
+            <div class="col mb-3"> <!-- Services -->
                 <h5>Services</h5>
                 <ul class="nav flex-column">
                     <li class="nav-item mb-2"><a href="{{ route('frontend.properties') }}"
@@ -461,16 +475,15 @@
         });
     </script>
     @auth
-    <script>
-        // ... (دوال JavaScript: markFrontendNotificationAsRead, updateFrontendNotificationBadge, getTransChoice) ...
-        // التي قدمتها لك في الردود السابقة
-    function markFrontendNotificationAsRead(element, event) {
-        // event.preventDefault(); // أزل التعليق إذا كنت لا تريد الانتقال للرابط فوراً وتريد التحكم به
+        <script>
+           function markFrontendNotificationAsRead(element, event) {
+        // يمكنك إلغاء التعليق عن event.preventDefault() إذا كنت تريد التحكم الكامل في التوجيه
+        // event.preventDefault();
         let notificationId = element.dataset.notificationIdFrontend;
-        let targetUrl = element.href;
+        // let targetUrl = element.href; // إذا كنت ستتحكم في التوجيه يدويًا
 
         if (notificationId) {
-            fetch(`/notifications/${notificationId}/mark-as-read`, { // نفس المسار الذي يستخدمه الداشبورد
+            fetch(`/notifications/${notificationId}/mark-as-read`, {
                 method: 'PATCH',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
@@ -478,65 +491,57 @@
                     'Content-Type': 'application/json'
                 },
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok for markAsRead.');
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
-                    element.classList.remove('bg-light-subtle');
-                    const iconElement = element.querySelector('i');
+                    element.classList.remove('bg-light-subtle'); // إزالة تمييز الخلفية
+                    const iconElement = element.querySelector('i.fs-5'); // استهداف الأيقونة داخل الرابط
                     if (iconElement) {
                         iconElement.classList.remove('text-primary');
                         iconElement.classList.add('text-muted');
                     }
-                    updateFrontendNotificationBadge();
+                    updateFrontendNotificationBadge(); // تحديث العداد بعد تمييز الإشعار
+                } else {
+                    console.error('Failed to mark notification as read:', data.message);
                 }
+                // إذا استخدمت event.preventDefault()، يمكنك التوجيه هنا:
+                // window.location.href = targetUrl;
             })
             .catch(error => {
-                console.error('Error marking notification as read:', error);
+                console.error('Error in markFrontendNotificationAsRead:', error);
+                // يمكنك التوجيه للرابط الأصلي حتى لو فشل طلب AJAX
+                // window.location.href = targetUrl;
             });
         }
-        // ... (updateFrontendNotificationBadge و getTransChoice) ...
-        function updateFrontendNotificationBadge() {
-            fetch('{{ route("notifications.unread.count") }}')
-                .then(response => response.json())
-                .then(data => {
-                    const badge = document.querySelector('.navbar .notification-count');
-                    const dropdownHeaderTextElement = document.querySelector('#navbarDropdownNotifications + .dropdown-menu .dropdown-header');
+    }
 
-                    if (badge) {
-                        if (data.count > 0) {
-                            badge.textContent = data.count;
-                            badge.style.display = 'inline-block';
-                        } else {
-                            badge.style.display = 'none';
-                        }
-                    }
-                    if(dropdownHeaderTextElement) {
-                        let textNode = Array.from(dropdownHeaderTextElement.childNodes).find(node => node.nodeType === Node.TEXT_NODE);
-                        if (textNode) {
-                            if (data.count > 0) {
-                                textNode.textContent = ` لديك ${data.count} ${getTransChoice('إشعار|إشعاران|إشعارات', data.count)} جديدة `;
-                            } else {
-                                textNode.textContent = ' لا توجد إشعارات جديدة ';
-                            }
-                        }
-                    }
-                })
-                .catch(error => console.error('Error fetching unread count:', error));
+    // =========================================================================
+    // دالة مساعدة لـ trans_choice
+    // =========================================================================
+    function getTransChoice(key, number) {
+        const parts = key.split('|');
+        if (number === 1) return parts[0];
+        if (number === 2 && parts.length > 1 && parts[1] !== '') return parts[1]; // تأكد أن الجزء الثاني ليس فارغًا
+        if (parts.length > 2 && parts[2] !== '') return parts[2]; // إذا كان هناك جزء ثالث
+        return parts[parts.length - 1]; // الافتراضي هو الجزء الأخير
+    }
+
+    // =========================================================================
+    // استدعاء تحديث العداد عند تحميل الصفحة
+    // =========================================================================
+    document.addEventListener('DOMContentLoaded', function() {
+        // تحقق من وجود عناصر الإشعارات قبل محاولة تحديث العداد
+        if (document.querySelector('.navbar .notification-count') || document.querySelector('#navbarDropdownNotifications')) {
+            updateFrontendNotificationBadge();
         }
 
-        function getTransChoice(key, number) {
-            const parts = key.split('|');
-            if (number === 1) return parts[0];
-            if (number === 2 && parts.length > 1) return parts[1];
-            return parts[parts.length - 1];
-        }
+        // أي أكواد أخرى تعتمد على DOMContentLoaded وتتطلب مصادقة
+    });
 
-        document.addEventListener('DOMContentLoaded', function() {
-            if (document.querySelector('.navbar .notification-count') || document.querySelector('#navbarDropdownNotifications')) {
-                updateFrontendNotificationBadge();
-            }
-        });
-    </script>
+        </script>
     @endauth
 
     @stack('scripts')

@@ -98,7 +98,7 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                        <button type="submit" class="btn btn-success w-100"><i class="bi bi-send"></i> Send Response</button>
+                        <button type="submit" class="btn btn-gold w-100"><i class="bi bi-send"></i> Send Response</button>
                     </form>
                     <hr>
                     @endif
@@ -118,11 +118,11 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                        <button type="submit" class="btn btn-primary w-100"><i class="bi bi-check-circle"></i> Update Status</button>
+                        <button type="submit" class="btn btn-outline-gold1 w-100"><i class="bi bi-check-circle"></i> Update Status</button>
                     </form>
                 </div>
             </div>
-            <a href="{{ route('moderator.feedback.index') }}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Back to List</a>
+            <a href="{{ route('moderator.feedback.index') }}" class="btn btn-gold1"><i class="bi bi-arrow-left"></i> Back to List</a>
         </div>
     </div>
 @endsection

@@ -223,7 +223,32 @@ h1, h2, h3, h4, h5, h6 {
   background-color: #d3d3d4;
   border-color: #d3d3d4;
 }
+/* إزالة أسهم الترتيب نهائياً */
+table.datatable thead th.sorting:after,
+table.datatable thead th.sorting_asc:after,
+table.datatable thead th.sorting_desc:after {
+    display: none !important;
+}
 
+/* تنسيق حقل البحث */
+.dataTables_filter input {
+    background-color: #ffffff;
+    border: 1px solid #FFD700;
+    border-radius: 4px;
+    padding: 5px 10px;
+    margin-bottom: 10px;
+}
+
+/* تنسيق النص داخل حقل البحث */
+.dataTables_filter input::placeholder {
+    color: #FFD700;
+    opacity: 1;
+}
+
+.dataTables_filter label {
+    display: block;
+    margin-bottom: 15px;
+}
 /* Card */
 .card {
   margin-bottom: 30px;
@@ -249,6 +274,8 @@ border-color: #FFD700 ;
   color: #000000;
   padding: 15px;
 }
+/**/
+
 /**/
 .card-title {
   padding: 20px 0 15px 0;
@@ -288,6 +315,10 @@ color: black;
 background-color: #FFD700;
 color: white;
 }
+.btn-gold1 {
+background-color: #FFD700;
+color: white;
+}
 .btn-outline-gold {
 border-color: #FFD700;
 color: #FFD700;
@@ -299,6 +330,8 @@ color: white;
 .btn-outline-gold1 {
 border-color: #FFD700;
 color: #FFD700;
+    font-weight: bold;
+
 }
 .btn-outline-gold1:hover {
 background-color: #FFD700;

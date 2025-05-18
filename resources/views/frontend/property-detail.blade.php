@@ -276,7 +276,7 @@
 
                         @auth
                             <button
-                                class="btn {{ $property->is_favorited ? 'btn-danger' : 'btn-outline-danger' }} w-100 mb-2 favorite-toggle-button"
+                                class="btn {{ $property->is_favorited ? 'btn-gold' : 'btn-outline-gold' }} w-100 mb-2 favorite-toggle-button"
                                 data-property-id="{{ $property->id }}">
                                 <i class="bi {{ $property->is_favorited ? 'bi-heart-fill' : 'bi-heart' }}"></i>
                                 <span
@@ -284,12 +284,12 @@
                             </button>
                         @else
                             <a href="{{ route('login', ['redirect' => url()->current()]) }}"
-                                class="btn btn-outline-danger w-100 mb-2"><i class="bi bi-heart"></i> Add to Favourites</a>
+                                class="btn btn-outline-gold w-100 mb-2"><i class="bi bi-heart"></i> Add to Favourites</a>
                         @endauth
 
                         @if (Auth::check() && Auth::id() !== $property->user_id)
                             <a href="{{ route('chat.conversation.start', ['recipient' => $property->user_id, 'property_id' => $property->id]) }}"
-                                class="btn btn-success w-100"><i class="bi bi-chat-dots me-1"></i> Chat with Lister</a>
+                                class="btn btn-gold w-100"><i class="bi bi-chat-dots me-1"></i> Chat with Lister</a>
                         @elseif(!Auth::check())
                             <a href="{{ route('login', ['redirect' => url()->current()]) }}"
                                 class="btn btn-success w-100"><i class="bi bi-chat-dots me-1"></i> Chat with Lister</a>

@@ -26,8 +26,8 @@
     }
     .remove-btn {
       background-color: #ffffff;
-      border: 1px solid #dc3545;
-      color: #dc3545;
+      border: 1px solid #FFD700;
+      color: #FFD700;
       border-radius: 20px;
       padding: 5px 15px;
       font-size: 0.85rem;
@@ -35,7 +35,7 @@
       transition: background-color 0.2s ease, color 0.2s ease;
     }
     .remove-btn:hover {
-      background-color: #dc3545;
+      background-color: #FFD700;
       color: white;
     }
     .remove-btn i {
@@ -49,6 +49,29 @@
     .recommended-section .property-card {
          margin-bottom: 1.5rem;
     }
+    .linear-border {
+  position: relative;
+  background: white; /* أو حسب خلفية العنصر */
+  z-index: 1;
+}
+.linear-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1px; /* سماكة البوردر */
+  border-radius: inherit; /* يتبع نفس الزوايا */
+  background: linear-gradient(to top, #000, #fff); /* غيّر التدرج حسب رغبتك */
+  -webkit-mask: 
+    linear-gradient(#fff 0 0) content-box, 
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  z-index: -1;
+}
+.favorite-property-card:hover {
+  transform: translateY(-5px) scale(1.02); /* تطلع لفوق شوي و تكبر شوية */
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2); /* ظل أقوى عند التحويم */
+}
 </style>
 @endpush
 
@@ -78,7 +101,7 @@
 
 
   @forelse ($favoriteProperties as $property)
-      <div class="favorite-property-card d-flex align-items-center">
+      <div class="favorite-property-card d-flex align-items-center linear-border">
           <a href="{{ route('frontend.property.show', $property->id) }}">
               @php
                   $images = json_decode($property->images, true);

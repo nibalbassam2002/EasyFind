@@ -131,6 +131,8 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('properties/{property}/reject', [ModeratorController::class, 'rejectProperty'])->name('properties.reject');
         
     });
+    
+    Route::view('/help-center', 'frontend.help-center')->name('frontend.help_center');
 
     
 });

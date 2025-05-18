@@ -443,8 +443,9 @@
                     </div>
                     <!-- Help center -->
                     <div class="mb-3 a-gold">
-                        <a href="#" class="nav-link"><i class="bi bi-question-circle	" style="font-size: 20px;"></i>
-                            Help center</a>
+                        <a href="{{ route('frontend.help_center') }}" class="nav-link {{ request()->routeIs('frontend.help_center') ? 'active-link' : '' }}">
+                            <i class="bi bi-question-circle" style="font-size: 20px;"></i> Help center
+                        </a>
                     </div>
                     <!-- Log out -->
                     <div class="mb-3 a-gold">
@@ -519,9 +520,10 @@
                         <a href="#" class="nav-link"><i class="bi bi-gear" style="font-size: 20px;"></i> Settings</a>
                     </div>
                     <!-- Help center -->
-                    <div class="mb-3 a-gold">
-                        <a href="#" class="nav-link"><i class="bi bi-question-circle	" style="font-size: 20px;"></i>
-                            Help center</a>
+                   <div class="mb-3 a-gold">
+                        <a href="{{ route('frontend.help_center') }}" class="nav-link {{ request()->routeIs('frontend.help_center') ? 'active-link' : '' }}">
+                            <i class="bi bi-question-circle" style="font-size: 20px;"></i> Help center
+                        </a>
                     </div>
                     <!-- Log out -->
                     <div class="mb-3 a-gold">

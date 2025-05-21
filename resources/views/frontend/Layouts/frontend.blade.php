@@ -252,8 +252,8 @@
             <div class="col mb-3"> <!-- Company -->
                 <h5>Company</h5>
                 <ul class="nav flex-column">
-                    <li class="nav-item mb-2"><a href="{{ route('frontend.home') }}"
-                            class="nav-link p-0 text-muted">Home</a></li>
+                    <li class="nav-item  mb-2"><a href="{{ route('frontend.home') }}"
+                            class="nav-link p-0  text-muted">Home</a></li>
                     <li class="nav-item mb-2"><a href="#" class="nav-link p-0 text-muted">About Us</a></li>
                     <li class="nav-item mb-2">
                         <a href="{{ route('frontend.help_center') }}#faq-getting-started"

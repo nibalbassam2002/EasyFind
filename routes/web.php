@@ -13,6 +13,7 @@ use App\Http\Controllers\ChatController;
 use App\Models\Governorate; 
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\Auth\SocialiteController;
 use Illuminate\Support\Facades\Auth;
 
 
@@ -25,6 +26,11 @@ Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::get('/register', [AuthController::class, 'showRegistrationForm'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register.post');
+// المسار الذي سيضغط عليه المستخدم في صفحة التسجيل
+Route::get('/auth/{provider}/redirect', [SocialiteController::class, 'redirectToProvider'])->name('socialite.redirect');
+
+// المسار الذي سيعود إليه جوجل بعد المصادقة
+Route::get('/auth/{provider}/callback', [SocialiteController::class, 'handleProviderCallback'])->name('socialite.callback');
 
 
 

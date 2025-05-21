@@ -11,7 +11,7 @@ use App\Models\Message;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+     use  HasFactory, Notifiable;
 
 
     protected $fillable = [
@@ -24,13 +24,17 @@ class User extends Authenticatable
         'role',
         'status',
         'profile_image',
-        'description'
+        'description',
+        'provider_name',
+        'provider_id',
+        'provider_avatar',
     ];
 
 
     protected $hidden = [
         'password',
         'remember_token',
+        
     ];
 
     protected function casts(): array
@@ -38,6 +42,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            
         ];
     }
    

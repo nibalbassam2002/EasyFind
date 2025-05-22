@@ -25,7 +25,7 @@ and caravans.')
                         <input style="width: 300px; max-width: 80%;" class="form-control me-2" type="search" name="search"
                             placeholder="Search by title, address..." aria-label="Search"
                             value="{{ request('search') }}">
-                        <button class="btn btn-outline-gold" type="submit">Search</button>
+                        <button class="btn btn-gold" type="submit">Search</button>
                     </form>
                 </div>
             </div>
@@ -35,23 +35,23 @@ and caravans.')
             <img src="{{ asset('frontend/assets/cropped_A_high-resolution_digital_photograph_showcases_a_s.png') }}"
             class="d-block w-100" alt="Sell properties">
             <div class="carousel-caption text-center"> 
-                <h1>Sell</h1>
-                <p>Showcase your property to thousands of potential buyers.</p>
+                <h1 ><span class="highlighted-word">Sell</span></h1>
+                <p><span class="highlighted-word">Showcase your property to thousands of potential buyers.</span></p>
                 @can('create', App\Models\Property::class)
                     <p><a class="btn btn-lg btn-outline-light" href="{{ route('lister.properties.create') }}">List Your Property</a></p>
                 @else
-                    <p><a class="btn btn-lg btn-outline-light"
+                    <p><a class="btn btn-lg btn-dark"
                             href="{{ route('login') }}?redirect={{ urlencode(route('lister.properties.create')) }}">Login to Sell</a></p>
                 @endcan
             </div>
         </div>
         <div class="carousel-item">
-            <img src="{{ asset('frontend/assets/better_cropped_villa.png') }}"
+            <img src="{{ asset('frontend/assets/homepage2_LE_upscale_balanced_x4.jpg') }}"
                 class="d-block w-100" alt="Rent properties">
             <div class="carousel-caption text-center"> 
                 <h1><span class="highlighted-word">Rent</span></h1>
                 <p class="opacity-75"><span class="highlighted-word">Helping millions find their perfect rental fit.</span></p>
-                <p><a class="btn btn-lg btn-outline-gold"
+                <p><a class="btn btn-lg btn-gold2"
                         href="{{ route('frontend.properties', ['purpose' => 'rent']) }}">View Rentals</a></p>
             </div>
         </div>
@@ -180,7 +180,9 @@ and caravans.')
             <a href="{{ route('frontend.properties', ['category_slug' => 'tent']) }}"
                 class="text-decoration-none filter-item-link">
                 <div class="filter-item {{ request('category_slug') == 'tent' ? 'active' : '' }}">
-                    <i class="fas fa-campground" style="font-size: 2rem;"></i>
+                    <div style=" height: 8px;" > </div>
+                    <i class="fa-solid fa-tent" style="font-size: 2rem;"></i>
+                      <div style=" height: 6px;" > </div>
                     <div>Tent</div>
                 </div>
             </a>

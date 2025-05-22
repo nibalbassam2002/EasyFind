@@ -3,16 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <title>Easy Find - Log In</title>
-  <link rel="icon" type="image/x-icon" href="{{ asset('frontend/assets/شعار مفرغ 2.png') }}" sizes="100x100">
+  <link rel="icon" type="image/x-icon" href="{{ asset('frontend/assets/logo for tab.png') }}" >
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body { background-color: #f8f9fa; }
-    .logo-area { background-color: #f8f9fa; color: #f1c40f; font-size: 2.5rem; font-weight: bold; display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; }
+    .logo-area { background-color: #f8f9fa; color: #FFD700; font-size: 2.5rem; font-weight: bold; display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column; }
     .form-container { max-width: 400px; margin: auto; padding: 2rem; border-radius: 1rem; box-shadow: 0 0 10px rgba(0,0,0,0.1); background-color: #fff; }
-    .btn-yellow { background-color: #f1c40f; color: black; }
-    .btn-yellow:hover { background-color: #d4ac0d; }
+    .btn-yellow { background-color: #FFD700; color: #ffffff; }
+    .btn-yellow:hover { background-color: #FFD700; color: black;}
+    .btn-outline-yellow { border-color: #FFD700; color: #FFD700; }
+    .btn-outline-yellow:hover { background-color: #FFD700; color: #ffffff;}
     .form-control:focus { border-color: #f1c40f; box-shadow: 0 0 0 0.2rem rgba(241, 196, 15, 0.25); }
     .invalid-feedback { display: block; }
     .toggle-password { cursor: pointer; }
@@ -34,6 +36,12 @@
     <div class="col-md-5 d-flex align-items-center justify-content-center">
       <div class="form-container">
         <h2 class="text-center mb-4">Login</h2>
+        <div class="d-flex justify-content-between">
+            <button class="btn btn-yellow ms-2">log in by <i class="bi bi-google"></i></button>
+            <button class="btn btn-outline-yellow me-2">log in by <i class="bi bi-facebook"></i></button>
+          </div> <br>
+
+        
         {{-- النص التوضيحي المضاف --}}
         <p class="text-center text-muted small mb-3">Enter your email & password to login</p>
 

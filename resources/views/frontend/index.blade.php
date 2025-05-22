@@ -163,7 +163,7 @@ and caravans.')
                 class="text-decoration-none filter-item-link">
                 <div class="filter-item {{ request('category_slug') == 'apartment' ? 'active' : '' }}">
                     <i class="bi bi-building" style="font-size: 2rem;"></i>
-                    <div>Apartment</div>
+                    <div>Apart.</div>
                 </div>
             </a>
         </div>

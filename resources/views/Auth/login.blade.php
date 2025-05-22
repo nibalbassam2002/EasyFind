@@ -37,11 +37,17 @@
       <div class="form-container">
         <h2 class="text-center mb-4">Login</h2>
         <div class="d-flex justify-content-between">
-            <button class="btn btn-yellow ms-2">log in by <i class="bi bi-google"></i></button>
-            <button class="btn btn-outline-yellow me-2">log in by <i class="bi bi-facebook"></i></button>
-          </div> <br>
-
-        
+        <a href="{{ route('socialite.redirect', 'google') }}" class="btn btn-light border">
+                            {{-- border لإضافة حد بسيط --}}
+                            <img src="https://img.icons8.com/color/20/google-logo.png" alt="Google logo"
+                                class="me-2" style="margin-bottom: 5px;"/> With Google
+                        </a>
+                        <button type="button" class="btn btn-light border" >
+                            {{-- Added disabled & title --}}
+                            <img src="https://img.icons8.com/color/16/facebook-new.png" style="margin-bottom: 5px; width: 25px; height: 25px;"/> With Facebook
+                        </button>      
+      </div> 
+      <br>  
         {{-- النص التوضيحي المضاف --}}
         <p class="text-center text-muted small mb-3">Enter your email & password to login</p>
 

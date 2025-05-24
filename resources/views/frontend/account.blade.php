@@ -436,6 +436,14 @@
                     <div class="mb-3 ">
                         <hr>
                     </div>
+                    @if (Auth::user()->password === null)
+                        <div class="mb-3 a-gold">
+                                <a href="{{ route('profile.show_set_initial_password_form') }}"
+                                    class="nav-link {{ ($activeTab ?? '') == 'profile-set-initial-password' ? 'active-link text-warning fw-bold' : '' }}">
+                                    <i class="bi bi-key-fill" style="font-size: 20px;"></i> Set Initial Password
+                                </a>
+                            </div>
+                        @endif
 
                     <!-- Setting -->
                     <div class="mb-3 a-gold">
@@ -514,6 +522,15 @@
                     <div class="mb-3 ">
                         <hr>
                     </div>
+                    @if (Auth::user()->password === null)
+                        <div class="mb-3 a-gold">
+                    
+                            <a href="{{ route('profile.show_set_initial_password_form') }}"
+                                class="nav-link {{ ($activeTab ?? '') == 'profile-set-initial-password' ? 'active-link text-warning fw-bold' : '' }}">
+                                <i class="bi bi-key-fill" style="font-size: 20px;"></i> Set Initial Password
+                            </a>
+                        </div>
+                    @endif
 
                     <!-- Setting -->
                     <div class="mb-3 a-gold">
@@ -581,10 +598,23 @@
                                                 data-bs-target="#profile-settings">Settings</button>
                                         </li>
 
-                                        <li class="nav-item">
-                                            <button class="nav-link" data-bs-toggle="tab"
-                                                data-bs-target="#profile-change-password">Change Password</button>
-                                        </li>
+                                        
+                                        @if (Auth::user()->password === null)
+                                            <li class="nav-item">
+                                                <button
+                                                    class="nav-link {{ ($activeTab ?? '') == 'profile-set-initial-password' ? 'active' : '' }}"
+                                                    data-bs-toggle="tab"
+                                                    data-bs-target="#profile-set-initial-password">Set Initial
+                                                    Password</button>
+                                            </li>
+                                        @else
+                                            <li class="nav-item">
+                                                <button
+                                                    class="nav-link {{ ($activeTab ?? '') == 'profile-change-password' ? 'active' : '' }}"
+                                                    data-bs-toggle="tab" data-bs-target="#profile-change-password">Change
+                                                    Password</button>
+                                            </li>
+                                        @endif
 
                                     </ul>
                                     <div class="tab-content pt-2">
@@ -869,6 +899,46 @@
                                             </form><!-- End settings Form -->
 
                                         </div>
+                                        
+                                            <div class="tab-pane fade {{ ($activeTab ?? '') == 'profile-set-initial-password' ? 'show active' : '' }} pt-3"
+                                                id="profile-set-initial-password">
+                                                <div class="card">
+                                                    <div class="card-header"><h5 class="mb-0">Set Your Initial Password</h5></div>
+                                                    <div class="card-body">
+                                                        @if (session('initial_password_success'))
+                                                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                                                {{ session('initial_password_success') }}
+                                                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                                            </div>
+                                                        @endif
+                                                        @if ($errors->storeInitialPassword->any())
+                                                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                                                <ul class="mb-0">@foreach ($errors->storeInitialPassword->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                                            </div>
+                                                        @endif
+                                                        <p class="text-muted small">Since your password is not set, please set a new password for your account.</p>
+                                                        <form method="POST" action="{{ route('profile.store_initial_password') }}">
+                                                            @csrf
+                                                            <div class="row mb-3">
+                                                                <label for="set_initial_password_input" class="col-md-4 col-lg-3 col-form-label">New Password</label>
+                                                                <div class="col-md-8 col-lg-9">
+                                                                    <input id="set_initial_password_input" type="password" class="form-control @error('password', 'storeInitialPassword') is-invalid @enderror" name="password" required autocomplete="new-password">
+                                                                    @error('password', 'storeInitialPassword')<span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>@enderror
+                                                                </div>
+                                                            </div>
+                                                            <div class="row mb-3">
+                                                                <label for="set_initial_password_confirmation" class="col-md-4 col-lg-3 col-form-label">Confirm New Password</label>
+                                                                <div class="col-md-8 col-lg-9">
+                                                                    <input id="set_initial_password_confirmation" type="password" class="form-control" name="password_confirmation" required autocomplete="new-password">
+                                                                </div>
+                                                            </div>
+                                                            <div class="text-center"><button type="submit" class="btn btn-gold">Set Password</button></div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                       
 
                                         <div class="tab-pane fade pt-3" id="profile-change-password">
                                             <!-- Change Password Form -->

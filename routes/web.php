@@ -64,6 +64,13 @@ Route::middleware(['auth'])->group(function () {
     
     Route::patch('/my-account/change-password', [ProfileController::class, 'changeCustomerPassword']) // استخدم اسم الدالة المتفق عليه
           ->name('frontend.account.changepassword');
+    Route::get('/my-account/set-initial-password', [ProfileController::class, 'showSetInitialPasswordForm'])
+        ->name('profile.show_set_initial_password_form')
+        ->middleware('password.notset'); // استخدم الـ middleware الذي ستنشئه
+
+    Route::post('/my-account/set-initial-password', [ProfileController::class, 'storeInitialPassword'])
+        ->name('profile.store_initial_password')
+        ->middleware('password.notset');
 
  
     Route::delete('/profile/image/delete', [ProfileController::class, 'deleteImage'])
@@ -157,6 +164,10 @@ Route::middleware(['auth', 'role:admin,content_moderator'])
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread.count'); // لجلب عدد الإشعارات غير المقروءة
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index'); 
     Route::get('/my-notifications', [NotificationController::class, 'index'])->name('frontend.notifications.index')->defaults('view_path', 'frontend.notifications.index');
+    Route::get('/set-initial-password', [AccountController::class, 'showSetInitialPasswordForm'])
+        ->name('frontend.social.set_initial_password_form');
+    Route::post('/set-initial-password', [AccountController::class, 'processSetInitialPassword'])
+        ->name('frontend.social.process_initial_password');
 Route::fallback(function () {
     return response()->view('errors.404', [], 404);
 });

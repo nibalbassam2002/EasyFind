@@ -7,33 +7,26 @@ use App\Models\Area;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator; // تأكد من وجود هذا
+use Illuminate\Support\Facades\Validator;
 use App\Models\User;
 use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\File; // قد لا يكون هذا مستخدماً الآن
-use Illuminate\Support\Facades\Storage; // مهم جداً للصورة
-use Illuminate\Http\JsonResponse; // قد لا يكون هذا مستخدماً الآن إذا لم يكن هناك AJAX
+use Illuminate\Validation\Rules\Password;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage; 
+use Illuminate\Http\JsonResponse; 
 
 class ProfileController extends Controller
 {
-    /**
-     * عرض صفحة الملف الشخصي في الداشبورد (للأدوار الأخرى)
-     */
     public function index()
     {
-        $user = Auth::user()->load('area.governorate'); // تحميل العلاقات
+        $user = Auth::user()->load('area.governorate'); 
         $governorates = Governorate::with('areas')->orderBy('name')->get();
 
-        return view('Auth.profile', [ // تأكد من أن هذا هو الـ view الصحيح للداشبورد
+        return view('Auth.profile', [ 
             'user' => $user,
             'governorates' => $governorates,
         ]);
     }
-
-    /**
-     * تحديث الملف الشخصي من الداشبورد (للأدوار الأخرى)
-     * هذه الدالة تبقى كما هي للتعامل مع تحديثات الداشبورد
-     */
     public function update(Request $request)
     {
         $user = Auth::user();
@@ -41,38 +34,29 @@ class ProfileController extends Controller
         $validatedData = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'description' => ['nullable', 'string', 'max:1000'], // حقل الوصف إذا كان موجوداً في الداشبورد
+            'description' => ['nullable', 'string', 'max:1000'], 
             'area_id' => ['nullable', 'integer', 'exists:areas,id'],
             'address' => ['nullable', 'string', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:20', Rule::unique('users')->ignore($user->id)], // التحقق من الهاتف هنا أيضاً
+            'phone' => ['nullable', 'string', 'max:20', Rule::unique('users')->ignore($user->id)], 
             'profile_image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:2048'],
         ]);
 
-        // معالجة رفع الصورة (إذا تم رفعها من الداشبورد)
+    
         if ($request->hasFile('profile_image')) {
             if ($user->profile_image) {
                 Storage::disk('public')->delete('images/' . $user->profile_image);
             }
             $image = $request->file('profile_image');
-            $imageName = time() . '_' . $user->id . '.' . $image->getClientOriginalExtension(); // اسم فريد أكثر
+            $imageName = time() . '_' . $user->id . '.' . $image->getClientOriginalExtension(); 
             $path = $image->storeAs('images', $imageName, 'public');
             $validatedData['profile_image'] = $imageName;
         }
 
-        // لا نحدث كلمة المرور من هنا عادةً، تكون في دالة منفصلة
-        // if ($request->filled('password')) { ... }
-
         $user->update($validatedData);
-        // $user->save(); // update تقوم بالحفظ، لا حاجة لـ save بعدها
 
-        // إعادة التوجيه لصفحة الملف الشخصي في الداشبورد
         return redirect()->route('profile.index')->with('profile_success', 'تم تحديث الملف الشخصي بنجاح!');
     }
 
-    /**
-     * حذف الصورة الشخصية (قد تستخدم AJAX من الداشبورد أو صفحة العميل)
-     * هذه الدالة تبدو جيدة للاستخدام مع AJAX
-     */
     public function deleteImage()
     {
         $user = Auth::user();
@@ -84,17 +68,13 @@ class ProfileController extends Controller
 
             return response()->json([
                 'message' => 'تم حذف الصورة الشخصية بنجاح!',
-                // قد تحتاج لتحديد صورة افتراضية مختلفة لصفحة العميل والداشبورد
-                'default_image' => asset('assets/img/profile.jpg') // تأكد من صحة هذا المسار
+                'default_image' => asset('assets/img/profile.jpg') 
             ]);
         }
 
         return response()->json(['message' => 'لا توجد صورة شخصية لحذفها.'], 404);
     }
 
-    /**
-     * تغيير كلمة المرور من الداشبورد (للأدوار الأخرى)
-     */
     public function changePassword(Request $request)
     {
         $request->validate([
@@ -106,73 +86,142 @@ class ProfileController extends Controller
         $user->password = Hash::make($request->new_password);
         $user->save();
 
-        // إعادة التوجيه للصفحة السابقة (غالباً تبويب تغيير كلمة المرور في الداشبورد)
         return redirect()->back()->with('success', 'تم تغيير كلمة السر بنجاح!');
     }
+        public function showCustomerAccountPage(Request $request)
+    {
+        $user = Auth::user()->load('area.governorate');
+        $governorates = Governorate::with('areas')->orderBy('name')->get();
 
-    // ================================================================
-    // == الدوال الخاصة بصفحة حساب العميل (frontend.account) ==
-    // ================================================================
+        $defaultTab = 'profile-overview';
+        if (Auth::user()->password === null) {
+            $defaultTab = 'profile-set-initial-password';
+        }
 
-    /**
-     * تحديث بيانات حساب العميل (بما في ذلك الصورة) من صفحة /my-account
-     * هذه هي الدالة التي ستستقبل الطلب من الفورم الموحد
-     */
+        if (session()->has('errors')) {
+            if (session('errors')->hasBag('updateProfile')) {
+                $activeTab = 'profile-edit';
+            } elseif (session('errors')->hasBag('storeInitialPassword')) {
+                $activeTab = 'profile-set-initial-password';
+            } elseif (session('errors')->hasBag('changePassword')) {
+                $activeTab = 'profile-change-password';
+            } else {
+                // إذا لا يوجد خطأ محدد، استخدم التبويب من الجلسة أو الطلب أو الافتراضي
+                $activeTab = $request->query('tab', session('active_tab', $defaultTab));
+            }
+        } else {
+           
+            $activeTab = $request->query('tab', session('active_tab', $defaultTab));
+        }
+
+
+        if ($activeTab === 'profile-set-initial-password' && Auth::user()->password !== null) {
+            $activeTab = 'profile-overview'; 
+             session()->flash('info', 'Password already set. Use "Change Password" if needed.');
+        }
+        else if ($activeTab === 'profile-change-password' && Auth::user()->password === null) {
+            $activeTab = 'profile-set-initial-password';
+            session()->flash('warning', 'Please set your initial password first.');
+        }
+
+        session(['active_tab' => $activeTab]); 
+
+        return view('frontend.account', compact('user', 'governorates', 'activeTab'));
+    }
+
     public function updateCustomerProfile(Request $request)
     {
         $user = Auth::user();
 
-        // 1. قواعد التحقق (تشمل الصورة كـ nullable)
         $validatedData = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'phone' => ['nullable', 'string', 'max:20', Rule::unique('users')->ignore($user->id)],
             'address' => ['nullable', 'string', 'max:255'],
             'area_id' => ['nullable', 'integer', 'exists:areas,id'],
-            'profile_image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:2048'], // <-- التحقق من الصورة هنا
+            'profile_image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:2048'], 
         ]);
 
-        // 2. معالجة رفع الصورة (فقط إذا تم اختيار ملف جديد)
         if ($request->hasFile('profile_image')) {
-            // حذف الصورة القديمة إذا كانت موجودة
             if ($user->profile_image) {
                 Storage::disk('public')->delete('images/' . $user->profile_image);
             }
-            // رفع الصورة الجديدة وتسميتها
             $image = $request->file('profile_image');
             $imageName = time() . '_' . $user->id . '.' . $image->getClientOriginalExtension();
-            $path = $image->storeAs('images', $imageName, 'public'); // تخزين في storage/app/public/images
-
-            // إضافة اسم الصورة الجديدة إلى البيانات التي سيتم تحديثها
+            $path = $image->storeAs('images', $imageName, 'public'); 
             $validatedData['profile_image'] = $imageName;
         }
 
         try {
-            // $user->update() ستقوم بتحديث الحقول الموجودة في $validatedData فقط
             $user->update($validatedData);
 
-            // إعادة التوجيه إلى صفحة حساب العميل مع رسالة نجاح
             return redirect()->route('frontend.account')->with('success', 'تم تحديث بيانات حسابك بنجاح!');
 
         } catch (\Exception $e) {
             logger("Customer Account Update Error for user {$user->id}: " . $e->getMessage());
-            // إعادة التوجيه للصفحة السابقة مع عرض الأخطاء وإعادة ملء الفورم بالبيانات القديمة
             return redirect()->back()->withInput()->with('error', 'حدث خطأ أثناء تحديث البيانات. يرجى المحاولة مرة أخرى.');
         }
     }
 
     public function changeCustomerPassword(Request $request)
     {
-        $request->validate([
-            'current_password' => ['required', 'current_password'],
-            'new_password' => ['required', 'string', 'min:8', 'confirmed'], 
+        if (Auth::user()->password === null) {
+            session(['active_tab' => 'profile-set-initial-password']);
+            return redirect()->route('frontend.account')
+                             ->with('warning', 'Please set your initial password first.');
+        }
+
+        // *** استخدام Error Bag وقواعد Password ***
+        $request->validateWithBag('changePassword', [
+            'current_password' => ['required', function ($attribute, $value, $fail) {
+                if (!Hash::check($value, Auth::user()->password)) {
+                    $fail(__('The provided current password does not match your actual current password.'));
+                }
+            }],
+            'password' => ['required', 'confirmed', 'min:8'], // <-- *** التعديل هنا ***
+        ], [], [
+            'password' => 'new password'
+        ]);
+        $user = Auth::user();
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        session(['active_tab' => 'profile-change-password']); // *** تحديد التبويب النشط بعد النجاح ***
+        return redirect()->route('frontend.account')->with('password_change_success', 'Password changed successfully!');
+    }
+    
+    public function showSetInitialPasswordForm()
+    {
+        // Middleware 'password.notset' يجب أن يحمي هذا المسار
+        if (Auth::user()->password !== null) {
+            session(['active_tab' => 'profile-overview']);
+            return redirect()->route('frontend.account')->with('info', 'You have already set your password.');
+        }
+        session(['active_tab' => 'profile-set-initial-password']);
+        return redirect()->route('frontend.account'); // سيعرض صفحة الحساب مع التبويب الصحيح نشطًا
+    }
+
+    // *** دالة لحفظ كلمة المرور الأولية ***
+    public function storeInitialPassword(Request $request)
+    {
+        // Middleware 'password.notset' يجب أن يحمي هذا المسار
+        if (Auth::user()->password !== null) {
+            session(['active_tab' => 'profile-overview']);
+            return redirect()->route('frontend.account')->with('info', 'You have already set your password.');
+        }
+
+        // *** استخدام Error Bag وقواعد Password ***
+        $request->validateWithBag('storeInitialPassword', [
+            'password' => ['required', 'confirmed', 'min:8'], // <-- *** التعديل هنا ***
+        ], [], [
+            'password' => 'new password'
         ]);
 
         $user = Auth::user();
-        $user->password = Hash::make($request->new_password);
+        $user->password = Hash::make($request->password);
         $user->save();
 
-      
-        return redirect()->route('frontend.account')->with('success', 'تم تغيير كلمة السر بنجاح!');
+        session(['active_tab' => 'profile-overview']); // *** تحديد التبويب النشط بعد النجاح ***
+        return redirect()->route('frontend.account')->with('initial_password_success', 'Your password has been set successfully!'); // *** رسالة نجاح مخصصة ***
     }
 }

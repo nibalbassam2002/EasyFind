@@ -130,6 +130,7 @@ class AuthController extends Controller
                 'password' => Hash::make($request->input('password')), 
                 'role' => 'customer', 
                 'status' => 'active', 
+                'has_set_password' => true,
             ]);
 
 

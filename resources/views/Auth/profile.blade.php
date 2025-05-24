@@ -274,7 +274,7 @@
                                         <label for="fullName" class="col-md-4 col-lg-3 col-form-label">Email
                                             Notifications</label>
                                         <div class="col-md-8 col-lg-9">
-                                            <div class="form-check">
+                                            <div class="form-check ">
                                                 <input class="form-check-input" type="checkbox" id="changesMade" checked>
                                                 <label class="form-check-label" for="changesMade">
                                                     Changes made to your account

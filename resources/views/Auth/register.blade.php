@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Easy Find - Sign Up</title>
     {{-- ↓↓↓ تم التعديل باستخدام asset() ↓↓↓ --}}
-    <link rel="icon" type="image/x-icon" href="{{ asset('frontend/assets/شعار مفرغ 2.png') }}" sizes="100x100">
+    <link rel="icon" type="image/x-icon" href="{{ asset('frontend/assets/logo for tab.png') }}" >
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     {{-- ↓↓↓ إضافة بعض التنسيقات للـ invalid-feedback من Bootstrap ↓↓↓ --}}
     <style>

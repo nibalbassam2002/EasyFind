@@ -149,6 +149,14 @@ max-width: 1400px; /* أو أي قيمة تناسبك */
         background-color:  rgb(255, 215, 0);
         color: white;
       }
+      .btn-gold2 {
+        background-color:  rgb(255, 215, 0);
+        color: white;
+      }
+      .btn-gold2:hover {
+        background-color:  rgb(255, 215, 0);
+        color: rgb(0, 0, 0);
+      }
       .view-all {
           align-content: center;
       }
@@ -171,7 +179,7 @@ max-width: 1400px; /* أو أي قيمة تناسبك */
           object-fit: cover;
         }
         .highlighted-word {
-          background-color: rgba(255, 255, 255, 0.6); /* أبيض شفاف */
+          background-color: rgba(0, 0, 0, 0.6); /* أبيض شفاف */
           padding: 0.2rem 0.5rem;
           border-radius: 5px;
         }

@@ -28,6 +28,7 @@ class User extends Authenticatable
         'provider_name',
         'provider_id',
         'provider_avatar',
+        'has_set_password',
     ];
 
 
@@ -42,6 +43,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'has_set_password' => 'boolean', 
             
         ];
     }

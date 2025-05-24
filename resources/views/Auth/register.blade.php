@@ -72,20 +72,21 @@
                 <div class="form-container bg-white">
                     <h2 class="text-center mb-4">Create Account</h2>
 
-                    {{-- ===== ملاحظة: أزرار Google/Facebook هنا للعرض فقط، لا تعمل بعد ===== --}}
+                    {{-- أزرار Google/Facebook --}}
                     <div class="d-flex justify-content-between mb-3">
-                        <a href="{{ route('socialite.redirect', 'google') }}" class="btn btn-light border">
-                            {{-- border لإضافة حد بسيط --}}
+                        <a href="{{ route('socialite.redirect', 'google') }}" class="btn btn-light border w-100 me-1">
                             <img src="https://img.icons8.com/color/20/google-logo.png" alt="Google logo"
                                 class="me-2" /> Sign up with Google
                         </a>
-                        <button type="button" class="btn btn-light w-100 ms-2" disabled title="Coming soon!">
-                            {{-- Added disabled & title --}}
-                            <img src="https://img.icons8.com/color/16/facebook-new.png" /> Sign up with Facebook
-                        </button>
+                        {{-- ↓↓↓ هذا هو التعديل الرئيسي ↓↓↓ --}}
+                        <a href="{{ route('socialite.redirect', 'facebook') }}" class="btn btn-light border w-100 ms-1">
+                            {{-- w-100 ms-1 لتوزيع المساحة --}}
+                            <img src="https://img.icons8.com/color/16/facebook-new.png" alt="Facebook logo"
+                                class="me-2" /> Sign up with Facebook
+                        </a>
+                        {{-- ↑↑↑ نهاية التعديل الرئيسي ↑↑↑ --}}
                     </div>
                     <div class="text-center mb-3">— OR —</div>
-                    {{-- ===== نهاية الملاحظة ===== --}}
 
 
                     {{-- ↓↓↓ عرض أخطاء التحقق العامة ورسائل الخطأ من السيرفر ↓↓↓ --}}

@@ -186,9 +186,83 @@ class PropertyListerController extends Controller
         return redirect()->route('lister.properties.index')->with('success', 'Property submitted for review successfully!');
     }
 
-    // ... دوال show, edit, update, destroy تحتاج لتعديلات مشابهة للتحقق من الاشتراك والقيود ...
-    // (الكود الذي قدمته سابقًا لهذه الدوال كان جيدًا كنقطة انطلاق)
-    // سأضع هنا دالة destroy كمثال:
+public function edit(Property $property) // استخدام Route Model Binding
+    {
+        // 1. التحقق من أن المستخدم يملك هذا العقار أو أنه أدمن
+        if ($property->user_id !== Auth::id() && !Auth::user()->hasRole('admin')) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // 2. شرط: يمكن التعديل فقط إذا كانت الحالة 'pending' (ما لم يكن المستخدم أدمن)
+        if ($property->status !== 'pending' && !Auth::user()->hasRole('admin')) {
+            return redirect()->route('lister.properties.index')
+                             ->with('error', 'This property cannot be edited as it is no longer pending review.');
+        }
+
+        $user = Auth::user();
+        // استخدم دالة مساعدة من موديل User لجلب الاشتراك النشط مع الخطة
+        $activeSubscription = $user->activeSubscriptionWithPlan();
+
+        if (!$activeSubscription || !$activeSubscription->plan) {
+            return redirect()->route('frontend.pricing')
+                             ->with('error', 'An active subscription is required to manage properties.');
+        }
+
+        $planFeatures = $activeSubscription->plan->features ?? ($activeSubscription->metadata ?? []);
+
+        // فلترة التصنيفات المسموح بها بناءً على الخطة الحالية
+        $allowedTypesFromPlan = $planFeatures['allowed_types'] ?? [];
+        if (!is_array($allowedTypesFromPlan)) {
+            $allowedTypesFromPlan = $allowedTypesFromPlan ? [(string)$allowedTypesFromPlan] : [];
+        }
+        $allowedTypesFromPlan = array_map('strtolower', $allowedTypesFromPlan);
+
+        $categoriesQuery = Category::whereNull('parent_id')->orderBy('name');
+        if (!empty($allowedTypesFromPlan) && !in_array('all', $allowedTypesFromPlan)) {
+            $categoriesQuery->whereIn(DB::raw('LOWER(slug)'), $allowedTypesFromPlan);
+        }
+        $categories = $categoriesQuery->get();
+
+        $subCategories = Category::whereNotNull('parent_id')->orderBy('name')->get();
+        $governorates = Governorate::with('areas')->orderBy('name')->get();
+        $purposes = ['rent', 'sale', 'lease'];
+        $currencies = ['ILS', 'USD', 'JOD'];
+        $isFreePlan = ($activeSubscription->plan->price == 0.00);
+        $maxImages = $planFeatures['max_images_per_property'] ?? 5;
+
+        $currentImages = is_string($property->images) ? json_decode($property->images, true) : ($property->images ?? []);
+        if (!is_array($currentImages)) $currentImages = [];
+
+        return view('dashboard.property_lister.edit', compact(
+            'property',
+            'categories',
+            'subCategories',
+            'governorates',
+            'purposes',
+            'currencies',
+            'activeSubscription', // قد لا تحتاجه مباشرة في _form إذا مررت isFreePlan و maxImages
+            'isFreePlan',         // مهم للـ _form
+            'maxImages',          // مهم للـ _form
+            'currentImages'
+        ));
+    }
+    // ▲▲▲ نهاية دالة edit ▲▲▲
+
+
+    public function update(Request $request, Property $property)
+    {
+        // ... (كود دالة update كما هو لديك، مع التأكد من إضافة شرط عدم التحديث إذا لم تكن الحالة pending) ...
+         // 1. التحقق من الملكية
+        if ($property->user_id !== Auth::id() && !Auth::user()->hasRole('admin')) {
+            abort(403);
+        }
+
+        // 2. شرط: يمكن التحديث فقط إذا كانت الحالة 'pending' (ما لم يكن المستخدم أدمن)
+        if ($property->status !== 'pending' && !Auth::user()->hasRole('admin')) {
+            return redirect()->route('lister.properties.index')
+                            ->with('error', 'This property cannot be updated as it is no longer pending review.');
+        }
+    }
     public function destroy(Property $property)
     {
         $user = Auth::user();

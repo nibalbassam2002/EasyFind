@@ -173,11 +173,25 @@ public function favorites()
 public function showPricingPlans()
 {
 
-    $plans = Plan::where('is_active', true)
-                 ->orderBy('price', 'asc') 
-                 ->get();
+   $plans = Plan::where('is_active', true)
+                     ->orderBy('price', 'asc')
+                     ->get();
 
-    return view('frontend.pricing', compact('plans'));
+        $userHasUsedFreePlan = false;
+        $freePlanSlug = 'free';
+
+        if (Auth::check()) {
+            $user = Auth::user();
+            $freePlanModel = Plan::where('slug', $freePlanSlug)->first();
+
+            if ($freePlanModel) {
+                $userHasUsedFreePlan = $user->subscriptions()
+                                          ->where('plan_id', $freePlanModel->id)
+                                          ->exists();
+            }
+        }
+
+        return view('frontend.pricing', compact('plans', 'userHasUsedFreePlan', 'freePlanSlug'));
+    }
 }
     
-}

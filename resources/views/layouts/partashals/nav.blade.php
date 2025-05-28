@@ -1,28 +1,26 @@
 <ul class="sidebar-nav" id="sidebar-nav">
 
-
   {{-- === قسم لوحة التحكم (للجميع) === --}}
-  <li class="nav>
-
+  <li class="nav-item"> {{-- <--- تم إصلاح الكلاس هنا --}}
     <a class="nav-link {{ request()->routeIs('dashboard') ? '' : 'collapsed' }}" href="{{ route('dashboard') }}">
       <i class="bi bi-grid"></i>
-      <span >Dashboard</span>
+      <span>Dashboard</span>
     </a>
   </li>
-  <li class="nav-item">
-    <a class="nav-link collapsed" href="{{ route('frontend.home') }}" target="_blank"> {{-- target="_blank" لفتحه في تبويب جديد (اختياري) --}}
+<li class="nav-item">
+    <a class="nav-link {{ request()->routeIs('frontend.home') ? '' : 'collapsed' }}" href="{{ route('frontend.home') }}">
       <i class="bi bi-box-arrow-up-right"></i>
       <span>View Site</span>
     </a>
-  </li><!-- End Dashboard Nav -->
+  </li>
 
   {{-- === قسم إدارة النظام (للأدمن فقط) === --}}
   @if(Auth::check() && Auth::user()->role == 'admin')
   <li class="nav-item">
-    <a class="nav-link {{ request()->routeIs('admin.*') ? '' : 'collapsed' }}" data-bs-target="#admin-nav" data-bs-toggle="collapse" href="#" aria-expanded="{{ request()->routeIs('admin.*') ? 'true' : 'false' }}">
+    <a class="nav-link {{ request()->is('dashboard/admin*') ? '' : 'collapsed' }}" data-bs-target="#admin-nav" data-bs-toggle="collapse" href="#" aria-expanded="{{ request()->is('dashboard/admin*') ? 'true' : 'false' }}"> {{-- استخدام request()->is() لمطابقة البادئة --}}
       <i class="bi bi-shield-lock"></i><span>Administration</span><i class="bi bi-chevron-down ms-auto"></i>
     </a>
-    <ul id="admin-nav" class="nav-content collapse {{ request()->routeIs('admin.*') || request()->routeIs('moderator.*') ? 'show' : '' }}" data-bs-parent="#sidebar-nav"> {{-- تعديل: تضمين moderator.* للإبقاء مفتوحاً --}}
+    <ul id="admin-nav" class="nav-content collapse {{ request()->is('dashboard/admin*') || request()->is('dashboard/moderator/properties/pending') || request()->is('dashboard/moderator/feedback*') ? 'show' : '' }}" data-bs-parent="#sidebar-nav">
       <li>
         <a href="{{ route('admin.users.index') }}" class="{{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
           <i class="bi bi-circle"></i><span>User Management</span>
@@ -39,13 +37,10 @@
         </a>
       </li>
       <li>
-        <a href="#"> {{-- TODO: Add route for admin property management --}}
-          <i class="bi bi-circle"></i><span>All Properties</span>
+        {{-- <a href="#"> --}} {{-- TODO: Add route for admin property management --}}
+          <i class="bi bi-circle"></i><span>All Properties (Admin)</span> {{-- تمييز أنها للأدمن --}}
         </a>
       </li>
-       {{-- TODO: Add links for Categories, Cities etc. management --}}
-       {{-- <li> <a href="#"> <i class="bi bi-circle"></i><span>Categories</span> </a> </li> --}}
-       {{-- <li> <a href="#"> <i class="bi bi-circle"></i><span>Cities/Areas</span> </a> </li> --}}
     </ul>
   </li>
   @endif
@@ -53,10 +48,10 @@
 
 
   {{-- === قسم مدير العقارات (Property Lister) === --}}
+  {{-- هذا القسم سيظهر للـ customer الذي اشترك في الخطة المجانية وتغير دوره --}}
   @if(Auth::check() && Auth::user()->role == 'property_lister')
     <li class="nav-heading">My Properties</li>
     <li class="nav-item">
-      {{-- جعل الرابط الرئيسي يفتح القائمة المنسدلة --}}
       <a class="nav-link {{ request()->routeIs('lister.properties.*') ? '' : 'collapsed' }}" data-bs-target="#lister-nav" data-bs-toggle="collapse" href="#" aria-expanded="{{ request()->routeIs('lister.properties.*') ? 'true' : 'false' }}">
         <i class="bi bi-building-gear"></i><span>Manage Properties</span><i class="bi bi-chevron-down ms-auto"></i>
       </a>
@@ -71,44 +66,37 @@
                <i class="bi bi-circle"></i><span>Add New Property</span>
              </a>
           </li>
-          {{-- TODO: Add link to view requests for lister's properties --}}
-          {{-- <li> <a href="#"> <i class="bi bi-circle"></i><span>View Requests</span> </a> </li> --}}
        </ul>
     </li>
   @endif
   {{-- === نهاية قسم مدير العقارات === --}}
 
 
-  {{-- ▼▼▼ قسم مشرف المحتوى (Content Moderator) - الكود الجديد ▼▼▼ --}}
-  @if(Auth::check() && Auth::user()->role == 'content_moderator') {{-- شرط مشرف المحتوى فقط --}}
+  {{-- === قسم مشرف المحتوى (Content Moderator) === --}}
+  @if(Auth::check() && Auth::user()->role == 'content_moderator')
     <li class="nav-heading">Moderation Tools</li>
     <li class="nav-item">
       <a class="nav-link {{ request()->routeIs('moderator.properties.pending') ? '' : 'collapsed' }}" href="{{ route('moderator.properties.pending') }}">
         <i class="bi bi-clipboard-check"></i>
         <span>Pending Properties</span>
-        {{-- يمكنك إضافة عداد هنا إذا تم تمريره --}}
-        {{-- @if(isset($pendingCount) && $pendingCount > 0) <span class="badge bg-warning ms-auto">{{ $pendingCount }}</span> @endif --}}
       </a>
     </li>
     <li class="nav-item">
       <a class="nav-link {{ request()->routeIs('moderator.feedback.*') ? '' : 'collapsed' }}" href="{{ route('moderator.feedback.index') }}">
-        <i class="bi bi-chat-left-text"></i> {{-- أيقونة مناسبة للملاحظات --}}
+        <i class="bi bi-chat-left-text"></i>
         <span>Manage Feedback</span>
       </a>
     </li>
-     
   @endif
-  {{-- ▲▲▲ نهاية قسم مشرف المحتوى ▲▲▲ --}}
+  {{-- === نهاية قسم مشرف المحتوى === --}}
 
 
-  {{-- === قسم الملف الشخصي ) === --}}
-   <li class="nav-heading">Account</li> {{-- إضافة عنوان للقسم --}}
+  {{-- === قسم الملف الشخصي (للجميع) === --}}
+   <li class="nav-heading">Account</li>
   <li class="nav-item">
     <a class="nav-link {{ request()->routeIs('profile.index') ? '' : 'collapsed' }}" href="{{ route('profile.index') }}">
-        <i class="bi bi-person-circle"></i> {{-- تغيير الأيقونة --}}
+        <i class="bi bi-person-circle"></i>
         <span>My Profile</span>
     </a>
   </li>
-
-
 </ul>

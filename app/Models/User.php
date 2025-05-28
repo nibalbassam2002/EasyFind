@@ -137,4 +137,15 @@ public function conversations()
     {
         return $this->hasMany(Feedback::class);
     }
+    public function activeSubscriptionWithPlan()
+{
+    return $this->subscriptions()
+                ->where('status', 'active')
+                ->where(function ($query) {
+                    $query->whereNull('ends_at')
+                          ->orWhere('ends_at', '>', now());
+                })
+                ->with('plan') // Eager load the plan
+                ->first();
+}
 }

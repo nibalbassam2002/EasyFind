@@ -270,9 +270,9 @@
                             class="nav-link p-0 text-muted">Help Center</a></li>
                     <li class="nav-item mb-2"><a href="{{ route('frontend.home') }}#feedback-section"
                             class="nav-link p-0 text-muted">Contact Us</a></li>
-                    <li class="nav-item mb-2"><a href="#" class="nav-link p-0 text-muted">Terms &
+                    <li class="nav-item mb-2"><a href="{{route('legal.terms')}}" class="nav-link p-0 text-muted">Terms &
                             Conditions</a></li>
-                    <li class="nav-item mb-2"><a href="#" class="nav-link p-0 text-muted">Privacy Policy</a>
+                    <li class="nav-item mb-2"><a href="{{route('privacy')}}" class="nav-link p-0 text-muted">Privacy Policy</a>
                     </li>
                 </ul>
             </div>
@@ -281,14 +281,7 @@
                 <ul class="nav flex-column">
                     <li class="nav-item mb-2"><a href="{{ route('frontend.properties') }}"
                             class="nav-link p-0 text-muted">Explore Properties</a></li>
-                    @can('create', App\Models\Property::class)
-                        <li class="nav-item mb-2"><a href="{{ route('lister.properties.create') }}"
-                                class="nav-link p-0 text-muted">List Property</a></li>
-                    @else
-                        <li class="nav-item mb-2"><a
-                                href="{{ route('login') }}?redirect={{ urlencode(route('lister.properties.create')) }}"
-                                class="nav-link p-0 text-muted">List Property</a></li>
-                    @endcan
+                    @can('create', App\Models\Property::class)@endcan
                 </ul>
             </div>
         </footer>

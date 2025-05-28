@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Easy Find - Sign Up</title>
     {{-- ↓↓↓ تم التعديل باستخدام asset() ↓↓↓ --}}
-    <link rel="icon" type="image/x-icon" href="{{ asset('frontend/assets/logo for tab.png') }}" >
+    <link rel="icon" type="image/x-icon" href="{{ asset('frontend/assets/logo for tab.png') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     {{-- ↓↓↓ إضافة بعض التنسيقات للـ invalid-feedback من Bootstrap ↓↓↓ --}}
     <style>
@@ -159,12 +159,11 @@
                         </div>
 
                         <div class="form-check mb-3">
-
                             <input type="checkbox" class="form-check-input @error('terms') is-invalid @enderror"
                                 id="terms" name="terms" value="1" {{ old('terms') ? 'checked' : '' }}>
                             <label class="form-check-label" for="terms">
-                                I agree to all the <a href="#">Terms</a> and <a href="#">Privacy
-                                    Policies</a>
+                                I agree to all the <a href="{{ route('legal.terms') }}">Terms</a> and <a
+                                    href="{{ route('privacy') }}">Privacy Policies</a>
                             </label>
                             @error('terms')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>

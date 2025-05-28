@@ -15,23 +15,43 @@ use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Auth\SocialiteController;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\SubscriptionController;
 
 
 Route::get('/', [FrontendController::class, 'index'])->name('frontend.home');
 Route::get('/properties', [FrontendController::class, 'properties'])->name('frontend.properties');
 Route::get('/properties/{property}', [FrontendController::class, 'showProperty'])->name('frontend.property.show');
-
+Route::get('properties/{property}', [PropertyListerController::class, 'show'])->name('properties.show');
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::get('/register', [AuthController::class, 'showRegistrationForm'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register.post');
-// المسار الذي سيضغط عليه المستخدم في صفحة التسجيل
 Route::get('/auth/{provider}/redirect', [SocialiteController::class, 'redirectToProvider'])->name('socialite.redirect');
-
-// المسار الذي سيعود إليه جوجل بعد المصادقة
 Route::get('/auth/{provider}/callback', [SocialiteController::class, 'handleProviderCallback'])->name('socialite.callback');
+Route::get('/terms-and-conditions', function () {
+    return view('Auth.terms');
+})->name('legal.terms'); 
+Route::get('/privacy', function () {
+    return view('Auth.privacy');
+})->name('privacy'); 
+Route::get('forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])
+    ->middleware('guest')
+    ->name('password.request');
 
+Route::post('forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])
+    ->middleware('guest')
+    ->name('password.email');
+
+Route::get('reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])
+    ->middleware('guest')
+    ->name('password.reset'); 
+
+Route::post('reset-password', [ResetPasswordController::class, 'reset'])
+    ->middleware('guest')
+    ->name('password.update');
 
 
 Route::middleware(['auth'])->group(function () {
@@ -146,7 +166,7 @@ Route::middleware(['auth'])->group(function () {
     });
     
     Route::view('/help-center', 'frontend.help-center')->name('frontend.help_center');
-
+Route::get('/subscribe/{plan:slug}', [SubscriptionController::class, 'subscribeToPlan'])->name('subscriptions.subscribe');
     
 });
 Route::middleware(['auth', 'role:admin,content_moderator']) 

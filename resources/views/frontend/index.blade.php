@@ -199,13 +199,15 @@ and caravans.')
 
     <div class="row g-4 property-list-row">
         @forelse ($latestProperties as $property)
-            <div class="col-12 col-sm-6 col-md-4 col-lg-3 d-flex"> {{-- إضافة d-flex هنا --}}
-                {{-- اجعل البطاقة بأكملها رابطًا. أضف كلاسات لـ Bootstrap لضمان عدم وجود خط تحت النص إذا لم ترغب به --}}
-                <a href="{{ route('frontend.property.show', $property->id) }}" class="text-decoration-none d-block w-100">
-                    <div class="card property-card h-100 shadow-sm"> {{-- h-100 لجعل البطاقات متساوية الارتفاع، shadow-sm لتأثير ظل بسيط --}}
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3 d-flex"> 
+                @guest
+                <a href="{{ route('login', ['intended' => route('frontend.property.show', $property->id)]) }}" class="text-decoration-none d-block w-100">
+        @else
+            <a href="{{ route('frontend.property.show', $property->id) }}" class="text-decoration-none d-block w-100">
+        @endguest
+                    <div class="card property-card h-100 shadow-sm"> 
                         @php
-                            // يفضل استخدام $casts في موديل Property لتحويل 'images' إلى array تلقائياً
-                            // إذا لم تكن تستخدم $casts، فالكود الحالي جيد
+ 
                             $images = $property->images;
                             if (is_string($property->images)) { // احتياطي إذا لم يتم تحويلها بعد
                                 $images = json_decode($property->images, true);

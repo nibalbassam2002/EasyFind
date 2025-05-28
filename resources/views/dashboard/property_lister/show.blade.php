@@ -76,7 +76,7 @@
             <h4 class="mb-0 fw-bold">{{ $property->title }}</h4>
         </div>
         <div class="col-auto">
-            @if($property->status === 'pending' || (Auth::check() && Auth::user()->hasRole('admin')))
+            @if($property->status === 'pending' || (Auth::check() && Auth::user()->role == 'admin'))
                 <a href="{{ route('lister.properties.edit', $property->id) }}" class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-pencil"></i> Edit</a>
             @else
                 <button class="btn btn-sm btn-outline-secondary me-1" disabled><i class="bi bi-pencil"></i> Edit</button>

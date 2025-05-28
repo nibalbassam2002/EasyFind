@@ -189,12 +189,12 @@ class PropertyListerController extends Controller
 public function edit(Property $property) // استخدام Route Model Binding
     {
         // 1. التحقق من أن المستخدم يملك هذا العقار أو أنه أدمن
-        if ($property->user_id !== Auth::id() && !Auth::user()->hasRole('admin')) {
+        if ($property->user_id !== Auth::id() && Auth::user()->role != 'admin') {
             abort(403, 'Unauthorized action.');
         }
 
         // 2. شرط: يمكن التعديل فقط إذا كانت الحالة 'pending' (ما لم يكن المستخدم أدمن)
-        if ($property->status !== 'pending' && !Auth::user()->hasRole('admin')) {
+        if ($property->status !== 'pending' && Auth::user()->role != 'admin') {
             return redirect()->route('lister.properties.index')
                              ->with('error', 'This property cannot be edited as it is no longer pending review.');
         }

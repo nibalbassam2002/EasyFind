@@ -216,7 +216,7 @@
                     </div>
 
                     <!-- العمود الخاص بالفيديو/الصورة الرئيسية (على اليمين للشاشات الكبيرة) -->
-                    <div class="col-md-10 order-md-2">
+                    <div class="col-auto order-md-2">
                         <div id="mainMediaDisplay" class="main-media-container">
                             @if ($mainDisplayItem['type'] === 'video')
                                 <video id="mainContentPlayer" src="{{ $mainDisplayItem['src'] }}" controls autoplay
@@ -230,7 +230,8 @@
                                 </div>
                             @else
                                 <img id="mainContentPlayer" src="{{ $mainDisplayItem['src'] }}"
-                                    alt="{{ $property->title }}">
+                                    alt="{{ $property->title }}"
+                                         class="img-fluid main-media-image">
                             @endif
                         </div>
                     </div>

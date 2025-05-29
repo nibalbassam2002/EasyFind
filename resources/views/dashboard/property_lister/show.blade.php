@@ -107,7 +107,7 @@
 
                     @if($firstImage)
                         <img src="{{ Storage::disk('public')->exists($firstImage) ? Storage::url($firstImage) : $defaultImageUrl }}"
-                             alt="{{ $property->title }}" class="main-property-image-display" id="mainPropertyImage">
+                             alt="{{ $property->title }}" class="main-property-image-display max-w-h" id="mainPropertyImage">
                     @else
                         <img src="{{ $defaultImageUrl }}" alt="No Image" class="main-property-image-display">
                     @endif

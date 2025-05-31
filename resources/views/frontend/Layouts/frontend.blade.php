@@ -17,6 +17,8 @@
         integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="{{ asset('frontend/style.css') }}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     @stack('styles')
 
 </head>
@@ -245,16 +247,17 @@
 
 
             <div class="col mb-3">
-                
+
             </div>
-         
+
 
             <div class="col mb-3"> <!-- Company -->
                 <h5>Company</h5>
                 <ul class="nav flex-column">
                     <li class="nav-item  mb-2"><a href="{{ route('frontend.home') }}"
                             class="nav-link p-0  text-muted">Home</a></li>
-                    <li class="nav-item mb-2"><a href="#" class="nav-link p-0 text-muted">About Us</a></li>
+                    <li class="nav-item mb-2"><a href="{{ route('frontend.about') }}"
+                            class="nav-link p-0 text-muted">About Us</a></li>
                     <li class="nav-item mb-2">
                         <a href="{{ route('frontend.help_center') }}#faq-getting-started"
                             class="nav-link p-0 text-muted footer-link {{ request()->routeIs('frontend.help_center') ? 'active' : '' }}">
@@ -270,18 +273,36 @@
                             class="nav-link p-0 text-muted">Help Center</a></li>
                     <li class="nav-item mb-2"><a href="{{ route('frontend.home') }}#feedback-section"
                             class="nav-link p-0 text-muted">Contact Us</a></li>
-                    <li class="nav-item mb-2"><a href="{{route('legal.terms')}}" class="nav-link p-0 text-muted">Terms &
+                    <li class="nav-item mb-2"><a href="{{ route('legal.terms') }}"
+                            class="nav-link p-0 text-muted">Terms &
                             Conditions</a></li>
-                    <li class="nav-item mb-2"><a href="{{route('privacy')}}" class="nav-link p-0 text-muted">Privacy Policy</a>
+                    <li class="nav-item mb-2"><a href="{{ route('privacy') }}"
+                            class="nav-link p-0 text-muted">Privacy Policy</a>
                     </li>
                 </ul>
             </div>
             <div class="col mb-3"> <!-- Services -->
                 <h5>Services</h5>
                 <ul class="nav flex-column">
-                    <li class="nav-item mb-2"><a href="{{ route('frontend.properties') }}"
-                            class="nav-link p-0 text-muted">Explore Properties</a></li>
-                    @can('create', App\Models\Property::class)@endcan
+                    <li class="nav-item mb-2">
+                        @guest {{-- إذا كان المستخدم زائرًا (غير مسجل) --}}
+                            <a href="{{ route('login', ['intended' => route('frontend.properties')]) }}"
+                                class="nav-link p-0 text-muted">Explore Properties</a>
+                        @else
+                            {{-- إذا كان المستخدم مسجلاً دخوله --}}
+                            <a href="{{ route('frontend.properties') }}" class="nav-link p-0 text-muted">Explore
+                                Properties</a>
+                        @endguest
+                    </li>
+                    @auth
+                        @if (Auth::user()->role !== 'customer')
+                            <li class="nav-item mb-2"><a href="{{ route('lister.properties.create') }}"
+                                    class="nav-link p-0 text-muted">List Your Property</a></li>
+                        @else
+                            <li class="nav-item mb-2"><a href="{{ route('frontend.pricing') }}"
+                                    class="nav-link p-0 text-muted">Become a Seller</a></li>
+                        @endif
+                    @endauth
                 </ul>
             </div>
         </footer>
@@ -291,6 +312,8 @@
     </script>
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.favorite-icon').forEach(iconElement => {
@@ -469,71 +492,71 @@
     </script>
     @auth
         <script>
-           function markFrontendNotificationAsRead(element, event) {
-        // يمكنك إلغاء التعليق عن event.preventDefault() إذا كنت تريد التحكم الكامل في التوجيه
-        // event.preventDefault();
-        let notificationId = element.dataset.notificationIdFrontend;
-        // let targetUrl = element.href; // إذا كنت ستتحكم في التوجيه يدويًا
+            function markFrontendNotificationAsRead(element, event) {
+                // يمكنك إلغاء التعليق عن event.preventDefault() إذا كنت تريد التحكم الكامل في التوجيه
+                // event.preventDefault();
+                let notificationId = element.dataset.notificationIdFrontend;
+                // let targetUrl = element.href; // إذا كنت ستتحكم في التوجيه يدويًا
 
-        if (notificationId) {
-            fetch(`/notifications/${notificationId}/mark-as-read`, {
-                method: 'PATCH',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                },
-            })
-            .then(response => {
-                if (!response.ok) throw new Error('Network response was not ok for markAsRead.');
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    element.classList.remove('bg-light-subtle'); // إزالة تمييز الخلفية
-                    const iconElement = element.querySelector('i.fs-5'); // استهداف الأيقونة داخل الرابط
-                    if (iconElement) {
-                        iconElement.classList.remove('text-primary');
-                        iconElement.classList.add('text-muted');
-                    }
-                    updateFrontendNotificationBadge(); // تحديث العداد بعد تمييز الإشعار
-                } else {
-                    console.error('Failed to mark notification as read:', data.message);
+                if (notificationId) {
+                    fetch(`/notifications/${notificationId}/mark-as-read`, {
+                            method: 'PATCH',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            },
+                        })
+                        .then(response => {
+                            if (!response.ok) throw new Error('Network response was not ok for markAsRead.');
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.success) {
+                                element.classList.remove('bg-light-subtle'); // إزالة تمييز الخلفية
+                                const iconElement = element.querySelector('i.fs-5'); // استهداف الأيقونة داخل الرابط
+                                if (iconElement) {
+                                    iconElement.classList.remove('text-primary');
+                                    iconElement.classList.add('text-muted');
+                                }
+                                updateFrontendNotificationBadge(); // تحديث العداد بعد تمييز الإشعار
+                            } else {
+                                console.error('Failed to mark notification as read:', data.message);
+                            }
+                            // إذا استخدمت event.preventDefault()، يمكنك التوجيه هنا:
+                            // window.location.href = targetUrl;
+                        })
+                        .catch(error => {
+                            console.error('Error in markFrontendNotificationAsRead:', error);
+                            // يمكنك التوجيه للرابط الأصلي حتى لو فشل طلب AJAX
+                            // window.location.href = targetUrl;
+                        });
                 }
-                // إذا استخدمت event.preventDefault()، يمكنك التوجيه هنا:
-                // window.location.href = targetUrl;
-            })
-            .catch(error => {
-                console.error('Error in markFrontendNotificationAsRead:', error);
-                // يمكنك التوجيه للرابط الأصلي حتى لو فشل طلب AJAX
-                // window.location.href = targetUrl;
+            }
+
+            // =========================================================================
+            // دالة مساعدة لـ trans_choice
+            // =========================================================================
+            function getTransChoice(key, number) {
+                const parts = key.split('|');
+                if (number === 1) return parts[0];
+                if (number === 2 && parts.length > 1 && parts[1] !== '') return parts[1]; // تأكد أن الجزء الثاني ليس فارغًا
+                if (parts.length > 2 && parts[2] !== '') return parts[2]; // إذا كان هناك جزء ثالث
+                return parts[parts.length - 1]; // الافتراضي هو الجزء الأخير
+            }
+
+            // =========================================================================
+            // استدعاء تحديث العداد عند تحميل الصفحة
+            // =========================================================================
+            document.addEventListener('DOMContentLoaded', function() {
+                // تحقق من وجود عناصر الإشعارات قبل محاولة تحديث العداد
+                if (document.querySelector('.navbar .notification-count') || document.querySelector(
+                        '#navbarDropdownNotifications')) {
+                    updateFrontendNotificationBadge();
+                }
+
+                // أي أكواد أخرى تعتمد على DOMContentLoaded وتتطلب مصادقة
             });
-        }
-    }
-
-    // =========================================================================
-    // دالة مساعدة لـ trans_choice
-    // =========================================================================
-    function getTransChoice(key, number) {
-        const parts = key.split('|');
-        if (number === 1) return parts[0];
-        if (number === 2 && parts.length > 1 && parts[1] !== '') return parts[1]; // تأكد أن الجزء الثاني ليس فارغًا
-        if (parts.length > 2 && parts[2] !== '') return parts[2]; // إذا كان هناك جزء ثالث
-        return parts[parts.length - 1]; // الافتراضي هو الجزء الأخير
-    }
-
-    // =========================================================================
-    // استدعاء تحديث العداد عند تحميل الصفحة
-    // =========================================================================
-    document.addEventListener('DOMContentLoaded', function() {
-        // تحقق من وجود عناصر الإشعارات قبل محاولة تحديث العداد
-        if (document.querySelector('.navbar .notification-count') || document.querySelector('#navbarDropdownNotifications')) {
-            updateFrontendNotificationBadge();
-        }
-
-        // أي أكواد أخرى تعتمد على DOMContentLoaded وتتطلب مصادقة
-    });
-
         </script>
     @endauth
 

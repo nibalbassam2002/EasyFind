@@ -39,7 +39,7 @@
                     'categories' => $categories ?? collect(),
                     'subCategories' => $subCategories ?? collect(),
                     'governorates' => $governorates ?? collect(),
-                    'purposes' => $purposes ?? ['sale', 'rent', 'lease'],
+                    'purpose' => $purpose ?? ['sale', 'rent', 'lease'],
                     'currencies' => $currencies ?? ['ILS', 'USD', 'JOD'],
                     'currentImages' => $currentImages ?? [],     // الصور الحالية للعقار
                 ])

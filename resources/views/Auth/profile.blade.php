@@ -43,11 +43,19 @@
                                 <button class="nav-link" data-bs-toggle="tab"
                                     data-bs-target="#profile-settings">Settings</button>
                             </li>
-
-                            <li class="nav-item">
-                                <button class="nav-link" data-bs-toggle="tab"
-                                    data-bs-target="#profile-change-password">Change Password</button>
-                            </li>
+{{-- ▼▼▼ بداية: تبويب كلمة المرور الديناميكي ▼▼▼ --}}
+                            {{-- $passwordIsSet يجب أن يتم تمريره من ProfileController@index --}}
+                            @if(isset($passwordIsSet) && $passwordIsSet)
+                                <li class="nav-item">
+                                    <button class="nav-link {{ (isset($activeTabForDashboard) && $activeTabForDashboard == 'profile-change-password') ? 'active' : '' }}" data-bs-toggle="tab"
+                                        data-bs-target="#profile-change-password">Change Password</button>
+                                </li>
+                            @else
+                                <li class="nav-item">
+                                    <button class="nav-link {{ (isset($activeTabForDashboard) && $activeTabForDashboard == 'profile-set-initial-password') ? 'active' : '' }}" data-bs-toggle="tab"
+                                        data-bs-target="#profile-set-initial-password">Set Initial Password</button>
+                                </li>
+                            @endif
 
                         </ul>
                         <div class="tab-content pt-2">
@@ -309,51 +317,90 @@
 
                             </div>
 
-                            <div class="tab-pane fade pt-3" id="profile-change-password">
-                                <!-- Change Password Form -->
-                                <form method="POST" action="{{ route('profile.changePassword') }}">
-                                    @csrf
-                                    @method('PATCH')
-                            
-                                    @if (session('success'))
+                          
+                            {{-- ▼▼▼ بداية: محتوى تبويبات كلمة المرور الديناميكي ▼▼▼ --}}
+                            @if(isset($passwordIsSet) && $passwordIsSet)
+                                <div class="tab-pane fade {{ (isset($activeTabForDashboard) && $activeTabForDashboard == 'profile-change-password') ? 'show active' : '' }} pt-3" id="profile-change-password">
+                                    <h5 class="card-title">Change Password</h5>
+                                    @if (session('success')) {{-- رسالة نجاح تغيير كلمة المرور --}}
                                         <div class="alert alert-success alert-dismissible fade show" role="alert">
                                             {{ session('success') }}
                                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                         </div>
                                     @endif
-                            
-                                    <div class="row mb-3">
-                                        <label for="currentPassword" class="col-md-4 col-lg-3 col-form-label">Current Password</label>
-                                        <div class="col-md-8 col-lg-9">
-                                            <input name="current_password" type="password" class="form-control @error('current_password') is-invalid @enderror" id="currentPassword">
-                                            @error('current_password')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
+                                    @if (session('error')) {{-- رسالة خطأ تغيير كلمة المرور --}}
+                                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                            {{ session('error') }}
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                         </div>
-                                    </div>
-                            
-                                    <div class="row mb-3">
-                                        <label for="newPassword" class="col-md-4 col-lg-3 col-form-label">New Password</label>
-                                        <div class="col-md-8 col-lg-9">
-                                            <input name="new_password" type="password" class="form-control @error('new_password') is-invalid @enderror" id="newPassword">
-                                            @error('new_password')
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
+                                    @endif
+                                    {{-- لاحظ أن اسم المسار هنا profile.changePassword هو الذي يشير لدالة تغيير كلمة المرور بالداشبورد --}}
+                                    <form method="POST" action="{{ route('profile.changePassword') }}">
+                                        @csrf
+                                        @method('PATCH')
+                                        <div class="row mb-3">
+                                            <label for="currentPasswordDashboard" class="col-md-4 col-lg-3 col-form-label">Current Password</label>
+                                            <div class="col-md-8 col-lg-9">
+                                                <input name="current_password" type="password" class="form-control @error('current_password') is-invalid @enderror" id="currentPasswordDashboard" required>
+                                                @error('current_password') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                            </div>
                                         </div>
-                                    </div>
-                            
-                                    <div class="row mb-3">
-                                        <label for="renewPassword" class="col-md-4 col-lg-3 col-form-label">Re-enter New Password</label>
-                                        <div class="col-md-8 col-lg-9">
-                                            <input name="new_password_confirmation" type="password" class="form-control" id="renewPassword">
+                                        <div class="row mb-3">
+                                            <label for="newPasswordDashboard" class="col-md-4 col-lg-3 col-form-label">New Password</label>
+                                            <div class="col-md-8 col-lg-9">
+                                                <input name="new_password" type="password" class="form-control @error('new_password') is-invalid @enderror" id="newPasswordDashboard" required>
+                                                @error('new_password') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                            </div>
                                         </div>
-                                    </div>
-                            
-                                    <div class="text-center">
-                                        <button type="submit" class="btn btn-gold">Change Password</button>
-                                    </div>
-                                </form>
-                            </div>
+                                        <div class="row mb-3">
+                                            <label for="renewPasswordDashboard" class="col-md-4 col-lg-3 col-form-label">Re-enter New Password</label>
+                                            <div class="col-md-8 col-lg-9">
+                                                <input name="new_password_confirmation" type="password" class="form-control" id="renewPasswordDashboard" required>
+                                            </div>
+                                        </div>
+                                        <div class="text-center">
+                                            <button type="submit" class="btn btn-gold">Change Password</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            @else
+                                <div class="tab-pane fade {{ (isset($activeTabForDashboard) && $activeTabForDashboard == 'profile-set-initial-password') ? 'show active' : '' }} pt-3" id="profile-set-initial-password">
+                                    <h5 class="card-title">Set Your Initial Password</h5>
+                                    @if (session('warning')) {{-- رسالة إذا حاول الوصول لتغيير كلمة المرور وهي غير معينة --}}
+                                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                            {{ session('warning') }}
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                        </div>
+                                    @endif
+                                     @if (session('success')) {{-- رسالة نجاح تعيين كلمة المرور الأولية --}}
+                                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                            {{ session('success') }}
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                        </div>
+                                    @endif
+                                    <p>Since your password is not currently set (you might have registered via a social account or it was reset), please set a new password for your account to enable direct login and enhance security.</p>
+                                    {{-- هذا المسار يجب أن يشير إلى دالة storeInitialPasswordDashboard في ProfileController --}}
+                                    <form method="POST" action="{{ route('profile.store_initial_password_dashboard') }}">
+                                        @csrf
+                                        <div class="row mb-3">
+                                            <label for="setNewPasswordDashboard" class="col-md-4 col-lg-3 col-form-label">New Password</label>
+                                            <div class="col-md-8 col-lg-9">
+                                                <input name="new_password" type="password" class="form-control @error('new_password') is-invalid @enderror" id="setNewPasswordDashboard" required>
+                                                @error('new_password') <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> @enderror
+                                            </div>
+                                        </div>
+                                        <div class="row mb-3">
+                                            <label for="setRenewPasswordDashboard" class="col-md-4 col-lg-3 col-form-label">Confirm New Password</label>
+                                            <div class="col-md-8 col-lg-9">
+                                                <input name="new_password_confirmation" type="password" class="form-control" id="setRenewPasswordDashboard" required>
+                                            </div>
+                                        </div>
+                                        <div class="text-center">
+                                            <button type="submit" class="btn btn-gold">Set Password</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            @endif
 
                         </div><!-- End Bordered Tabs -->
 

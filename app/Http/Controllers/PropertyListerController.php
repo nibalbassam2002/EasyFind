@@ -86,10 +86,10 @@ class PropertyListerController extends Controller
 
         $subCategories = Category::whereNotNull('parent_id')->orderBy('name')->get();
         $governorates = Governorate::with('areas')->orderBy('name')->get();
-        $purposes = ['rent', 'sale', 'lease'];
+        $purpose = ['rent', 'sale', 'lease'];
         $currencies = ['ILS', 'USD', 'JOD'];
 
-        return view('dashboard.property_lister.create', compact('categories', 'subCategories', 'governorates', 'purposes', 'currencies', 'activeSubscription'));
+        return view('dashboard.property_lister.create', compact('categories', 'subCategories', 'governorates', 'purpose', 'currencies', 'activeSubscription'));
     }
 
     public function store(Request $request)
@@ -198,6 +198,7 @@ public function edit(Property $property) // استخدام Route Model Binding
             return redirect()->route('lister.properties.index')
                              ->with('error', 'This property cannot be edited as it is no longer pending review.');
         }
+        
 
         $user = Auth::user();
         // استخدم دالة مساعدة من موديل User لجلب الاشتراك النشط مع الخطة
@@ -225,7 +226,7 @@ public function edit(Property $property) // استخدام Route Model Binding
 
         $subCategories = Category::whereNotNull('parent_id')->orderBy('name')->get();
         $governorates = Governorate::with('areas')->orderBy('name')->get();
-        $purposes = ['rent', 'sale', 'lease'];
+        $purpose = ['rent', 'sale', 'lease'];
         $currencies = ['ILS', 'USD', 'JOD'];
         $isFreePlan = ($activeSubscription->plan->price == 0.00);
         $maxImages = $planFeatures['max_images_per_property'] ?? 5;
@@ -238,7 +239,7 @@ public function edit(Property $property) // استخدام Route Model Binding
             'categories',
             'subCategories',
             'governorates',
-            'purposes',
+            'purpose',
             'currencies',
             'activeSubscription', // قد لا تحتاجه مباشرة في _form إذا مررت isFreePlan و maxImages
             'isFreePlan',         // مهم للـ _form

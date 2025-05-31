@@ -128,6 +128,23 @@ class ProfileController extends Controller
 
         return view('frontend.account', compact('user', 'governorates', 'activeTab'));
     }
+    public function storeInitialPasswordDashboard(Request $request)
+    {
+        $user = Auth::user();
+        
+        if ($user->password !== null && $user->password !== '') {
+            return redirect()->route('profile.index')->with('info', 'Your password is already set.');
+        }
+
+        $request->validate([
+            'new_password' => ['required', Password::min(8)->mixedCase()->numbers()->symbols(), 'confirmed'],
+        ]);
+
+        $user->password = Hash::make($request->new_password);
+        $user->save();
+
+        return redirect()->route('profile.index')->with('success', 'Your initial password has been set successfully!');
+    }
 
     public function updateCustomerProfile(Request $request)
     {

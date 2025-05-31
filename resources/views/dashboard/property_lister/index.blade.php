@@ -80,11 +80,36 @@
                                 <td>{{ $property->listarea?->name ?? 'N/A' }}</td>
                                 <td class="text-end">{{ number_format($property->price, 0) }} {{ $property->currency }}
                                 </td>
-                                <td>
-                                    {{-- ... (كود عرض الغرض) ... --}}
+                               <td>
+                                    @php
+                                        $purposeConfig = [
+                                            'sale' => ['color' => 'primary', 'icon' => 'bi-tag-fill'],
+                                            'rent' => ['color' => 'success', 'icon' => 'bi-key-fill'],
+                                            'lease' => ['color' => 'info', 'icon' => 'bi-calendar-week-fill'],
+                                        ];
+                                        $pConfig = $purposeConfig[strtolower($property->purpose ?? '')] ?? ['color' => 'secondary', 'icon' => 'bi-question-circle'];
+                                    @endphp
+                                    <span class="badge bg-{{ $pConfig['color'] }}">
+                                        <i class="{{ $pConfig['icon'] }} me-1"></i>
+                                        {{ ucfirst(strtolower($property->purpose ?? 'N/A')) }}
+                                    </span>
                                 </td>
-                                <td>
-                                    {{-- ... (كود عرض الحالة) ... --}}
+                               <td>
+                                    @php
+                                        $statusConfig = [
+                                            'pending' => ['color' => 'warning', 'icon' => 'bi-hourglass-split'],
+                                            'approved' => ['color' => 'success', 'icon' => 'bi-check-circle-fill'],
+                                            'rejected' => ['color' => 'danger', 'icon' => 'bi-x-octagon-fill'],
+                                            'rented' => ['color' => 'info', 'icon' => 'bi-building-check'],
+                                            'sold' => ['color' => 'primary', 'icon' => 'bi-building-check'],
+                                            'unavailable' => ['color' => 'secondary', 'icon' => 'bi-slash-circle-fill'],
+                                        ];
+                                        $sConfig = $statusConfig[strtolower($property->status ?? '')] ?? ['color' => 'light', 'icon' => 'bi-question-circle'];
+                                    @endphp
+                                    <span class="badge bg-{{ $sConfig['color'] }}">
+                                        <i class="{{ $sConfig['icon'] }} me-1"></i>
+                                        {{ ucfirst(strtolower($property->status ?? 'N/A')) }}
+                                    </span>
                                 </td>
                                 <td class="text-center">
                                     {{-- ▼▼▼ إضافة زر عرض التفاصيل (اختياري، لأن العنوان أصبح رابطًا) ▼▼▼ --}}

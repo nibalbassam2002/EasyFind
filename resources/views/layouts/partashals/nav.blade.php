@@ -38,7 +38,7 @@
       </li>
       <li>
         {{-- <a href="#"> --}} {{-- TODO: Add route for admin property management --}}
-          <i class="bi bi-circle"></i><span>All Properties (Admin)</span> {{-- تمييز أنها للأدمن --}}
+          {{-- <i class="bi bi-circle"></i><span>All Properties (Admin)</span> تمييز أنها للأدمن --}}
         </a>
       </li>
     </ul>

@@ -42,7 +42,7 @@ Route::get('/pricing-plans', [FrontendController::class, 'showPricingPlans'])->n
 Route::view('/help-center', 'frontend.help-center')->name('frontend.help_center');
 Route::get('/terms-and-conditions', function () { return view('Auth.terms'); })->name('legal.terms');
 Route::get('/privacy', function () { return view('Auth.privacy'); })->name('privacy');
-
+Route::get('/about-us', function () { return view('frontend.about'); })->name('frontend.about');
 
 // ============================================
 // == Authentication Routes
@@ -81,7 +81,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::patch('/my-account/update', [ProfileController::class, 'updateCustomerProfile'])->name('frontend.account.update');
     Route::patch('/my-account/change-password', [ProfileController::class, 'changeCustomerPassword'])->name('frontend.account.changepassword');
-    // (مسارات set-initial-password للـ customer إذا كان يسجل عبر social media ولم يضع كلمة سر)
+    
     Route::get('/my-account/set-initial-password', [ProfileController::class, 'showSetInitialPasswordForm'])
         ->name('profile.show_set_initial_password_form')
         ->middleware('password.notset'); // middleware لفحص إذا كانت كلمة السر لم تُعين
@@ -89,7 +89,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/my-account/set-initial-password', [ProfileController::class, 'storeInitialPassword'])
         ->name('profile.store_initial_password')
         ->middleware('password.notset');
-
+    Route::post('/profile/store-initial-password-dashboard', [ProfileController::class, 'storeInitialPasswordDashboard'])
+     ->name('profile.store_initial_password_dashboard');;
 
     // --- Favorites ---
     Route::get('/my-favourites', [FrontendController::class, 'favorites'])->name('frontend.favorites');
@@ -137,6 +138,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('properties/{property}/edit', [PropertyListerController::class, 'edit'])->name('properties.edit');
             Route::put('properties/{property}', [PropertyListerController::class, 'update'])->name('properties.update');
             Route::delete('properties/{property}', [PropertyListerController::class, 'destroy'])->name('properties.destroy');
+            
         });
 
 

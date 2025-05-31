@@ -29,6 +29,8 @@
 
     <!-- Template Main CSS File -->
     <link href="{{ asset('assets/css/style.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <style>
         .bg-gold {
             background-color: #FFD700;
@@ -94,7 +96,8 @@
                                     No new notifications
                                 @endif
                                 {{-- TODO: Create this route later --}}
-                                <a href="{{route('notifications.index')}}"><span class="badge rounded-pill bg-primary p-2 ms-2">View
+                                <a href="{{ route('notifications.index') }}"><span
+                                        class="badge rounded-pill bg-primary p-2 ms-2">View
                                         All</span></a>
                             </li>
                             <li>
@@ -116,7 +119,8 @@
                                             {{-- <h4 class="mb-0 fs-6">{{ $notification->data['title'] ?? 'New notification' }}</h4> --}}
                                             <p class="mb-1 small">{{ $notification->data['message'] }}</p>
                                             <p class="mb-0 text-muted xsmall">
-                                                <small>{{ $notification->created_at->diffForHumans() }}</small></p>
+                                                <small>{{ $notification->created_at->diffForHumans() }}</small>
+                                            </p>
                                         </div>
                                     </a>
                                 </li>
@@ -130,8 +134,8 @@
                             @endforelse
 
                             <li class="dropdown-footer">
-                                
-                                <a href="{{route('notifications.index')}}">View all notifications</a>
+
+                                <a href="{{ route('notifications.index') }}">View all notifications</a>
                             </li>
 
                         </ul><!-- End Notification Dropdown Items -->
@@ -233,15 +237,17 @@
     <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
             class="bi bi-arrow-up-short"></i></a>
 
-    <!-- Vendor JS Files -->
+
     <script src="{{ asset('assets/vendor/apexcharts/apexcharts.min.js') }}"></script>
-    <script src="{{ asset('assets/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ asset('assets/vendor/chart.js/chart.umd.js') }}"></script>
-    <script src="{{ asset('assets/vendor/echarts/echarts.min.js') }}"></script>
+    <script src="{{ asset('assets/vendor/echarts/echarts.min.js') }}"></script> 
+    <script src="{{ asset('assets/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ asset('assets/vendor/quill/quill.js') }}"></script>
     <script src="{{ asset('assets/vendor/simple-datatables/simple-datatables.js') }}"></script>
     <script src="{{ asset('assets/vendor/tinymce/tinymce.min.js') }}"></script>
     <script src="{{ asset('assets/vendor/php-email-form/validate.js') }}"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <!-- Template Main JS File -->
     <script src="{{ asset('assets/js/main.js') }}"></script>
@@ -250,29 +256,29 @@
         function markNotificationAsRead(element) {
             let notificationId = element.dataset.notificationId;
             if (notificationId) {
-                fetch(`/notifications/${notificationId}/mark-as-read`, { 
-                    method: 'PATCH',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'), 
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    },
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        
-                        element.closest('.notification-item').classList.remove('bg-light'); 
-                        updateNotificationBadge();
-                    }
-                })
-                .catch(error => console.error('Error marking notification as read:', error));
+                fetch(`/notifications/${notificationId}/mark-as-read`, {
+                        method: 'PATCH',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+
+                            element.closest('.notification-item').classList.remove('bg-light');
+                            updateNotificationBadge();
+                        }
+                    })
+                    .catch(error => console.error('Error marking notification as read:', error));
             }
-            
+
         }
 
         function updateNotificationBadge() {
-            fetch('{{ route("notifications.unread.count") }}') 
+            fetch('{{ route('notifications.unread.count') }}')
                 .then(response => response.json())
                 .then(data => {
                     const badge = document.querySelector('.header-nav .nav-icon .badge-number');
@@ -283,12 +289,13 @@
                             badge.textContent = data.count;
                             badge.style.display = 'inline-block';
                         } else {
-                            badge.style.display = 'none'; 
+                            badge.style.display = 'none';
                         }
                     }
-                    if(dropdownHeader && dropdownHeader.firstChild) {
+                    if (dropdownHeader && dropdownHeader.firstChild) {
                         if (data.count > 0) {
-                            dropdownHeader.firstChild.textContent = ` You have ${data.count} ${getTransChoice('Notice|Notices|Notices', data.count)} new `;
+                            dropdownHeader.firstChild.textContent =
+                                ` You have ${data.count} ${getTransChoice('Notice|Notices|Notices', data.count)} new `;
                         } else {
                             dropdownHeader.firstChild.textContent = ' No new notifications';
                         }
@@ -296,15 +303,15 @@
                 })
                 .catch(error => console.error('Error fetching unread count:', error));
         }
-      
+
         function getTransChoice(key, number) {
             const parts = key.split('|');
             if (number === 1) return parts[0];
             if (number === 2 && parts.length > 1) return parts[1];
-            return parts[parts.length -1];
+            return parts[parts.length - 1];
         }
 
-    
+
         document.addEventListener('DOMContentLoaded', updateNotificationBadge);
     </script>
 </body>

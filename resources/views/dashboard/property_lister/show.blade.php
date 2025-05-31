@@ -92,38 +92,86 @@
     <div class="row g-4">
         {{-- العمود الأيسر للصور والوصف والمرافق --}}
         <div class="col-lg-7">
-            {{-- بطاقة الصور --}}
-            <div class="card property-detail-card">
-                <div class="card-header">
-                    <i class="bi bi-images me-2"></i>Property Gallery
-                </div>
-                <div class="card-body text-center">
-                    @php
-                        $images = is_string($property->images) ? json_decode($property->images, true) : ($property->images ?? []);
-                        if (!is_array($images)) $images = [];
-                        $firstImage = count($images) > 0 ? $images[0] : null;
-                        $defaultImageUrl = asset('assets/img/placeholder-property.png');
-                    @endphp
+      {{-- بطاقة الوسائط --}}
+<div class="card property-detail-card">
+    <div class="card-header">
+        <i class="bi bi-images me-2"></i>معرض الوسائط
+    </div>
+    <div class="card-body">
+        @php
+            // معالجة الصور
+            $images = is_string($property->images) ? json_decode($property->images, true) : ($property->images ?? []);
+            if (!is_array($images)) $images = [];
+            
+            // معالجة الفيديوهات
+            $videos = is_string($property->videos) ? json_decode($property->videos, true) : ($property->videos ?? []);
+            if (!is_array($videos)) $videos = [];
+            
+            $allMedia = array_merge($videos, $images);
+            $firstMedia = count($allMedia) > 0 ? $allMedia[0] : null;
+            $defaultImageUrl = asset('assets/img/placeholder-property.png');
+        @endphp
 
-                    @if($firstImage)
-                        <img src="{{ Storage::disk('public')->exists($firstImage) ? Storage::url($firstImage) : $defaultImageUrl }}"
-                             alt="{{ $property->title }}" class="main-property-image-display max-w-h" id="mainPropertyImage">
+        <div class="row">
+            {{-- العمود الأيسر للمصغرات --}}
+            <div class="col-md-3 order-md-1 thumbnails-column">
+                @if(count($allMedia) > 1)
+                    <div class="thumbnails-container d-flex flex-md-column flex-wrap gap-2">
+                        @foreach($allMedia as $index => $mediaPath)
+                            @if(in_array(pathinfo($mediaPath, PATHINFO_EXTENSION), ['mp4', 'mov', 'avi']))
+                                {{-- مصغر الفيديو --}}
+                                <div class="thumbnail-video-container {{ $index == 0 ? 'active-thumb' : '' }}"
+                                    onclick="changeMainMedia('{{ Storage::url($mediaPath) }}', 'video', this)">
+                                    <video class="thumbnail-media">
+                                        <source src="{{ Storage::url($mediaPath) }}" type="video/mp4">
+                                    </video>
+                                    <div class="video-play-icon">
+                                        <i class="bi bi-play-circle-fill"></i>
+                                    </div>
+                                </div>
+                            @else
+                                {{-- مصغر الصورة --}}
+                                <img src="{{ Storage::url($mediaPath) }}"
+                                    alt="Thumb {{ $index + 1 }}"
+                                    class="thumbnail-media {{ $index == 0 ? 'active-thumb' : '' }}"
+                                    onclick="changeMainMedia('{{ Storage::url($mediaPath) }}', 'image', this)">
+                            @endif
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+
+            {{-- العمود الأيمن للعرض الرئيسي --}}
+            <div class="col-md-9 order-md-2">
+                <div class="main-media-container">
+                    @if($firstMedia)
+                        @if(in_array(pathinfo($firstMedia, PATHINFO_EXTENSION), ['mp4', 'mov', 'avi']))
+                            {{-- فيديو رئيسي --}}
+                            <video id="mainPropertyMedia" controls class="main-media-display">
+                                <source src="{{ Storage::url($firstMedia) }}" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                        @else
+                            {{-- صورة رئيسية --}}
+                            <img id="mainPropertyMedia" 
+                                src="{{ Storage::url($firstMedia) }}" 
+                                alt="{{ $property->title }}" 
+                                class="main-media-display">
+                        @endif
                     @else
-                        <img src="{{ $defaultImageUrl }}" alt="No Image" class="main-property-image-display">
-                    @endif
-
-                    @if(count($images) > 1)
-                        <div class="thumbnails-container d-flex flex-wrap justify-content-center mt-2">
-                            @foreach($images as $index => $imagePath)
-                                <img src="{{ Storage::disk('public')->exists($imagePath) ? Storage::url($imagePath) : $defaultImageUrl }}"
-                                     alt="Thumb {{ $index + 1 }}"
-                                     class="{{ $index == 0 ? 'active-thumb' : '' }}"
-                                     onclick="document.getElementById('mainPropertyImage').src='{{ Storage::disk('public')->exists($imagePath) ? Storage::url($imagePath) : $defaultImageUrl }}'; document.querySelectorAll('.thumbnails-container img').forEach(img => img.classList.remove('active-thumb')); this.classList.add('active-thumb');">
-                            @endforeach
-                        </div>
+                        {{-- صورة افتراضية --}}
+                        <img id="mainPropertyMedia" 
+                            src="{{ $defaultImageUrl }}" 
+                            alt="No Media" 
+                            class="main-media-display">
                     @endif
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+
 
             {{-- بطاقة الوصف --}}
             <div class="card property-detail-card">
@@ -256,5 +304,76 @@
             });
         });
     });
+</script>
+<script>
+function changeMainMedia(newSrc, mediaType, clickedElement) {
+    const mainMediaContainer = document.querySelector('.main-media-container');
+    let newMediaHtml = '';
+    
+    if (mediaType === 'video') {
+        newMediaHtml = `
+            <video id="mainPropertyMedia" controls class="main-media-display">
+                <source src="${newSrc}" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        `;
+    } else {
+        newMediaHtml = `
+            <img id="mainPropertyMedia" 
+                src="${newSrc}" 
+                alt="Main Media" 
+                class="main-media-display">
+        `;
+    }
+    
+    mainMediaContainer.innerHTML = newMediaHtml;
+    
+    // تحديث المصغرات النشطة
+    document.querySelectorAll('.thumbnail-media, .thumbnail-video-container').forEach(thumb => {
+        thumb.classList.remove('active-thumb');
+    });
+    clickedElement.classList.add('active-thumb');
+}
+function changeMainMedia(clickedElement, newSrc, mediaType) {
+    try {
+        const mainMediaContainer = document.querySelector('.main-media-container');
+        
+        // إزالة العنصر الحالي مع جميع الأحداث المرتبطة به
+        while (mainMediaContainer.firstChild) {
+            mainMediaContainer.removeChild(mainMediaContainer.firstChild);
+        }
+        
+        // إنشاء العنصر الجديد
+        let newMedia;
+        if (mediaType === 'video') {
+            newMedia = document.createElement('video');
+            newMedia.controls = true;
+            newMedia.className = 'main-media-display';
+            const source = document.createElement('source');
+            source.src = newSrc;
+            source.type = 'video/mp4';
+            newMedia.appendChild(source);
+            newMedia.appendChild(document.createTextNode('Your browser does not support the video tag.'));
+        } else {
+            newMedia = document.createElement('img');
+            newMedia.src = newSrc;
+            newMedia.alt = 'Main Media';
+            newMedia.className = 'main-media-display';
+        }
+        
+        // إضافة العنصر الجديد
+        mainMediaContainer.appendChild(newMedia);
+        
+        // تحديث المصغرات النشطة
+        document.querySelectorAll('.thumbnail-media, .thumbnail-video-container').forEach(thumb => {
+            thumb.classList.remove('active-thumb');
+        });
+        clickedElement.classList.add('active-thumb');
+        
+        console.log('تم تغيير الوسائط بنجاح إلى:', newSrc);
+    } catch (error) {
+        console.error('حدث خطأ أثناء تغيير الوسائط:', error);
+    }
+}
 </script>
 @endpush

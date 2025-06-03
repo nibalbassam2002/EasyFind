@@ -9,6 +9,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Transaction;
+use App\Models\PropertyRequest as PropertyRequestModel;
+use App\Models\Property;
+use Illuminate\Support\Facades\Log;
+use App\Models\Feedback;
 use Illuminate\Support\Facades\Validator; 
 
 class ManagementController extends Controller
@@ -159,4 +164,108 @@ class ManagementController extends Controller
             return redirect()->route('admin.users.index')->with('error', 'حدث خطأ أثناء حذف المستخدم: ' . $e->getMessage());
         }
     }
+public function show(User $user)
+    {
+        // تحميل العلاقات الأساسية للمستخدم
+        $user->load(['area.governorate']);
+        $viewData = []; // مصفوفة لتمرير البيانات الإضافية للـ view
+
+        Log::info("ManagementController@show: Displaying details for User ID: {$user->id}, Role: {$user->role}");
+
+        // --- بيانات خاصة بالزبون (Customer) ---
+        if ($user->role === 'customer') {
+            Log::info("ManagementController@show: Fetching data for CUSTOMER role (User ID: {$user->id}).");
+
+            // 1. سجل المعاملات
+            $viewData['customerTransactions'] = Transaction::where('user_id', $user->id)
+                                                ->with('property:id,title') // جلب فقط الأعمدة المطلوبة من العقار
+                                                ->latest()
+                                                ->take(5)
+                                                ->get();
+            Log::info('Customer Transactions:', $viewData['customerTransactions']->toArray());
+
+            // 2. العقارات المفضلة
+            $viewData['customerFavorites'] = $user->favoriteProperties()
+                                             ->select('properties.id', 'properties.title') // جلب الأعمدة المطلوبة
+                                             ->withPivot('created_at') // لجلب تاريخ الإضافة للمفضلة
+                                             ->latest('favorites.created_at') // الترتيب حسب تاريخ الإضافة
+                                             ->take(5)
+                                             ->get();
+            Log::info('Customer Favorites:', $viewData['customerFavorites']->toArray());
+
+            // 3. طلبات/استفسارات الزبون
+            $viewData['customerRequests'] = $user->propertyRequests() // يفترض وجود علاقة propertyRequests في موديل User
+                                    ->with('property:id,title') // جلب الأعمدة المطلوبة
+                                    ->latest()
+                                    ->take(5)
+                                    ->get();
+            Log::info('Customer Requests:', $viewData['customerRequests']->toArray());
+        }
+        // --- بيانات خاصة بمشرف المحتوى (Content Moderator) ---
+        elseif ($user->role === 'content_moderator') {
+            Log::info("ManagementController@show: Fetching data for CONTENT_MODERATOR role (User ID: {$user->id}).");
+
+            // 1. إحصائيات مراجعة العقارات
+            // تستخدم عمود 'moderated_by' من جدول 'properties'
+            $viewData['total_properties_reviewed'] = Property::where('moderated_by', $user->id)
+                                                        ->whereIn('status', ['approved', 'rejected'])->count();
+            $viewData['properties_approved_count'] = Property::where('moderated_by', $user->id)
+                                                           ->where('status', 'approved')->count();
+            $viewData['properties_rejected_count'] = Property::where('moderated_by', $user->id)
+                                                           ->where('status', 'rejected')->count();
+            Log::info('Moderator Property Review Stats:', [
+                'total' => $viewData['total_properties_reviewed'],
+                'approved' => $viewData['properties_approved_count'],
+                'rejected' => $viewData['properties_rejected_count'],
+            ]);
+
+            // 2. تفاصيل آخر العقارات المرفوضة (مع سبب الرفض)
+            // تستخدم 'moderated_by', 'status', 'rejection_reason', 'moderated_at' من 'properties'
+            $viewData['recent_rejected_properties_details'] = Property::where('moderated_by', $user->id)
+                                                            ->where('status', 'rejected')
+                                                            // ->whereNotNull('rejection_reason') // يمكنك إلغاء التعليق إذا أردت عرض فقط التي لها سبب
+                                                            ->orderBy('moderated_at', 'desc')
+                                                            ->take(5)
+                                                            ->get(['id', 'title', 'rejection_reason', 'moderated_at', 'status']); // أضفت status
+            Log::info('Moderator Recent Rejected Properties:', $viewData['recent_rejected_properties_details']->toArray());
+
+
+            // 3. تفاصيل آخر العقارات الموافق عليها
+            // تستخدم 'moderated_by', 'status', 'moderated_at' من 'properties'
+            $viewData['recent_approved_properties_details'] = Property::where('moderated_by', $user->id)
+                                                            ->where('status', 'approved')
+                                                            ->orderBy('moderated_at', 'desc')
+                                                            ->take(5)
+                                                            ->get(['id', 'title', 'status', 'moderated_at']);
+            Log::info('Moderator Recent Approved Properties:', $viewData['recent_approved_properties_details']->toArray());
+
+            // 4. إحصائيات التعامل مع الملاحظات
+            // تستخدم عمود 'replied_by' (أو الاسم الصحيح لديك) من جدول 'feedbacks'
+            $viewData['feedback_handled_count'] = Feedback::where('replied_by', $user->id) // <--- تأكد أن 'replied_by' هو اسم العمود الصحيح
+                                                      ->whereIn('status', ['resolved', 'closed', 'replied']) // أو الحالات التي تدل على المعالجة
+                                                      ->count();
+            Log::info('Moderator Feedback Handled Count (using replied_by): ' . $viewData['feedback_handled_count']);
+
+            $viewData['recent_handled_feedbacks'] = Feedback::where('replied_by', $user->id) // تأكد من اسم العمود 'replied_by'
+                                                        ->whereIn('status', ['resolved', 'closed', 'replied'])
+                                                        ->with('user') // لجلب معلومات من قدم الملاحظة
+                                                        ->orderBy('updated_at', 'desc') // أو replied_at
+                                                        ->take(5)
+                                                        ->get();
+            Log::info('Moderator Recent Handled Feedbacks:', $viewData['recent_handled_feedbacks']->toArray());
+            // 5. قائمة بأحدث إجراءات الإشراف (حالياً هي العقارات المراجعة)
+            // تستخدم 'moderated_by', 'status', 'moderated_at', 'rejection_reason' من 'properties'
+            $viewData['recent_moderation_actions_detailed'] = Property::where('moderated_by', $user->id)
+                                                        ->whereIn('status', ['approved', 'rejected'])
+                                                        ->orderBy('moderated_at', 'desc')
+                                                        ->take(10)
+                                                        ->get(['id', 'title', 'status', 'moderated_at', 'rejection_reason']);
+            Log::info('Moderator Recent Moderation Actions (Properties):', $viewData['recent_moderation_actions_detailed']->toArray());
+        }
+        // يمكنك إضافة @elseif($user->role === 'property_lister') هنا لاحقًا لعرض بيانات خاصة بالبائع
+
+        Log::info("ManagementController@show: Data being passed to 'dashboard.usermanagement.show' view: ", $viewData);
+        return view('dashboard.usermanagement.show', compact('user', 'viewData'));
+    }
 }
+

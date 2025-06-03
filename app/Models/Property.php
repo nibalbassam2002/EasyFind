@@ -41,7 +41,10 @@ class Property extends Model
         'video_url',
         'rating',
         'views_count',
-        'status'
+        'status',
+        'moderated_by',
+        'moderated_at',
+        'rejection_reason',
     ];
 
     protected $casts = [
@@ -49,6 +52,7 @@ class Property extends Model
         'price' => 'decimal:2',
         'rating' => 'decimal:2',
         'amenities' => 'array',
+        'moderated_at' => 'datetime',
     ];
 
     // العلاقات
@@ -71,4 +75,8 @@ class Property extends Model
      {
     return $this->belongsTo(Area::class, 'area_id');
      }
+     public function moderator()
+    {
+        return $this->belongsTo(User::class, 'moderated_by');
+    }
 }

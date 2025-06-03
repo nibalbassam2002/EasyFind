@@ -7,6 +7,9 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Conversation; 
+use App\Models\Transaction;
+use App\Models\Request as PropertyRequestModel;
+use App\Models\Request as UserPropertyRequest;
 use App\Models\Message;
 
 class User extends Authenticatable
@@ -148,4 +151,18 @@ public function conversations()
                 ->with('plan') // Eager load the plan
                 ->first();
 }
+public function transactions()
+    {
+        // افترض أن جدول 'transactions' يحتوي على عمود 'user_id' يشير إلى المستخدم الذي قام بالمعاملة.
+        return $this->hasMany(Transaction::class, 'user_id');
+    }
+    public function propertyRequests()
+{
+    return $this->hasMany(UserPropertyRequest::class, 'user_id');
+}
+     public function properties()
+    {
+        return $this->hasMany(Property::class, 'user_id');
+    }
+
 }

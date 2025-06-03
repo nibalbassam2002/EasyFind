@@ -5,63 +5,141 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Plan;
 use App\Models\Subscription;
-use App\Models\User; // تأكد من وجود هذا
+use App\Models\User; 
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log; // لإضافة التسجيل إذا أردت
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log; 
+use Illuminate\Support\Str;
 
 class SubscriptionController extends Controller
 {
-    public function showPaymentMethod(Request $request, $plan_slug)
+        public function showPaymentMethod(Request $request, $plan_slug)
     {
         Log::info("SubscriptionController@showPaymentMethod: Called for plan_slug '{$plan_slug}' by User ID: " . (Auth::id() ?? 'Guest'));
 
+        // 1. جلب الخطة والمستخدم المسجل
         $plan = Plan::where('slug', $plan_slug)->firstOrFail();
         $user = Auth::user(); // Middleware 'auth' يجب أن يضمن أن المستخدم مسجل
 
+        // تحقق إضافي (على الرغم من أن middleware 'auth' يجب أن يعتني بهذا)
         if (!$user) {
-            // هذا يجب ألا يحدث إذا كان Middleware يعمل
             Log::error("SubscriptionController@showPaymentMethod: User not authenticated despite auth middleware for plan '{$plan_slug}'.");
             return redirect()->route('login')->with('error', 'Please login to subscribe to a plan.');
         }
 
-        // --- التعامل مع الخطة المجانية ---
-        if ($plan->price == 0.00) { // أو يمكنك التحقق من $plan->slug === 'free-plan-slug'
-            Log::info("SubscriptionController@showPaymentMethod: Plan '{$plan->name}' is Free. Checking previous subscriptions for User ID: {$user->id}.");
+        // 2. التعامل مع الخطة المجانية
+        if ($plan->price == 0.00) { // أو يمكنك التحقق من $plan->slug === config('plans.free_plan_slug')
+            Log::info("SubscriptionController@showPaymentMethod: Plan '{$plan->name}' (ID: {$plan->id}) is Free. Checking conditions for User ID: {$user->id}.");
 
-            // 1. تحقق أولاً إذا كان المستخدم لديه اشتراك نشط حاليًا (لأي خطة)
-            $activeExistingSubscription = $user->subscriptions()
-                                       ->where('status', 'active')
-                                       ->where(function ($query) {
-                                           $query->whereNull('ends_at')
-                                                 ->orWhere('ends_at', '>', now());
-                                       })
-                                       ->first();
+            // أ. تحقق أولاً إذا كان المستخدم لديه اشتراك نشط حاليًا (لأي خطة)
+            $activeExistingSubscription = $user->activeSubscriptionWithPlan(); // افترض وجود هذه الدالة في موديل User
             if ($activeExistingSubscription) {
-                Log::warning("SubscriptionController@showPaymentMethod: User ID {$user->id} already has an active subscription: '{$activeExistingSubscription->plan->name}'. Redirecting for plan '{$plan->name}'.");
-                return redirect()->route('dashboard')
+                Log::warning("SubscriptionController@showPaymentMethod: User ID {$user->id} already has an active subscription: '{$activeExistingSubscription->plan->name}'. Cannot subscribe to free plan '{$plan->name}'.");
+                return redirect()->route('dashboard') // أو frontend.pricing
                                  ->with('info', "You already have an active subscription: {$activeExistingSubscription->plan->name}. You cannot subscribe to another plan while one is active.");
             }
 
-            // 2. تحقق إذا كان المستخدم قد اشترك *سابقًا* في هذه الخطة المجانية المحددة
+            // ب. تحقق إذا كان المستخدم قد اشترك *سابقًا* في هذه الخطة المجانية المحددة
             $hasUsedThisSpecificFreePlan = $user->subscriptions()
                                               ->where('plan_id', $plan->id)
                                               ->exists();
-
             if ($hasUsedThisSpecificFreePlan) {
-                Log::warning("SubscriptionController@showPaymentMethod: User ID {$user->id} has already used the free plan '{$plan->name}'. Redirecting.");
+                Log::warning("SubscriptionController@showPaymentMethod: User ID {$user->id} has ALREADY USED the free plan '{$plan->name}'. Redirecting to pricing.");
                 return redirect()->route('frontend.pricing')
                                  ->with('error', "You have already used the '{$plan->name}'. Please choose a paid plan to continue.");
             }
 
-            // إذا لم يكن لديه اشتراك نشط ولم يستخدم هذه الخطة المجانية من قبل، قم بالاشتراك
-            Log::info("SubscriptionController@showPaymentMethod: User ID {$user->id} is eligible for free plan '{$plan->name}'. Proceeding to create subscription.");
-            return $this->createSubscriptionForUser($user, $plan);
+            // إذا لم يكن لديه اشتراك نشط آخر ولم يستخدم هذه الخطة المجانية من قبل، قم بالاشتراك
+            Log::info("SubscriptionController@showPaymentMethod: User ID {$user->id} is ELIGIBLE for free plan '{$plan->name}'. Proceeding to createSubscriptionForUser.");
+            return $this->createSubscriptionForUser($user, $plan); // دالة createSubscriptionForUser تعالج إنشاء الاشتراك وتغيير الدور
         }
 
-        // --- التعامل مع الخطط المدفوعة (للمستقبل) ---
-        Log::info("SubscriptionController@showPaymentMethod: Plan '{$plan->name}' is Paid. Redirecting to pricing with info for User ID: {$user->id}.");
+        // 3. التعامل مع الخطط المدفوعة: التفاعل مع "لحظة" API
+        Log::info("SubscriptionController@showPaymentMethod: Processing PAID plan '{$plan->name}' for User ID: {$user->id} using Lahza /page endpoint.");
+
+        try {
+            // **مهم جداً: تأكد من وحدة المبلغ (هللات/سنتات أم العملة الأساسية)**
+            // التوثيق لـ "لحظة" (/page endpoint) قد يتطلب المبلغ بالوحدة الأصغر.
+            // افترض أن سعر الخطة في قاعدة البيانات بالوحدة الأساسية (مثلاً 19.99 دولار)
+            $amountInSmallestUnit = (int) round($plan->price * 100); // تحويل إلى سنتات/هللات كعدد صحيح
+
+            // تحضير البيانات (Payload) لإرسالها إلى "لحظة" لإنشاء صفحة دفع
+            $payload = [
+                'amount' => $amountInSmallestUnit,
+                'currency' => strtolower($plan->currency), // مثال: "usd", "sar", "ils"
+                'description' => "Subscription: EasyFind - {$plan->name} Plan",
+                'name' => "Payment for {$plan->name}",
+                'success_url' => route('lahza.payment.success', [], true), // يجب أن يكون absolute URL
+                'failure_url' => route('lahza.payment.cancel', [], true),   // يجب أن يكون absolute URL
+                'customer_name' => $user->name,
+                'customer_email' => $user->email,
+                'customer_phone' => $user->phone, // (اختياري، أرسله إذا كان متوفرًا)
+                'send_email_receipt' => true,    // أو false حسب رغبتك
+                'metadata' => [                  // بيانات إضافية مهمة لاسترجاعها في الـ Webhook
+                    'user_id' => (string) $user->id,
+                    'plan_id' => (string) $plan->id,
+                    'plan_slug' => $plan->slug,
+                    // يمكنك إضافة أي بيانات أخرى مفيدة هنا
+                ],
+                // ابحث في توثيق "لحظة" عن أي حقول أخرى مطلوبة أو اختيارية لـ POST /page
+                // مثل 'title' للصفحة، 'reference_id' خاص بك، إلخ.
+            ];
+            Log::info("SubscriptionController@showPaymentMethod: Payload to Lahza (/page): ", $payload);
+
+            // إرسال الطلب إلى "لحظة" API
+            $response = Http::withToken(config('lahza.secret_key')) // Bearer Token Authentication
+                ->contentType('application/json') // التأكيد على إرسال JSON
+                ->acceptJson()                   // طلب استجابة JSON
+                ->post(config('lahza.base_uri', 'https://api.lahza.io/v1') . '/page', $payload); // الـ Endpoint لإنشاء صفحة دفع
+
+            // تحليل الاستجابة
+                    if ($response->successful() && isset($response->json()['data']['slug'])) { // تحقق من وجود slug
+            $paymentPageSlug = $response->json()['data']['slug'];
+            $paymentId = $response->json()['data']['id'] ?? null;
+
+            // ▼▼▼ بناء رابط صفحة الدفع (تحقق من الدومين الصحيح من توثيق "لحظة") ▼▼▼
+            $lahzaPaymentPageBaseUrl = config('lahza.payment_page_base_url', 'https://checkout.lahza.io/'); // مثال، أضف هذا لـ config/lahza.php
+            $paymentUrl = rtrim($lahzaPaymentPageBaseUrl, '/') . '/' . $paymentPageSlug;
+            // أو قد يكون: $paymentUrl = 'https://lahza.io/p/' . $paymentPageSlug; (تحقق من التوثيق!)
+
+            Log::info("SubscriptionController@showPaymentMethod: Lahza Payment Page created. User ID {$user->id}. Payment ID: {$paymentId}. Slug: {$paymentPageSlug}. Constructed URL: {$paymentUrl}");
+
+            return redirect()->away($paymentUrl); // توجيه المستخدم لصفحة دفع "لحظة"
+
+        } else {
+            // ... (الكود الحالي لمعالجة الخطأ أو عدم وجود الرابط) ...
+            $errorData = $response->json() ?? ['raw_body' => $response->body(), 'status_code' => $response->status()];
+            Log::error("SubscriptionController@showPaymentMethod: Lahza Create Page Error (or slug not found) for User ID {$user->id}. Status: {$response->status()}. Response: ", $errorData);
+            $errorMessage = $errorData['message'] ?? 'Could not retrieve payment page details from Lahza.';
+            if (is_array($errorMessage) && isset($errorMessage[0])) $errorMessage = $errorMessage[0];
+            return redirect()->route('frontend.pricing')->with('error', (string)$errorMessage);
+        }
+        } catch (\Illuminate\Http\Client\RequestException $e) {
+            Log::error('SubscriptionController@showPaymentMethod: Lahza API Request Exception for User ID ' . $user->id . ': ' . $e->getMessage(), ['response_body' => $e->response ? $e->response->body() : 'N/A']);
+            return redirect()->route('frontend.pricing')->with('error', 'Error connecting to the payment service. Please try again later.');
+        } catch (\Exception $e) {
+            Log::error('SubscriptionController@showPaymentMethod: General Exception for User ID ' . $user->id . ': ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return redirect()->route('frontend.pricing')->with('error', 'An unexpected error occurred while preparing your payment. Please contact support.');
+        }
+    }
+    public function handleLahzaSuccess(Request $request)
+    {
+        Log::info("Lahza Payment Success Callback Received. Request data: ", $request->all());
+        // لا تقم بتفعيل الاشتراك هنا مباشرة. انتظر الـ Webhook.
+        // يمكنك عرض رسالة "شكرًا، جارٍ تأكيد دفعتك" أو توجيه للملف الشخصي.
+        // قد ترغب في التحقق من معرف معاملة إذا تم تمريره في الـ query string
+        $transactionId = $request->query('transaction_id'); // أو أي اسم بارامتر يرسله "لحظة"
+        // إذا لم يتم إرسال معرف، يمكنك الاعتماد على الجلسة إذا خزنت paymentId
+
+        return redirect()->route('dashboard') // أو صفحة مخصصة لنجاح الدفع
+            ->with('success', 'Thank you! Your payment is being processed. Your subscription will be activated shortly.');
+    }
+
+    public function handleLahzaCancel(Request $request)
+    {
+        Log::info("Lahza Payment Cancel/Failure Callback Received. Request data: ", $request->all());
         return redirect()->route('frontend.pricing')
-                         ->with('info', "Payment processing for the '{$plan->name}' plan is not yet implemented. Please choose the Free plan if available.");
+            ->with('error', 'Your payment was cancelled or failed. Please try again or choose a different payment method.');
     }
 
     protected function createSubscriptionForUser(User $user, Plan $plan, array $paymentData = [])

@@ -119,8 +119,14 @@ Route::middleware(['auth'])->group(function () {
         ->prefix('dashboard/admin')
         ->name('admin.')
         ->group(function () {
-            Route::resource('users', ManagementController::class)->except(['show']);
-            // يمكنك إضافة مسارات أخرى خاصة بالأدمن هنا
+            Route::get('users', [ManagementController::class, 'index'])->name('users.index');
+            Route::get('users/create', [ManagementController::class, 'create'])->name('users.create'); // <--- تأكد من وجود هذا
+            Route::post('users', [ManagementController::class, 'store'])->name('users.store');
+            Route::get('users/{user}', [ManagementController::class, 'show'])->name('users.show');       // <--- تأكد من وجود هذا
+            Route::get('users/{user}/edit', [ManagementController::class, 'edit'])->name('users.edit'); // <--- تأكد من وجود هذا
+            Route::put('users/{user}', [ManagementController::class, 'update'])->name('users.update');
+            Route::delete('users/{user}', [ManagementController::class, 'destroy'])->name('users.destroy');
+                    
         });
 
     // --- Property Lister Specific Routes ---
@@ -173,7 +179,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread.count');
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index'); // Dashboard notifications
     Route::get('/my-notifications', [NotificationController::class, 'index'])->name('frontend.notifications.index')->defaults('view_path', 'frontend.notifications.index'); // Frontend notifications
-
+Route::get('/payment/lahza/success', [SubscriptionController::class, 'handleLahzaSuccess'])->name('lahza.payment.success');
+Route::get('/payment/lahza/cancel', [SubscriptionController::class, 'handleLahzaCancel'])->name('lahza.payment.cancel');
     // Set Initial Password (if using AccountController)
     // تأكد من أن AccountController موجود ومُعرف بشكل صحيح
     // Route::get('/set-initial-password', [AccountController::class, 'showSetInitialPasswordForm'])->name('frontend.social.set_initial_password_form');

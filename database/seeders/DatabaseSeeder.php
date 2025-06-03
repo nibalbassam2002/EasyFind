@@ -18,7 +18,8 @@ class DatabaseSeeder extends Seeder
             AreaSeeder::class,
             UserSeeder::class,
             CategorySeeder::class,
-            PlanSeeder::class
+            PlanSeeder::class,
+            FakeSubscriptionSeeder::class,
             
             
         ]);

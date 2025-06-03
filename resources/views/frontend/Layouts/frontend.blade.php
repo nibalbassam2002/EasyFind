@@ -37,12 +37,10 @@
             <div class="collapse navbar-collapse" id="navbarLinks">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        @if (Auth::check() && Auth::user()->role === 'customer')
-                            <a href="#" class="nav-link" data-bs-toggle="modal"
-                                data-bs-target="#subscribeModal">Sell</a>
-                        @else
-                            <a href="{{ route('lister.properties.create') }}" class="nav-link">Sell</a>
-                        @endif
+                        {{-- رابط "Sell" الجديد ليعرض العقارات المفلترة للبيع --}}
+                        <a href="{{ route('frontend.properties', ['purpose' => 'sale']) }}"
+                            class="nav-link {{ request()->routeIs('frontend.properties') && request('purpose') == 'sale' ? 'active' : '' }}">Sell</a>
+                        {{-- ستحتاج لرابط آخر لـ "List Your Property" الذي يوجه لـ lister.properties.create --}}
                     </li>
                     <li class="nav-item">
                         @guest
@@ -50,8 +48,10 @@
                                 class="nav-link">Buy</a>
                         @endguest
                         @auth
+                            {{-- ▼▼▼ بداية التعديل هنا ▼▼▼ --}}
                             <a href="{{ route('frontend.properties', ['purpose' => 'sale']) }}"
                                 class="nav-link {{ request()->routeIs('frontend.properties') && request('purpose') == 'sale' ? 'active' : '' }}">Buy</a>
+                            {{-- ▲▲▲ نهاية التعديل ▲▲▲ --}}
                         @endauth
                     </li>
                     <li class="nav-item">

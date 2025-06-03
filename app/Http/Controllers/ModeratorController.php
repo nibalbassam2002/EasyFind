@@ -22,39 +22,56 @@ class ModeratorController extends Controller
     /**
      * الموافقة على عقار معلق.
      */
-    public function approveProperty(Property $property) // استخدام Route Model Binding
+    public function approveProperty(Property $property) // Route Model Binding
     {
-        // التأكد مرة أخرى أن العقار كان pending (احتياطي)
         if ($property->status !== 'pending') {
              return redirect()->route('moderator.properties.pending')->with('warning', 'This property is not pending approval.');
         }
 
         $property->status = 'approved';
-        $property->save();
+
+        // ▼▼▼ بداية: إضافة الكود لتحديث حقول المراجعة ▼▼▼
+        $property->moderated_by = Auth::id(); // المستخدم الحالي الذي قام بالإجراء
+        $property->moderated_at = now();     // الوقت الحالي للإجراء
+        $property->rejection_reason = null;  // عند الموافقة، امسح أي سبب رفض سابق
+        // ▲▲▲ نهاية: إضافة الكود ▲▲▲
+
+        $property->save(); // حفظ كل التغييرات
 
         // TODO: إرسال إشعار للمالك (اختياري)
-        // $property->user->notify(new PropertyApproved($property));
+        // if ($property->user) {
+        //    $property->user->notify(new \App\Notifications\PropertyApprovedNotification($property));
+        // }
 
         return redirect()->route('moderator.properties.pending')->with('success', "Property '{$property->title}' has been approved.");
     }
 
-    /**
-     * رفض عقار معلق.
-     */
-    public function rejectProperty(Property $property) // استخدام Route Model Binding
+    public function rejectProperty(Request $request, Property $property) // Route Model Binding, و Request للحصول على سبب الرفض
     {
-         // التأكد مرة أخرى أن العقار كان pending (احتياطي)
          if ($property->status !== 'pending') {
             return redirect()->route('moderator.properties.pending')->with('warning', 'This property is not pending rejection.');
         }
 
-        // يمكنك إضافة سبب للرفض إذا أردت (يتطلب حقل إضافي أو استخدام حقل موجود)
-        // $property->rejection_reason = $request->input('reason'); // مثال
+        // ▼▼▼ إضافة التحقق من سبب الرفض (يفترض أنه إلزامي عند الرفض) ▼▼▼
+        $validatedData = $request->validate([
+            'rejection_reason' => 'required|string|min:10|max:1000', // اجعل قواعد التحقق مناسبة
+        ]);
+        // ▲▲▲ نهاية التحقق ▲▲▲
+
         $property->status = 'rejected';
+
+        // ▼▼▼ بداية: إضافة الكود لتحديث حقول المراجعة ▼▼▼
+        $property->moderated_by = Auth::id();
+        $property->moderated_at = now();
+        $property->rejection_reason = $validatedData['rejection_reason']; // حفظ سبب الرفض من النموذج
+        // ▲▲▲ نهاية: إضافة الكود ▲▲▲
+
         $property->save();
 
-         // TODO: إرسال إشعار للمالك (اختياري)
-         // $property->user->notify(new PropertyRejected($property, $rejectionReason));
+         // TODO: إرسال إشعار للمالك مع سبب الرفض (اختياري)
+         // if ($property->user) {
+         //    $property->user->notify(new \App\Notifications\PropertyRejectedNotification($property, $validatedData['rejection_reason']));
+         // }
 
         return redirect()->route('moderator.properties.pending')->with('success', "Property '{$property->title}' has been rejected.");
     }

@@ -54,6 +54,13 @@ public function properties(Request $request)
 {
     $query = Property::query()->where('status', 'approved')
                        ->with(['listarea', 'category']);
+                       if ($request->filled('purpose')) {
+        $validPurposes = ['sale', 'rent', 'lease']; // الأغراض الصالحة
+        $requestedPurpose = strtolower($request->input('purpose'));
+        if (in_array($requestedPurpose, $validPurposes)) {
+            $query->where('purpose', $requestedPurpose); // إضافة شرط WHERE للاستعلام
+        }
+    }
 
     $properties = $query->latest()->paginate(12)->withQueryString();
 

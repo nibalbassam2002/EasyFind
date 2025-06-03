@@ -303,5 +303,9 @@
 @endsection
 
 @push('scripts')
-    {{-- أي JavaScript خاص بهذه الصفحة لاحقاً --}}
+    <script>
+    if (typeof updateFrontendNotificationBadge === 'undefined') {
+        window.updateFrontendNotificationBadge = function() { console.log('Dummy updateFrontendNotificationBadge called on pricing page.'); };
+    }
+</script>
 @endpush

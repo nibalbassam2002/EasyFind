@@ -97,7 +97,8 @@
     <div class="card-header">
         <i class="bi bi-images me-2"></i>معرض الوسائط
     </div>
-    <div class="card-body">
+    <br>
+    <div class="card-body ">
         @php
             // معالجة الصور
             $images = is_string($property->images) ? json_decode($property->images, true) : ($property->images ?? []);
@@ -142,7 +143,7 @@
             </div>
 
             {{-- العمود الأيمن للعرض الرئيسي --}}
-            <div class="col-md-9 order-md-2">
+            <div class="col-md-9 order-md-2 ">
                 <div class="main-media-container">
                     @if($firstMedia)
                         @if(in_array(pathinfo($firstMedia, PATHINFO_EXTENSION), ['mp4', 'mov', 'avi']))

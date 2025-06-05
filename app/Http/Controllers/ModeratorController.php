@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Models\Property;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Notifications\PropertyRejectedNotification;
 
 class ModeratorController extends Controller
 {
@@ -30,23 +31,22 @@ class ModeratorController extends Controller
 
         $property->status = 'approved';
 
-        // ▼▼▼ بداية: إضافة الكود لتحديث حقول المراجعة ▼▼▼
-        $property->moderated_by = Auth::id(); // المستخدم الحالي الذي قام بالإجراء
-        $property->moderated_at = now();     // الوقت الحالي للإجراء
-        $property->rejection_reason = null;  // عند الموافقة، امسح أي سبب رفض سابق
-        // ▲▲▲ نهاية: إضافة الكود ▲▲▲
+       
+        $property->moderated_by = Auth::id(); 
+        $property->moderated_at = now();     
+        $property->rejection_reason = null;  
+        
 
-        $property->save(); // حفظ كل التغييرات
-
-        // TODO: إرسال إشعار للمالك (اختياري)
-        // if ($property->user) {
-        //    $property->user->notify(new \App\Notifications\PropertyApprovedNotification($property));
-        // }
+        $property->save(); 
+        if ($property->user) { 
+            $property->user->notify(new PropertyRejectedNotification($property));
+        }
+      
 
         return redirect()->route('moderator.properties.pending')->with('success', "Property '{$property->title}' has been approved.");
     }
 
-    public function rejectProperty(Request $request, Property $property) // Route Model Binding, و Request للحصول على سبب الرفض
+    public function rejectProperty(Request $request, Property $property) 
     {
          if ($property->status !== 'pending') {
             return redirect()->route('moderator.properties.pending')->with('warning', 'This property is not pending rejection.');
@@ -63,8 +63,8 @@ class ModeratorController extends Controller
         // ▼▼▼ بداية: إضافة الكود لتحديث حقول المراجعة ▼▼▼
         $property->moderated_by = Auth::id();
         $property->moderated_at = now();
-        $property->rejection_reason = $validatedData['rejection_reason']; // حفظ سبب الرفض من النموذج
-        // ▲▲▲ نهاية: إضافة الكود ▲▲▲
+        $property->rejection_reason = $validatedData['rejection_reason']; 
+   
 
         $property->save();
 
@@ -74,6 +74,21 @@ class ModeratorController extends Controller
          // }
 
         return redirect()->route('moderator.properties.pending')->with('success', "Property '{$property->title}' has been rejected.");
+    }
+    public function showPropertyForReview(Property $property) // استخدام Route Model Binding
+    {
+        // لا نحتاج للتحقق من ملكية العقار هنا لأن المشرف/الأدمن يمكنه رؤية كل العقارات المعلقة
+        // ولكن يمكنك إضافة تحقق إذا كان العقار فعلاً 'pending' إذا أردت
+        // if ($property->status !== 'pending') {
+        //     return redirect()->route('moderator.properties.pending')->with('warning', 'This property is not currently pending review.');
+        // }
+
+        // تحميل العلاقات اللازمة لعرض التفاصيل الكاملة
+        $property->load(['user', 'category', 'subCategory', 'listarea.governorate']);
+
+        // يمكنك تمرير أي بيانات إضافية تحتاجها في صفحة المراجعة
+        return view('dashboard.moderator.review_property_details', compact('property'));
+        // تأكد أن هذا الـ view موجود: resources/views/dashboard/moderator/review_property_details.blade.php
     }
 
 }

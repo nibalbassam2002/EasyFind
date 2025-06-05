@@ -53,16 +53,16 @@
 
     {{-- Purpose --}}
     <div class="col-md-4">
-         <label for="purpose" class="form-label required">Purpose</label>
-        <select class="form-select @error('purpose') is-invalid @enderror" id="purpose" name="purpose" required>
-             <option value="" disabled {{ !(old('purpose', $property->purpose ?? '')) ? 'selected' : '' }}>Select...</option>
+         <label for="purposes" class="form-label required">Purpose</label>
+        <select class="form-select @error('purposes') is-invalid @enderror" id="purposes" name="purposes" required>
+             <option value="" disabled {{ !(old('purposes', $property->purposes ?? '')) ? 'selected' : '' }}>Select...</option>
              @isset($purposes)
                  @foreach($purposes as $purposeValue) {{-- استخدام purposeValue لتجنب التعارض --}}
-                 <option value="{{ $purposeValue }}" {{ old('purpose', $property->purpose ?? '') == $purposeValue ? 'selected' : '' }}>{{ ucfirst($purposeValue) }}</option>
+                 <option value="{{ $purposeValue }}" {{ old('purposes', $property->purposes ?? '') == $purposeValue ? 'selected' : '' }}>{{ ucfirst($purposeValue) }}</option>
                 @endforeach
              @endisset
         </select>
-         @error('purpose') <div class="invalid-feedback">{{ $message }}</div> @enderror
+         @error('purposes') <div class="invalid-feedback">{{ $message }}</div> @enderror
     </div>
 
     {{-- Price & Currency --}}

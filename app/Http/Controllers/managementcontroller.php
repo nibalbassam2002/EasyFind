@@ -262,10 +262,89 @@ public function show(User $user)
                                                         ->get(['id', 'title', 'status', 'moderated_at', 'rejection_reason']);
             Log::info('Moderator Recent Moderation Actions (Properties):', $viewData['recent_moderation_actions_detailed']->toArray());
         }
-        // يمكنك إضافة @elseif($user->role === 'property_lister') هنا لاحقًا لعرض بيانات خاصة بالبائع
+        elseif ($user->role === 'property_lister') {
+            Log::info("ManagementController@show: Fetching data for PROPERTY_LISTER role (User ID: {$user->id}).");
 
+            // 1. جلب الاشتراك النشط والخطة وتفاصيلها
+            $activeUserSubscription = $user->activeSubscriptionWithPlan(); // تأكد أن هذه الدالة موجودة في موديل User
+            $viewData['listerSubscriptionDetails'] = null; // قيمة افتراضية
+
+            if ($activeUserSubscription && $activeUserSubscription->plan) {
+                $plan = $activeUserSubscription->plan;
+                $planFeatures = $plan->features ?? ($activeUserSubscription->metadata ?? []);
+
+                $maxProperties = (int)($planFeatures['max_properties'] ?? 0);
+                $listedCount = (int)($activeUserSubscription->properties_listed_count ?? 0);
+
+                $allowedTypes = $planFeatures['allowed_types'] ?? [];
+                $allowedPropertyTypesString = 'N/A';
+                if (is_array($allowedTypes)) {
+                    if (in_array('all', array_map('strtolower', $allowedTypes))) {
+                        $allowedPropertyTypesString = 'All Types Allowed';
+                    } elseif (!empty($allowedTypes)) {
+                        $allowedPropertyTypesString = implode(', ', array_map('ucfirst', $allowedTypes));
+                    } else {
+                        $allowedPropertyTypesString = 'No specific types restricted';
+                    }
+                } elseif (!empty($allowedTypes)){
+                    $allowedPropertyTypesString = ucfirst((string)$allowedTypes);
+                }
+
+                $viewData['listerSubscriptionDetails'] = [
+                    'plan_name' => $plan->name,
+                    'status' => ucfirst($activeUserSubscription->status), // حالة الاشتراك (Active, Expired, etc.)
+                    'starts_at' => $activeUserSubscription->starts_at?->format('F j, Y'),
+                    'ends_at' => $activeUserSubscription->ends_at ? $activeUserSubscription->ends_at->translatedFormat('F j, Y, g:i a') : 'Does not expire',
+                    'is_free_plan' => ($plan->price == 0.00), // هل الخطة مجانية؟
+                    'properties_limit' => $maxProperties,
+                    'properties_listed' => $listedCount,
+                    'properties_remaining' => max(0, $maxProperties - $listedCount),
+                    'allowed_property_types' => $allowedPropertyTypesString,
+                    'featured_slots_limit' => (int)($planFeatures['featured_slots'] ?? 0),
+                    // يمكنك إضافة أي تفاصيل أخرى من الخطة أو الاشتراك هنا
+                ];
+                Log::info('Lister Subscription Details Prepared: ', $viewData['listerSubscriptionDetails']);
+            } else {
+                Log::warning("ManagementController@show: Property Lister (User ID: {$user->id}) has NO active subscription or plan details.");
+            }
+
+              $viewData['listerProperties'] = $user->properties() // استخدام العلاقة 'properties'
+                                             ->with('category') // تحميل التصنيف مع كل عقار
+                                             ->orderBy('created_at', 'desc') // الأحدث أولاً
+                                             ->take(10) // جلب آخر 10 عقارات
+                                             ->get();
+            Log::info('Lister Properties Fetched: ', $viewData['listerProperties']->toArray());
+
+
+            // 3. إحصائيات أداء البائع
+            $viewData['listerStats'] = [
+                'total_properties' => $user->properties()->count(), // إجمالي العقارات للبائع
+                'approved_properties' => $user->properties()->where('status', 'approved')->count(),
+                'pending_properties' => $user->properties()->where('status', 'pending')->count(),
+                'sold_properties' => $user->properties()->where('status', 'sold')->count(),
+                'rented_properties' => $user->properties()->where('status', 'rented')->count(),
+                'total_views' => $user->properties()->sum('views_count'),
+                
+            ];
+            Log::info('Lister Stats Prepared: ', $viewData['listerStats']);
+        }
         Log::info("ManagementController@show: Data being passed to 'dashboard.usermanagement.show' view: ", $viewData);
         return view('dashboard.usermanagement.show', compact('user', 'viewData'));
+    }
+    public function showPropertyForReview(Property $property) // استخدام Route Model Binding
+    {
+        // لا نحتاج للتحقق من ملكية العقار هنا لأن المشرف/الأدمن يمكنه رؤية كل العقارات المعلقة
+        // ولكن يمكنك إضافة تحقق إذا كان العقار فعلاً 'pending' إذا أردت
+        // if ($property->status !== 'pending') {
+        //     return redirect()->route('moderator.properties.pending')->with('warning', 'This property is not currently pending review.');
+        // }
+
+        // تحميل العلاقات اللازمة لعرض التفاصيل الكاملة
+        $property->load(['user', 'category', 'subCategory', 'listarea.governorate']);
+
+        // يمكنك تمرير أي بيانات إضافية تحتاجها في صفحة المراجعة
+        return view('dashboard.moderator.review_property_details', compact('property'));
+        // سننشئ هذا الـ view: resources/views/dashboard/moderator/review_property_details.blade.php
     }
 }
 

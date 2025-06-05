@@ -10,10 +10,12 @@
             @switch(auth()->user()->role)
                 @case('admin')
                     Admin
-                    @break
+                @break
+
                 @case('moderator')
                     Moderation
-                    @break
+                @break
+
                 @default
                     Dashboard
             @endswitch
@@ -71,16 +73,21 @@
                             <tr>
                                 <td>{{ $property->id }}</td>
                                 <td>
-                                    <span class="fw-bold">{{ Str::limit($property->title, 35) }}</span>
+                                    <a href="{{ route('moderator.properties.review', $property->id) }}">
+                                        <strong>{{ $property->title }}</strong>
+                                    </a>
+                                    <br>
                                     <small class="d-block text-muted">{{ $property->code }}</small>
                                 </td>
                                 <td>{{ $property->category?->name ?? 'N/A' }}</td>
-                                <td>{{ $property->area?->name ?? 'N/A' }}, {{ $property->area?->governorate?->name ?? 'N/A' }}</td>
+                                <td>{{ $property->area?->name ?? 'N/A' }},
+                                    {{ $property->area?->governorate?->name ?? 'N/A' }}</td>
                                 <td>{{ $property->user?->name ?? 'N/A' }}</td>
                                 <td>{{ $property->created_at->format('d M Y, H:i') }}</td>
                                 <td class="text-center">
                                     {{-- Approve Form --}}
-                                    <form action="{{ route('moderator.properties.approve', $property->id) }}" method="POST" class="d-inline approve-form me-1">
+                                    <form action="{{ route('moderator.properties.approve', $property->id) }}"
+                                        method="POST" class="d-inline approve-form me-1">
                                         @csrf
                                         @method('PATCH')
                                         <button type="submit" class="btn btn-sm btn-success" title="Approve">
@@ -89,7 +96,8 @@
                                     </form>
 
                                     {{-- Reject Form --}}
-                                    <form action="{{ route('moderator.properties.reject', $property->id) }}" method="POST" class="d-inline reject-form">
+                                    <form action="{{ route('moderator.properties.reject', $property->id) }}" method="POST"
+                                        class="d-inline reject-form">
                                         @csrf
                                         @method('PATCH')
                                         <button type="submit" class="btn btn-sm btn-danger" title="Reject">
@@ -128,11 +136,11 @@
 
     {{-- Confirmation Script --}}
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             // Approve Confirmation
             const approveForms = document.querySelectorAll('.approve-form');
             approveForms.forEach(form => {
-                form.addEventListener('submit', function (event) {
+                form.addEventListener('submit', function(event) {
                     event.preventDefault();
                     Swal.fire({
                         title: 'Approve Property?',
@@ -151,12 +159,12 @@
                 });
             });
 
-             // Reject Confirmation
+            // Reject Confirmation
             const rejectForms = document.querySelectorAll('.reject-form');
             rejectForms.forEach(form => {
-                form.addEventListener('submit', function (event) {
+                form.addEventListener('submit', function(event) {
                     event.preventDefault();
-                     Swal.fire({
+                    Swal.fire({
                         title: 'Reject Property?',
                         text: "This property will be marked as rejected.",
                         icon: 'warning',
@@ -165,9 +173,9 @@
                         cancelButtonColor: '#6c757d',
                         confirmButtonText: 'Yes, reject it!',
                         cancelButtonText: 'Cancel',
-                     }).then((result) => {
+                    }).then((result) => {
                         if (result.isConfirmed) {
-                           form.submit();
+                            form.submit();
                         }
                     });
                 });

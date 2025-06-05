@@ -156,6 +156,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('pending-properties', [ModeratorController::class, 'pendingProperties'])->name('properties.pending');
             Route::patch('properties/{property}/approve', [ModeratorController::class, 'approveProperty'])->name('properties.approve');
             Route::patch('properties/{property}/reject', [ModeratorController::class, 'rejectProperty'])->name('properties.reject');
+             Route::get('properties/{property}/review', [ModeratorController::class, 'showPropertyForReview'])->name('properties.review');
             // Feedback management for moderators/admin
             Route::get('feedback', [FeedbackController::class, 'indexAdminFeedbacks'])->name('feedback.index');
             Route::get('feedback/{feedback}', [FeedbackController::class, 'showAdminFeedback'])->name('feedback.show');

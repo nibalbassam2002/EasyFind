@@ -28,6 +28,16 @@
                      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             @endif
+            @if($property->status === 'rejected' && $property->rejection_reason)
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <h4 class="alert-heading"><i class="bi bi-exclamation-octagon-fill me-2"></i>Property Rejected!</h4>
+                    <p>This property was rejected by our moderation team for the following reason:</p>
+                    <p class="mb-0"><strong><em>{{ $property->rejection_reason }}</em></strong></p>
+                    <hr>
+                    <p class="mb-0 small">Please review the details below, make the necessary corrections, and save your changes to resubmit the property for review.</p>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
 
             <form action="{{ route('lister.properties.update', $property->id) }}" method="POST" enctype="multipart/form-data" id="edit-property-form"> {{-- إضافة ID للفورم --}}
                 @csrf

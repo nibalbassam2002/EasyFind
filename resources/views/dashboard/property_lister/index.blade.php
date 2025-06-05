@@ -80,21 +80,24 @@
                                 <td>{{ $property->listarea?->name ?? 'N/A' }}</td>
                                 <td class="text-end">{{ number_format($property->price, 0) }} {{ $property->currency }}
                                 </td>
-                               <td>
+                                <td>
                                     @php
                                         $purposeConfig = [
                                             'sale' => ['color' => 'primary', 'icon' => 'bi-tag-fill'],
                                             'rent' => ['color' => 'success', 'icon' => 'bi-key-fill'],
                                             'lease' => ['color' => 'info', 'icon' => 'bi-calendar-week-fill'],
                                         ];
-                                        $pConfig = $purposeConfig[strtolower($property->purpose ?? '')] ?? ['color' => 'secondary', 'icon' => 'bi-question-circle'];
+                                        $pConfig = $purposeConfig[strtolower($property->purpose ?? '')] ?? [
+                                            'color' => 'secondary',
+                                            'icon' => 'bi-question-circle',
+                                        ];
                                     @endphp
                                     <span class="badge bg-{{ $pConfig['color'] }}">
                                         <i class="{{ $pConfig['icon'] }} me-1"></i>
                                         {{ ucfirst(strtolower($property->purpose ?? 'N/A')) }}
                                     </span>
                                 </td>
-                               <td>
+                                <td>
                                     @php
                                         $statusConfig = [
                                             'pending' => ['color' => 'warning', 'icon' => 'bi-hourglass-split'],
@@ -104,12 +107,20 @@
                                             'sold' => ['color' => 'primary', 'icon' => 'bi-building-check'],
                                             'unavailable' => ['color' => 'secondary', 'icon' => 'bi-slash-circle-fill'],
                                         ];
-                                        $sConfig = $statusConfig[strtolower($property->status ?? '')] ?? ['color' => 'light', 'icon' => 'bi-question-circle'];
+                                        $sConfig = $statusConfig[strtolower($property->status ?? '')] ?? [
+                                            'color' => 'light',
+                                            'icon' => 'bi-question-circle',
+                                        ];
                                     @endphp
                                     <span class="badge bg-{{ $sConfig['color'] }}">
                                         <i class="{{ $sConfig['icon'] }} me-1"></i>
                                         {{ ucfirst(strtolower($property->status ?? 'N/A')) }}
                                     </span>
+                                    @if ($property->status === 'rejected' && $property->rejection_reason)
+                                        <i class="bi bi-info-circle-fill text-danger ms-1" data-bs-toggle="tooltip"
+                                            data-bs-placement="top"
+                                            title="Rejection Reason: {{ Str::limit($property->rejection_reason, 150) }}"></i>
+                                    @endif
                                 </td>
                                 <td class="text-center">
                                     {{-- ▼▼▼ إضافة زر عرض التفاصيل (اختياري، لأن العنوان أصبح رابطًا) ▼▼▼ --}}
@@ -118,9 +129,15 @@
                                         <i class="bi bi-eye-fill"></i>
                                     </a>
                                     {{-- ▲▲▲ نهاية زر عرض التفاصيل ▲▲▲ --}}
-                                    <a href="{{ route('lister.properties.edit', $property->id) }}"
-                                        class="btn btn-sm btn-outline-primary me-1" title="Edit"><i
-                                            class="bi bi-pencil-square"></i></a>
+                                    @if($property->status === 'pending' || $property->status === 'rejected' || (Auth::check() && Auth::user()->role == 'admin'))
+                                        <a href="{{ route('lister.properties.edit', $property->id) }}" class="btn btn-sm btn-outline-primary me-1 px-2" title="Edit Property">
+                                            <i class="bi bi-pencil-fill"></i>
+                                        </a>
+                                    @else
+                                        <button class="btn btn-sm btn-outline-secondary me-1 px-2" disabled title="Cannot edit property in its current status (e.g., Approved, Sold, Rented)">
+                                            <i class="bi bi-pencil-fill"></i>
+                                        </button>
+                                    @endif
                                     <form action="{{ route('lister.properties.destroy', $property->id) }}" method="POST"
                                         class="d-inline delete-property-form">
                                         @csrf

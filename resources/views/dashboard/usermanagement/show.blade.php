@@ -398,8 +398,170 @@
                             </div>
                         @endif
                     @endif {{-- نهاية @if ($user->role === 'content_moderator') --}}
-                    {{-- يمكنك إضافة @elseif($user->role === 'property_lister') هنا لاحقًا إذا أردت أقسامًا خاصة للبائع في صفحة عرض المستخدم --}}
-                @endif 
+                 @if ($user->role === 'property_lister')
+                     
+                 @endif
+                    @if(isset($viewData['listerSubscriptionDetails']))
+                            @php $subDetails = $viewData['listerSubscriptionDetails']; @endphp
+                            <div class="card mt-4">
+                                <div class="card-body pt-3">
+                                    <h5 class="card-title-custom">
+                                        <i class="bi bi-patch-check-fill me-2 {{ $subDetails['is_free_plan'] ? 'text-primary' : 'text-success' }}"></i>
+                                        Current Subscription
+                                    </h5>
+                                    <div class="profile-overview px-3 pb-2">
+                                        <div class="row">
+                                            <div class="col-md-4 label">Plan Name:</div>
+                                            <div class="col-md-8 fw-bold">
+                                                {{ $subDetails['plan_name'] ?? 'N/A' }}
+                                                @if(isset($subDetails['is_free_plan']) && $subDetails['is_free_plan'])
+                                                    <span class="badge bg-primary ms-2">Free</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-4 label">Subscription Status:</div>
+                                            <div class="col-md-8">
+                                                <span class="badge bg-{{ strtolower($subDetails['status'] ?? '') === 'active' ? 'success' : 'warning' }}">
+                                                    {{ $subDetails['status'] ?? 'N/A' }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        @if(isset($subDetails['starts_at']))
+                                            <div class="row">
+                                                <div class="col-md-4 label">Starts At:</div>
+                                                <div class="col-md-8">{{ $subDetails['starts_at'] }}</div>
+                                            </div>
+                                        @endif
+                                        <div class="row">
+                                            <div class="col-md-4 label">Expires At:</div>
+                                            <div class="col-md-8">{{ $subDetails['ends_at'] ?? 'Not Applicable' }}</div>
+                                        </div>
+                                        <hr class="my-2">
+                                        @if(isset($subDetails['properties_limit']) && $subDetails['properties_limit'] > 0)
+                                            <div class="row">
+                                                <div class="col-md-4 label">Property Listings:</div>
+                                                <div class="col-md-8">
+                                                    {{ $subDetails['properties_listed'] ?? 0 }} / {{ $subDetails['properties_limit'] }} used
+                                                    <span class="small text-muted">({{ $subDetails['properties_remaining'] ?? $subDetails['properties_limit'] }} remaining)</span>
+                                                </div>
+                                            </div>
+                                        @else
+                                            <div class="row">
+                                                <div class="col-md-4 label">Property Listings:</div>
+                                                <div class="col-md-8">Unlimited</div>
+                                            </div>
+                                        @endif
+                                        <div class="row">
+                                            <div class="col-md-4 label">Allowed Property Types:</div>
+                                            <div class="col-md-8">{{ $subDetails['allowed_property_types'] ?? 'Not Specified' }}</div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-4 label">Featured Slots:</div>
+                                            <div class="col-md-8">{{ $subDetails['featured_slots_limit'] ?? 0 }} available</div>
+                                            {{-- يمكنك إضافة عدد المستخدم منها إذا كنت تتتبعه --}}
+                                        </div>
+                                    </div>
+                                    {{-- يمكنك إضافة زر "إدارة الاشتراك" للأدمن هنا لاحقًا --}}
+                                    {{-- <div class="card-footer text-end">
+                                        <a href="#" class="btn btn-sm btn-outline-primary">Manage Subscription</a>
+                                    </div> --}}
+                                </div>
+                            </div>
+                        @else
+                            <div class="card mt-4">
+                                <div class="card-body pt-3">
+                                    <h5 class="card-title-custom"><i class="bi bi-exclamation-triangle-fill me-2 text-warning"></i>Subscription Information</h5>
+                                    <p class="text-muted px-3 pb-3">This property lister does not currently have an active subscription or plan details are unavailable.</p>
+                                    <div class="px-3 pb-3">
+                                        <a href="{{ route('frontend.pricing') }}"  class="btn btn-sm btn-info">View Available Plans</a>
+                                        {{-- يمكنك إضافة زر للأدمن لتعيين خطة لهذا المستخدم --}}
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+                        @if(isset($viewData['listerStats']))
+                        <div class="card mt-4">
+                            <div class="card-body pt-3">
+                                <h5 class="card-title-custom"><i class="bi bi-bar-chart-line-fill me-2"></i>Seller Performance</h5>
+                                <div class="profile-overview px-3 pb-2">
+                                    <div class="row"><div class="col-md-7 label">Total Properties Listed:</div><div class="col-md-5 fw-bold">{{ $viewData['listerStats']['total_properties'] ?? 0 }}</div></div>
+                                    <div class="row"><div class="col-md-7 label">Active (Approved):</div><div class="col-md-5 fw-bold text-success">{{ $viewData['listerStats']['approved_properties'] ?? 0 }}</div></div>
+                                    <div class="row"><div class="col-md-7 label">Pending Review:</div><div class="col-md-5 fw-bold text-warning">{{ $viewData['listerStats']['pending_properties'] ?? 0 }}</div></div>
+                                    <div class="row"><div class="col-md-7 label">Sold Properties:</div><div class="col-md-5 fw-bold">{{ $viewData['listerStats']['sold_properties'] ?? 0 }}</div></div>
+                                    <div class="row"><div class="col-md-7 label">Rented Properties:</div><div class="col-md-5 fw-bold">{{ $viewData['listerStats']['rented_properties'] ?? 0 }}</div></div>
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                    @if(isset($viewData['listerProperties']))
+                        <div class="card mt-4">
+                            <div class="card-body pt-3">
+                                <h5 class="card-title-custom"><i class="bi bi-collection-fill me-2"></i>Listed Properties {{ $viewData['listerProperties']->count() > 0 ? '(Showing Last '.$viewData['listerProperties']->count().')' : '' }}</h5>
+                                @if($viewData['listerProperties']->isNotEmpty())
+                                    <div class="table-responsive px-3 pb-2">
+                                        <table class="table table-sm table-hover align-middle">
+                                            <thead>
+                                                <tr>
+                                                    <th>Title</th>
+                                                    <th>Category</th>
+                                                    <th class="text-end">Price</th>
+                                                    <th>Status</th>
+                                                    <th>Added</th>
+                                                    <th class="text-center">View</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach($viewData['listerProperties'] as $property)
+                                                <tr>
+                                                    <td>
+                                                        {{-- رابط لعرض العقار في الواجهة الأمامية --}}
+                                                        <a href="{{ route('frontend.property.show', $property->id) }}"  title="{{ $property->title }}">{{ Str::limit($property->title, 30) }}</a>
+                                                    </td>
+                                                    <td>{{ $property->category?->name ?? 'N/A'}}</td>
+                                                    <td class="text-end">{{$property->currency}} {{ number_format($property->price,0) }}</td>
+                                                    <td>
+                                                        @php
+                                                            $statusClass = match(strtolower($property->status)) {
+                                                                'approved' => 'success',
+                                                                'pending' => 'warning',
+                                                                'rejected' => 'danger',
+                                                                'sold' => 'primary',
+                                                                'rented' => 'info',
+                                                                default => 'secondary',
+                                                            };
+                                                        @endphp
+                                                        <span class="badge bg-{{$statusClass}}">{{ ucfirst($property->status) }}</span>
+                                                    </td>
+                                                    <td>{{ $property->created_at->format('d M Y') }}</td>
+                                                    <td class="text-center">
+                                                        {{-- رابط لعرض تفاصيل العقار من لوحة تحكم الأدمن (إذا كان لديك مسار مخصص) --}}
+                                                        {{-- أو يمكنك استخدام نفس رابط الواجهة الأمامية --}}
+                                                        <a href="{{ route('frontend.property.show', $property->id) }}"  class="btn btn-sm btn-outline-secondary px-2 py-1" title="View on Site">
+                                                            <i class="bi bi-box-arrow-up-right"></i>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    @if($user->properties()->count() > $viewData['listerProperties']->count() && $viewData['listerProperties']->count() > 0)
+                                        <div class="text-center mt-2 pb-2">
+                                            {{-- رابط لصفحة الأدمن التي تعرض كل عقارات هذا البائع (ستحتاج لإنشاء هذا المسار والصفحة) --}}
+                                            {{-- <a href="{{ route('admin.user.properties', $user->id) }}">View All {{ $user->properties()->count() }} Properties</a> --}}
+                                            <small class="text-muted">Showing last {{ $viewData['listerProperties']->count() }} of {{ $user->properties()->count() }} total properties by this lister.</small>
+                                        </div>
+                                    @endif
+                                @else
+                                    <p class="text-muted px-3 pb-3">This user has not listed any properties yet.</p>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
+                 @endif
+          
             </div>
         </div>
     </section>

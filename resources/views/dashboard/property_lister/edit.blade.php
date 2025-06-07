@@ -1,4 +1,3 @@
-{{-- resources/views/dashboard/property_lister/edit.blade.php --}}
 @extends('layouts.dashboard')
 
 @section('title', 'Edit Property: ' . $property->title)
@@ -69,55 +68,71 @@
 @section('script') {{-- أو @push('scripts') حسب الـ Layout --}}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const governorateSelect = document.getElementById('governorate_id');
-        const areaSelect = document.getElementById('area_id');
+    const governorateSelect = document.getElementById('governorate_id');
+    const areaSelect = document.getElementById('area_id');
 
-        function updateAreaOptions() {
-            if (!governorateSelect || !areaSelect) return;
-            const selectedGovOption = governorateSelect.options[governorateSelect.selectedIndex];
-            const currentSelectedArea = "{{ old('area_id', $property->area_id ?? '') }}"; // <-- استخدام قيمة العقار
-            areaSelect.innerHTML = '';
+    function updateAreaOptions() {
+        if (!governorateSelect || !areaSelect) return;
+        
+        const selectedGovOption = governorateSelect.options[governorateSelect.selectedIndex];
+        const currentSelectedArea = "{{ old('area_id', $property->area_id ?? '') }}";
+        
+        areaSelect.innerHTML = '';
 
-            let defaultOptionGov = new Option('Select Governorate First...', '');
-            defaultOptionGov.disabled = true; defaultOptionGov.selected = true;
-            let defaultOptionArea = new Option('Select Area...', '');
+        let defaultOptionGov = new Option('Select Governorate First...', '');
+        defaultOptionGov.disabled = true;
+        defaultOptionGov.selected = true;
+        
+        let defaultOptionArea = new Option('Select Area...', '');
+        defaultOptionArea.disabled = true;
+        defaultOptionArea.selected = true;
 
-            if (!selectedGovOption || !selectedGovOption.value) {
-                areaSelect.add(defaultOptionGov);
-                areaSelect.disabled = true;
-            } else {
-                areaSelect.disabled = false;
-                areaSelect.add(defaultOptionArea);
+        if (!selectedGovOption || !selectedGovOption.value) {
+            areaSelect.add(defaultOptionGov);
+            areaSelect.disabled = true;
+        } else {
+            areaSelect.disabled = false;
+            areaSelect.add(defaultOptionArea);
 
-                let areas = {};
-                try {
-                    if (selectedGovOption.dataset.areas) areas = JSON.parse(selectedGovOption.dataset.areas);
-                } catch (e) { console.error("Error parsing areas data:", e); return; }
-
-                let areaFound = false;
-                for (const areaId in areas) {
-                    if (areas.hasOwnProperty(areaId)) {
-                        const option = new Option(areas[areaId], areaId);
-                        if (String(areaId) === String(currentSelectedArea)) {
-                            option.selected = true;
-                            areaFound = true;
-                        }
-                        areaSelect.add(option);
-                    }
+            let areas = {};
+            try {
+                if (selectedGovOption.dataset.areas) {
+                    areas = JSON.parse(selectedGovOption.dataset.areas);
                 }
-                if (!areaFound) {
-                     areaSelect.value = "";
+            } catch (e) { 
+                console.error("Error parsing areas data:", e); 
+                return; 
+            }
+
+            let areaFound = false;
+            for (const areaId in areas) {
+                if (areas.hasOwnProperty(areaId)) {
+                    const option = new Option(areas[areaId], areaId);
+                    if (String(areaId) === String(currentSelectedArea)) {
+                        option.selected = true;
+                        areaFound = true;
+                    }
+                    areaSelect.add(option);
                 }
             }
+            
+            if (!areaFound && currentSelectedArea) {
+                // إذا كانت المنطقة غير موجودة في القائمة، أضفها كخيار
+                const option = new Option("{{ $property->listarea->name ?? 'Selected Area' }}", currentSelectedArea);
+                option.selected = true;
+                areaSelect.add(option);
+            }
         }
+    }
 
-        if (governorateSelect && areaSelect) {
-            governorateSelect.addEventListener('change', updateAreaOptions);
-            updateAreaOptions(); // التشغيل الأولي مهم للتعديل
-        } else {
-            console.error("Governorate or Area select elements not found in edit form.");
-        }
-    });
+    // تشغيل الدالة عند تحميل الصفحة
+    updateAreaOptions();
+    
+    // إضافة حدث التغيير
+    if (governorateSelect) {
+        governorateSelect.addEventListener('change', updateAreaOptions);
+    }
+});
     </script>
 
 <script>

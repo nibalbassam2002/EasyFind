@@ -87,10 +87,10 @@ class PropertyListerController extends Controller
 
         $subCategories = Category::whereNotNull('parent_id')->orderBy('name')->get();
         $governorates = Governorate::with('areas')->orderBy('name')->get();
-        $purposes = ['rent', 'sale', 'lease'];
+        $purpose = ['rent', 'sale', 'lease'];
         $currencies = ['ILS', 'USD', 'JOD'];
 
-        return view('dashboard.property_lister.create', compact('categories', 'subCategories', 'governorates', 'purposes', 'currencies', 'activeSubscription'));
+        return view('dashboard.property_lister.create', compact('categories', 'subCategories', 'governorates', 'purpose', 'currencies', 'activeSubscription'));
     }
 
     public function store(Request $request)
@@ -132,7 +132,7 @@ class PropertyListerController extends Controller
             'category_id' => 'required|integer|exists:categories,id',
             'sub_category_id' => 'required_if:category_id,'.config('app.commercial_category_id', 5).'|nullable|integer|exists:categories,id',
             'description' => 'required|string',
-            'purposes' => 'required|in:rent,sale,lease',
+            'purpose' => 'required|in:rent,sale,lease',
             'price' => 'required|numeric|min:0',
             'currency' => 'required|in:ILS,USD,JOD',
             //'governorate_id' => 'required|exists:governorates,id', // ليس ضروريًا إذا كان area_id كافيًا
@@ -187,8 +187,9 @@ class PropertyListerController extends Controller
         return redirect()->route('lister.properties.index')->with('success', 'Property submitted for review successfully!');
     }
 
-public function edit(Property $property) // استخدام Route Model Binding
+public function edit(Property $property) 
 {
+    
     $user = Auth::user();
 
     // 1. التحقق من أن المستخدم يملك هذا العقار أو أنه أدمن
@@ -231,7 +232,7 @@ public function edit(Property $property) // استخدام Route Model Binding
     // 5. جلب باقي البيانات اللازمة للنموذج
     $subCategories = Category::whereNotNull('parent_id')->orderBy('name')->get();
     $governorates = Governorate::with('areas')->orderBy('name')->get();
-    $purposes = ['rent', 'sale', 'lease'];
+    $purpose = ['rent', 'sale', 'lease'];
     $currencies = ['ILS', 'USD', 'JOD'];
     $isFreePlan = ($activeSubscription->plan->price == 0.00);
     $maxImages = $planFeatures['max_images_per_property'] ?? 5;
@@ -249,9 +250,8 @@ public function edit(Property $property) // استخدام Route Model Binding
         'categories',
         'subCategories',
         'governorates',
-        'purposes',     // تم تغيير الاسم هنا ليتوافق مع ما استخدمته في create
+        'purpose',   
         'currencies',
-        // 'activeSubscription', // لا حاجة لتمريره إذا مررت التفاصيل اللازمة
         'isFreePlan',
         'maxImages',
         'availableAmenitiesForPlan',

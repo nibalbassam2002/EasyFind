@@ -80,8 +80,8 @@
                                     <small class="d-block text-muted">{{ $property->code }}</small>
                                 </td>
                                 <td>{{ $property->category?->name ?? 'N/A' }}</td>
-                                <td>{{ $property->area?->name ?? 'N/A' }},
-                                    {{ $property->area?->governorate?->name ?? 'N/A' }}</td>
+                                <td>{{ $property->listarea?->name ?? 'N/A' }},
+                                    {{ $property->listarea?->governorate?->name ?? 'N/A' }}</td>
                                 <td>{{ $property->user?->name ?? 'N/A' }}</td>
                                 <td>{{ $property->created_at->format('d M Y, H:i') }}</td>
                                 <td class="text-center">

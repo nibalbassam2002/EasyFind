@@ -401,6 +401,7 @@
                  @if ($user->role === 'property_lister')
                      
                  @endif
+                 @if ($user->role === 'property_lister')
                     @if(isset($viewData['listerSubscriptionDetails']))
                             @php $subDetails = $viewData['listerSubscriptionDetails']; @endphp
                             <div class="card mt-4">
@@ -559,6 +560,7 @@
                                 @endif
                             </div>
                         </div>
+                    @endif
                     @endif
                  @endif
           

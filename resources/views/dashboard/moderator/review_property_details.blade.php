@@ -109,7 +109,7 @@
     <div class="row mb-3 align-items-center">
         <div class="col">
             <h4 class="mb-0 fw-bold">{{ $property->title }}</h4>
-            <span class="badge bg-warning text-dark fs-6"><i class="bi bi-hourglass-split me-1"></i>Status: {{ ucfirst($property->status) }}</span>
+            <span class="badge bg-gold text-dark fs-6"><i class="bi bi-hourglass-split me-1"></i>Status: {{ ucfirst($property->status) }}</span>
         </div>
         <div class="col-auto">
             <a href="{{ route('moderator.properties.pending') }}" class="btn btn-sm btn-outline-secondary">
@@ -124,35 +124,56 @@
             {{-- بطاقة الصور --}}
             <div class="card property-detail-card">
                 <div class="card-header"><i class="bi bi-images me-2"></i>Property Gallery</div>
-                <div class="card-body text-center p-3">
-                    @php
-                        $images = is_string($property->images) ? json_decode($property->images, true) : ($property->images ?? []);
-                        if (!is_array($images)) $images = [];
-                        $firstImage = count($images) > 0 ? $images[0] : null;
-                        $defaultImageUrl = asset('assets/img/placeholder-property.png');
-                    @endphp
+              <div class="card-body p-3">
+    @php
+        $images = is_string($property->images) ? json_decode($property->images, true) : ($property->images ?? []);
+        if (!is_array($images)) $images = [];
+        $firstImage = count($images) > 0 ? $images[0] : null;
+        $defaultImageUrl = asset('assets/img/placeholder-property.png');
+    @endphp
 
-                    @if($firstImage && Storage::disk('public')->exists($firstImage))
-                        <img src="{{ Storage::url($firstImage) }}" alt="{{ $property->title }}" class="main-property-image-display mb-2" id="mainPropertyImageReview">
-                    @else
-                        <img src="{{ $defaultImageUrl }}" alt="No Image Available" class="main-property-image-display mb-2">
+    <div class="row align-items-start">
+        {{-- الصورة الرئيسية على اليسار --}}
+      <div class="row">
+    {{-- الصور المصغّرة على اليسار --}}
+    <div class="col-md-3">
+        @if(count($images) > 1)
+            <div class="d-flex flex-md-column flex-wrap gap-2" id="reviewPropertyImagesContainer">
+                @foreach($images as $index => $imagePath)
+                    @if(Storage::disk('public')->exists($imagePath))
+                        <img src="{{ Storage::url($imagePath) }}" 
+                             alt="Thumbnail {{ $index + 1 }}"
+                             class="img-thumbnail thumb-image {{ $index == 0 ? 'active-thumb' : '' }}"
+                             onclick="document.getElementById('mainPropertyImageReview').src='{{ Storage::url($imagePath) }}'; 
+                                      document.querySelectorAll('#reviewPropertyImagesContainer img').forEach(img => img.classList.remove('active-thumb')); 
+                                      this.classList.add('active-thumb');">
                     @endif
+                @endforeach
+            </div>
+        @endif
+    </div>
 
-                    @if(count($images) > 1)
-                        <div class="thumbnails-container d-flex flex-wrap justify-content-center" id="reviewPropertyImagesContainer">
-                            @foreach($images as $index => $imagePath)
-                                @if(Storage::disk('public')->exists($imagePath))
-                                <img src="{{ Storage::url($imagePath) }}" alt="Thumbnail {{ $index + 1 }}"
-                                     class="m-1 {{ $index == 0 ? 'active-thumb' : '' }}"
-                                     onclick="document.getElementById('mainPropertyImageReview').src='{{ Storage::url($imagePath) }}'; document.querySelectorAll('#reviewPropertyImagesContainer img').forEach(img => img.classList.remove('active-thumb')); this.classList.add('active-thumb');">
-                                @endif
-                            @endforeach
-                        </div>
-                    @endif
-                    @if(empty($images))
-                        <p class="text-muted mt-3">No images provided for this property.</p>
-                    @endif
-                </div>
+    {{-- الصورة الرئيسية على اليمين --}}
+    <div class="col-md-9 text-center">
+        @if($firstImage && Storage::disk('public')->exists($firstImage))
+            <img src="{{ Storage::url($firstImage) }}" 
+                 alt="{{ $property->title }}" 
+                 class="img-fluid border rounded main-property-image-display" 
+                 id="mainPropertyImageReview">
+        @else
+            <img src="{{ $defaultImageUrl }}" 
+                 alt="No Image" 
+                 class="img-fluid border rounded main-property-image-display">
+        @endif
+    </div>
+</div>
+
+@if(empty($images))
+    <p class="text-muted mt-3 text-center">No images provided for this property.</p>
+@endif
+
+  </div>
+        </div>
             </div>
 
             {{-- بطاقة الوصف --}}
@@ -261,12 +282,12 @@
                     <form action="{{ route('moderator.properties.approve', $property->id) }}" method="POST" class="d-inline-block me-2 mb-2">
                         @csrf
                         @method('PATCH')
-                        <button type="submit" class="btn btn-success btn-lg">
+                        <button type="submit" class="btn btn-outline-gold btn-lg">
                             <i class="bi bi-check-lg"></i> Approve Property
                         </button>
                     </form>
 
-                    <button type="button" class="btn btn-danger btn-lg mb-2" id="rejectButtonReview">
+                    <button type="button" class="btn btn-outline-danger btn-lg " id="rejectButtonReview">
                         <i class="bi bi-x-lg"></i> Reject Property
                     </button>
 

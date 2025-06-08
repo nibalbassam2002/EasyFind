@@ -205,7 +205,7 @@
                 <div class="card-header"><i class="bi bi-list-ul me-2"></i>Key Details</div>
                 <ul class="list-group list-group-flush detail-list-group">
                     <li class="list-group-item"><strong>Price:</strong> <span class="fw-bold text-success fs-6">{{ $property->currency }} {{ number_format($property->price, 0) }}</span></li>
-                    <li class="list-group-item"><strong>Status:</strong> @php /* ... كود الحالة ... */ @endphp <span class="badge bg-{{ $sConfig['color'] ?? 'light' }}"><i class="{{ $sConfig['icon'] ?? 'bi-question-circle' }} me-1"></i>{{ ucfirst($property->status) }}</span></li>
+                    <li class="list-group-item"><strong>Status:</strong> @php /* ... كود الحالة ... */ @endphp <span class="badge bg-{{ $sConfig['color'] ?? 'gold' }}"><i class="{{ $sConfig['icon'] ?? 'bi-question-circle' }} me-1"></i>{{ ucfirst($property->status) }}</span></li>
                     <li class="list-group-item"><strong>Purpose:</strong> <span class="badge bg-{{ $property->purpose == 'sale' ? 'primary' : 'success' }}">{{ ucfirst($property->purpose) }}</span></li>
                     <li class="list-group-item"><strong>Category:</strong> {{ $property->category?->name ?? 'N/A' }}@if($property->subCategory) / {{ $property->subCategory?->name }}@endif</li>
                     <li class="list-group-item"><strong>Code:</strong> {{ $property->code }}</li>
@@ -376,5 +376,6 @@ function changeMainMedia(clickedElement, newSrc, mediaType) {
         console.error('حدث خطأ أثناء تغيير الوسائط:', error);
     }
 }
-</script>
+</script>  
+
 @endpush

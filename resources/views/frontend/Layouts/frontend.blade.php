@@ -37,11 +37,21 @@
             <div class="collapse navbar-collapse" id="navbarLinks">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        {{-- رابط "Sell" الجديد ليعرض العقارات المفلترة للبيع --}}
-                        <a href="{{ route('frontend.properties', ['purpose' => 'sale']) }}"
-                            class="nav-link {{ request()->routeIs('frontend.properties') && request('purpose') == 'sale' ? 'active' : '' }}">Sell</a>
-                        {{-- ستحتاج لرابط آخر لـ "List Your Property" الذي يوجه لـ lister.properties.create --}}
-                    </li>
+                        {{-- ▼▼▼ بداية: الكود الصحيح لرابط Sell ▼▼▼ --}}
+                        @guest {{-- إذا كان المستخدم زائرًا --}}
+                            <a href="{{ route('login', ['intended' => route('frontend.pricing')]) }}" class="nav-link">Sell</a>
+                            {{-- أو إذا أردت توجيهه لـ lister.properties.create بعد التسجيل مباشرة إذا كان هذا مسموحًا --}}
+                            {{-- <a href="{{ route('login', ['intended' => route('lister.properties.create')]) }}" class="nav-link">Sell</a> --}}
+                        @else {{-- إذا كان المستخدم مسجلاً --}}
+                            @if (Auth::user()->role === 'customer')
+                                {{-- إذا كان customer، اعرض modal أو وجهه لصفحة الخطط --}}
+                                <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#subscribeModal">Sell</a>
+                                {{-- أو <a href="{{ route('frontend.pricing') }}" class="nav-link">Sell</a> --}}
+                            @else
+                                {{-- إذا كان property_lister أو admin، وجهه لصفحة إضافة عقار --}}
+                                <a href="{{ route('lister.properties.create') }}" class="nav-link">Sell</a>
+                            @endif
+                        @endguest
                     <li class="nav-item">
                         @guest
                             <a href="{{ route('login') }}?redirect={{ urlencode(route('frontend.properties', ['purpose' => 'sale'])) }}"

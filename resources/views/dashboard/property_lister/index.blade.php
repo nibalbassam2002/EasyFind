@@ -129,12 +129,17 @@
                                         <i class="bi bi-eye-fill"></i>
                                     </a>
                                     {{-- ▲▲▲ نهاية زر عرض التفاصيل ▲▲▲ --}}
-                                    @if($property->status === 'pending' || $property->status === 'rejected' || (Auth::check() && Auth::user()->role == 'admin'))
-                                        <a href="{{ route('lister.properties.edit', $property->id) }}" class="btn btn-sm btn-outline-primary me-1 px-2" title="Edit Property">
+                                    @if (
+                                        $property->status === 'pending' ||
+                                            $property->status === 'rejected' ||
+                                            (Auth::check() && Auth::user()->role == 'admin'))
+                                        <a href="{{ route('lister.properties.edit', $property->id) }}"
+                                            class="btn btn-sm btn-outline-primary me-1 px-2" title="Edit Property">
                                             <i class="bi bi-pencil-fill"></i>
                                         </a>
                                     @else
-                                        <button class="btn btn-sm btn-outline-secondary me-1 px-2" disabled title="Cannot edit property in its current status (e.g., Approved, Sold, Rented)">
+                                        <button class="btn btn-sm btn-outline-secondary me-1 px-2" disabled
+                                            title="Cannot edit property in its current status (e.g., Approved, Sold, Rented)">
                                             <i class="bi bi-pencil-fill"></i>
                                         </button>
                                     @endif
@@ -145,7 +150,36 @@
                                         <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"><i
                                                 class="bi bi-trash3"></i></button>
                                     </form>
+                                    @php
+                                        // جلب رصيد التمييز من الاشتراك
+                                        $planSlots = $activeSubscription->plan->features['featured_slots'] ?? 0;
+                                        $usedSlots = $activeSubscription->featured_slots_used ?? 0;
+                                        $canFeature = $planSlots > $usedSlots;
+                                    @endphp
+
+                                    {{-- إذا كان العقار موافق عليه، وغير مميز، ويوجد رصيد للتمييز --}}
+                                    @if ($property->status === 'approved' && !$property->is_featured && $canFeature)
+                                        <form action="{{ route('lister.properties.feature', $property) }}" method="POST"
+                                            class="d-inline feature-property-form"
+                                            onsubmit="return confirm('Are you sure you want to use one of your {{ $planSlots - $usedSlots }} featured slots for this property? This action cannot be undone.');">
+                                            @csrf
+                                            @method('PATCH')
+                                            <button type="submit" class="btn btn-sm btn-warning"
+                                                title="Make Featured ({{ $planSlots - $usedSlots }} left)">
+                                                <i class="bi bi-star-fill"></i>
+                                            </button>
+                                        </form>
+                                    @endif
+
+                                    {{-- إذا كان العقار مميزاً بالفعل، اعرض أيقونة ثابتة --}}
+                                    @if ($property->is_featured)
+                                        <button class="btn btn-sm btn-warning" disabled
+                                            title="This property is already featured">
+                                            <i class="bi bi-check-circle-fill"></i>
+                                        </button>
+                                    @endif
                                 </td>
+
                             </tr>
                         @empty
 

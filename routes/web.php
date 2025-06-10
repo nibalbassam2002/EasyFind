@@ -144,7 +144,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('properties/{property}/edit', [PropertyListerController::class, 'edit'])->name('properties.edit');
             Route::put('properties/{property}', [PropertyListerController::class, 'update'])->name('properties.update');
             Route::delete('properties/{property}', [PropertyListerController::class, 'destroy'])->name('properties.destroy');
-            
+            Route::patch('properties/{property}/feature', [PropertyListerController::class, 'featureProperty'])->name('properties.feature');
         });
 
 

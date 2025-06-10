@@ -27,24 +27,34 @@ class PropertyListerController extends Controller
         return $user->activeSubscription()->with('plan')->first();
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
-        // لا حاجة لجلب الاشتراك هنا إذا كانت الداشبورد الرئيسية هي التي تعرض معلومات الاشتراك
-        // ولكن إذا كانت هذه الصفحة هي الداشبورد الأساسية للمعلن, يمكنك جلب الاشتراك وتمريره
         $activeSubscription = $this->getActiveSubscriptionForCurrentUser();
 
-        $properties = Property::where('user_id', $user->id)
-                              ->with('listarea', 'category', 'subCategory')
-                              ->latest()
-                              ->paginate(10);
+        $propertiesQuery = Property::where('user_id', $user->id)
+                              ->with('listarea', 'category', 'subCategory');
+
+    // فلترة حسب الحالة إذا كانت موجودة في الرابط
+    if ($request->filled('status')) {
+        $propertiesQuery->where('status', $request->input('status'));
+    }
+
+    // فلترة حسب الغرض (purpose) إذا كانت موجودة في الرابط
+    // مثل: ?purpose=sale, ?purpose=rent
+    if ($request->filled('purpose')) {
+        $propertiesQuery->where('purpose', $request->input('purpose'));
+    }
+
+
+    $properties = $propertiesQuery->latest()->paginate(10);
 
         // مرر الاشتراك للـ view ليتمكن من عرض معلومات الاشتراك أو تقييد زر الإضافة
         return view('dashboard.property_lister.index', compact('properties', 'activeSubscription'));
     }
 
 
-    public function create()
+    public function create(Request $request)
     {
         $user = Auth::user();
         $activeSubscription = $this->getActiveSubscriptionForCurrentUser();
@@ -54,8 +64,10 @@ class PropertyListerController extends Controller
                              ->with('error', 'You need an active subscription to list properties. Please choose a plan.');
         }
 
-        // جلب ميزات الخطة من الاشتراك (إما من metadata أو من علاقة plan)
-        // الأفضل الاعتماد على $activeSubscription->plan->features إذا كان plan مُحمل
+        if (!$activeSubscription->isActive()) {
+        return redirect()->route('frontend.pricing')
+                         ->with('error', "Your '{$activeSubscription->plan->name}' plan has expired. Please renew or choose a new plan to continue.");
+    }
         $planFeatures = $activeSubscription->plan->features ?? ($activeSubscription->metadata ?? []);
         $maxProperties = $planFeatures['max_properties'] ?? 0;
 
@@ -87,10 +99,11 @@ class PropertyListerController extends Controller
 
         $subCategories = Category::whereNotNull('parent_id')->orderBy('name')->get();
         $governorates = Governorate::with('areas')->orderBy('name')->get();
-        $purpose = ['rent', 'sale', 'lease'];
+        $purpose_options = ['rent', 'sale', 'lease'];
         $currencies = ['ILS', 'USD', 'JOD'];
+        $selected_purpose = $request->input('purpose', '');
 
-        return view('dashboard.property_lister.create', compact('categories', 'subCategories', 'governorates', 'purpose', 'currencies', 'activeSubscription'));
+        return view('dashboard.property_lister.create', compact('categories', 'subCategories', 'governorates', 'purpose_options', 'currencies', 'activeSubscription', 'selected_purpose'));
     }
 
     public function store(Request $request)
@@ -101,6 +114,9 @@ class PropertyListerController extends Controller
         if (!$activeSubscription || !$activeSubscription->plan) {
             return redirect()->back()->withInput()->with('error', 'No active subscription found. Cannot add property.');
         }
+        if (!$activeSubscription->isActive()) {
+        return redirect()->back()->withInput()->with('error', "Your subscription has expired. You cannot add new properties.");
+    }
 
         $planFeatures = $activeSubscription->plan->features ?? ($activeSubscription->metadata ?? []);
         $maxProperties = $planFeatures['max_properties'] ?? 0;
@@ -212,6 +228,10 @@ public function edit(Property $property)
         Log::warning("PropertyListerController@edit: User ID {$user->id} has no active subscription or plan. Redirecting to pricing for property ID {$property->id}.");
         return redirect()->route('frontend.pricing')
                          ->with('error', 'An active subscription is required to manage properties.');
+    }
+    if (!$activeSubscription->isActive()) { 
+        return redirect()->route('frontend.pricing')
+                         ->with('error', "Your '{$activeSubscription->plan->name}' plan has expired. Please renew or choose a new plan to continue.");
     }
     $planFeatures = $activeSubscription->plan->features ?? ($activeSubscription->metadata ?? []);
 
@@ -437,5 +457,44 @@ public function update(Request $request, Property $property) // Route Model Bind
     $activeSubscription = Auth::user()->activeSubscriptionWithPlan();
 
     return view('dashboard.property_lister.show', compact('property', 'activeSubscription'));
+}
+public function featureProperty(Property $property)
+{
+    // 1. تحقق من الملكية والحالة
+    if ($property->user_id !== Auth::id()) {
+        abort(403, 'Unauthorized');
+    }
+    if ($property->status !== 'approved') {
+        return redirect()->back()->with('error', 'Only approved properties can be featured.');
+    }
+    if ($property->is_featured) {
+        return redirect()->back()->with('info', 'This property is already featured.');
+    }
+
+    // 2. تحقق من الاشتراك ورصيد التمييز
+    $activeSubscription = $this->getActiveSubscriptionForCurrentUser();
+    if (!$activeSubscription || !$activeSubscription->isActive()) {
+        return redirect()->back()->with('error', 'You need an active subscription to feature properties.');
+    }
+    
+    $planSlots = $activeSubscription->plan->features['featured_slots'] ?? 0;
+    $usedSlots = $activeSubscription->featured_slots_used;
+
+    if ($usedSlots >= $planSlots) {
+        return redirect()->back()->with('error', 'You have used all your available featured slots. Please upgrade your plan.');
+    }
+
+    // 3. تنفيذ عملية التمييز
+    DB::transaction(function () use ($property, $activeSubscription) {
+        // تمييز العقار
+        $property->update([
+            'is_featured' => true,
+            'featured_at' => now(),
+        ]);
+        // استهلاك فرصة من الرصيد
+        $activeSubscription->increment('featured_slots_used');
+    });
+
+    return redirect()->back()->with('success', "'{$property->title}' has been successfully featured!");
 }
 }

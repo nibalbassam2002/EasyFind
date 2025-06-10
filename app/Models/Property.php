@@ -45,6 +45,8 @@ class Property extends Model
         'moderated_by',
         'moderated_at',
         'rejection_reason',
+        'is_featured', 
+        'featured_at', 
     ];
 
     protected $casts = [
@@ -53,6 +55,8 @@ class Property extends Model
         'rating' => 'decimal:2',
         'amenities' => 'array',
         'moderated_at' => 'datetime',
+        'is_featured' => 'boolean',   
+        'featured_at' => 'datetime',  
     ];
 
     // العلاقات

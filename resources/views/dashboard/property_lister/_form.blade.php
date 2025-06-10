@@ -69,23 +69,22 @@
 
     {{-- Purpose --}}
     <div class="col-md-4">
-        <label for="purpose" class="form-label required">Purpose</label>
-        <select class="form-select @error('purpose') is-invalid @enderror" id="purpose" name="purpose" required>
-            <option value="" disabled {{ !old('purpose', $property->purposes ?? '') ? 'selected' : '' }}>
-                Select...</option>
-            @isset($purpose)
-                @foreach ($purpose as $purposeValue)
-                    {{-- استخدام purposeValue لتجنب التعارض --}}
-                    <option value="{{ $purposeValue }}"
-                        {{ old('purpose', $property->purpose ?? '') == $purposeValue ? 'selected' : '' }}>
-                        {{ ucfirst($purposeValue) }}</option>
-                @endforeach
-            @endisset
-        </select>
-        @error('purpose')
-            <div class="invalid-feedback">{{ $message }}</div>
-        @enderror
-    </div>
+    <label for="purpose" class="form-label required">Purpose</label>
+    <select class="form-select @error('purpose') is-invalid @enderror" id="purpose" name="purpose" required>
+        <option value="" disabled {{ !old('purpose', $property->purpose ?? $selected_purpose) ? 'selected' : '' }}>
+            Select...</option>
+        @isset($purpose_options) {{-- <-- استخدم المتغير الجديد --}}
+            @foreach ($purpose_options as $purposeValue)
+                <option value="{{ $purposeValue }}"
+                    {{ old('purpose', $property->purpose ?? $selected_purpose) == $purposeValue ? 'selected' : '' }}> {{-- <-- أضفنا $selected_purpose هنا --}}
+                    {{ ucfirst($purposeValue) }}</option>
+            @endforeach
+        @endisset
+    </select>
+    @error('purpose')
+        <div class="invalid-feedback">{{ $message }}</div>
+    @enderror
+</div>
 
     {{-- Price & Currency --}}
     <div class="col-md-4">

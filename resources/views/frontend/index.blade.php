@@ -37,12 +37,21 @@ and caravans.')
             <div class="carousel-caption text-center"> 
                 <h1 ><span class="highlighted-word">Sell</span></h1>
                 <p><span class="highlighted-word">Showcase your property to thousands of potential buyers.</span></p>
-                @can('create', App\Models\Property::class)
-                    <p><a class="btn btn-lg btn-outline-light" href="{{ route('lister.properties.create') }}">List Your Property</a></p>
+                <p>
+            @guest
+                {{-- حالة الزائر --}}
+                <a class="btn btn-lg btn-dark" href="{{ route('login', ['intended' => route('frontend.pricing')]) }}">Login to Sell</a>
+            @else
+                {{-- حالة المستخدم المسجل --}}
+                @if(Auth::user()->role === 'customer')
+                    {{-- إذا كان زبوناً، وجهه لصفحة الخطط --}}
+                    <a class="btn btn-lg btn-gold2" href="{{ route('frontend.pricing') }}">Become a Seller</a>
                 @else
-                    <p><a class="btn btn-lg btn-dark"
-                            href="{{ route('login') }}?redirect={{ urlencode(route('lister.properties.create')) }}">Login to Sell</a></p>
-                @endcan
+                    {{-- إذا كان بائعاً أو أدمن، وجهه لصفحة إضافة عقار --}}
+                    <a class="btn btn-lg btn-outline-light" href="{{ route('lister.properties.create') }}">List Your Property</a>
+                @endif
+            @endguest
+        </p>
             </div>
         </div>
         <div class="carousel-item">
@@ -76,7 +85,7 @@ and caravans.')
                             </a>
                         </div>
                         <div class="col-6 col-md-3">
-                            <a href="{{ route('lister.properties.index', ['status' => 'sold']) }}" class="btn btn-outline-secondary w-100 py-2">
+                            <a href="{{ route('lister.properties.index', ['purpose' => 'sale']) }}" class="btn btn-outline-secondary w-100 py-2">
                                 <span class="small">View Sold</span>
                                 <i class="bi bi-eye d-block fs-4 mb-1"></i>
                             </a>
@@ -88,7 +97,7 @@ and caravans.')
                             </a>
                         </div>
                         <div class="col-6 col-md-3">
-                            <a href="{{ route('lister.properties.index', ['status' => 'rented']) }}" class="btn btn-outline-secondary w-100 py-2">
+                           <a href="{{ route('lister.properties.index', ['purpose' => 'rent']) }}" class="btn btn-outline-secondary w-100 py-2">
                                 <span class="small">View Rented</span>
                                    <i class="bi bi-eye d-block fs-4 mb-1"></i>
                             </a>
@@ -146,47 +155,32 @@ and caravans.')
 </div>
 
 {{-- قسم أيقونات الفئات --}}
+{{-- ▼▼▼ الكود الجديد (الصحيح والديناميكي) ▼▼▼ --}}
 <div class="container py-4">
     <div class="row text-center justify-content-center g-4">
-        <div class="col-6 col-md-3 col-lg-1">
-            <a href="{{ route('frontend.properties', ['category_slug' => 'house']) }}"
-                class="text-decoration-none filter-item-link">
-                <div class="filter-item {{ request('category_slug') == 'house' ? 'active' : '' }}">
-                    {{-- جعل active ديناميكي --}}
-                    <i class="bi bi-house-door" style="font-size: 2rem;"></i>
-                    <div>House</div>
-                </div>
-            </a>
-        </div>
-        <div class="col-6 col-md-3 col-lg-1">
-            <a href="{{ route('frontend.properties', ['category_slug' => 'apartment']) }}"
-                class="text-decoration-none filter-item-link">
-                <div class="filter-item {{ request('category_slug') == 'apartment' ? 'active' : '' }}">
-                    <i class="bi bi-building" style="font-size: 2rem;"></i>
-                    <div>Apart.</div>
-                </div>
-            </a>
-        </div>
-        <div class="col-6 col-md-3 col-lg-1">
-            <a href="{{ route('frontend.properties', ['category_slug' => 'caravan']) }}"
-                class="text-decoration-none filter-item-link">
-                <div class="filter-item {{ request('category_slug') == 'caravan' ? 'active' : '' }}">
-                    <i class="bi bi-truck" style="font-size: 2rem;"></i>
-                    <div>Caravan</div>
-                </div>
-            </a>
-        </div>
-        <div class="col-6 col-md-3 col-lg-1">
-            <a href="{{ route('frontend.properties', ['category_slug' => 'tent']) }}"
-                class="text-decoration-none filter-item-link">
-                <div class="filter-item {{ request('category_slug') == 'tent' ? 'active' : '' }}">
-                    <div style=" height: 8px;" > </div>
-                    <i class="fa-solid fa-tent" style="font-size: 2rem;"></i>
-                      <div style=" height: 6px;" > </div>
-                    <div>Tent</div>
-                </div>
-            </a>
-        </div>
+        
+        @foreach($categories as $category)
+            {{-- سنقوم بتحديد الأيقونة بناءً على الـ slug --}}
+            @php
+                $iconClass = 'bi bi-building-fill-gear'; // أيقونة افتراضية
+                if ($category->slug == 'houses') $iconClass = 'bi bi-house-door';
+                if ($category->slug == 'apartments') $iconClass = 'bi bi-building';
+                if ($category->slug == 'caravans') $iconClass = 'bi bi-truck';
+                if ($category->slug == 'tents') $iconClass = 'fa-solid fa-tent';
+                // أضف أي أيقونات أخرى هنا...
+            @endphp
+            
+            <div class="col-6 col-md-3 col-lg-auto"> {{-- استخدم lg-auto لمرونة أفضل --}}
+                <a href="{{ route('frontend.properties', ['category_slug' => $category->slug]) }}"
+                    class="text-decoration-none filter-item-link">
+                    <div class="filter-item p-3 {{ request('category_slug') == $category->slug ? 'active' : '' }}">
+                        <i class="{{ $iconClass }}" style="font-size: 2rem; min-height: 32px; display: inline-block; line-height: 1;"></i>
+                        <div class="mt-2">{{ Str::limit($category->name, 8) }}</div>
+                    </div>
+                </a>
+            </div>
+        @endforeach
+
     </div>
 </div>
 

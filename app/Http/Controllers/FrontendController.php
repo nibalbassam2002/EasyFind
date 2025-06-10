@@ -19,6 +19,7 @@ class FrontendController extends Controller
 {
     $latestProperties = Property::where('status', 'approved')
                               ->with('listarea')
+                              ->orderBy('is_featured', 'desc') 
                               ->latest()
                               ->take(8)
                               ->get();
@@ -52,18 +53,30 @@ class FrontendController extends Controller
 
 public function properties(Request $request)
 {
+    
     $query = Property::query()->where('status', 'approved')
-                       ->with(['listarea', 'category']);
-                       if ($request->filled('purpose')) {
-        $validPurposes = ['sale', 'rent', 'lease']; // الأغراض الصالحة
+                   ->with(['listarea', 'category']);
+
+    // تصفية حسب الغرض (بيع/إيجار)
+    if ($request->filled('purpose')) {
+        $validPurposes = ['sale', 'rent', 'lease'];
         $requestedPurpose = strtolower($request->input('purpose'));
         if (in_array($requestedPurpose, $validPurposes)) {
-            $query->where('purpose', $requestedPurpose); // إضافة شرط WHERE للاستعلام
+            $query->where('purpose', $requestedPurpose);
         }
     }
 
-    $properties = $query->latest()->paginate(12)->withQueryString();
-
+    // تصفية حسب التصنيف
+    if ($request->filled('category_slug')) {
+        $query->whereHas('category', function($q) use ($request) {
+            $q->where('slug', $request->category_slug);
+        });
+    }
+    $properties = $query->orderBy('is_featured', 'desc') // المميز أولاً
+                    ->orderBy('featured_at', 'desc') // الأحدث تمييزاً أولاً
+                    ->latest() // ثم الأحدث تاريخاً
+                    ->paginate(12)
+                    ->withQueryString();
 
     $userId = Auth::id();
     if ($userId) {

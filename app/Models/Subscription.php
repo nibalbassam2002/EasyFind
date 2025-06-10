@@ -17,7 +17,9 @@ class Subscription extends Model
      'metadata',
      'payment_gateway',
      'payment_transaction_id',
-     'payment_details'];
+     'payment_details',
+     'featured_slots_used',
+    ];
      protected $casts = ['payment_details' => 'array',
       'starts_at' => 'datetime',
        'ends_at' => 'datetime',

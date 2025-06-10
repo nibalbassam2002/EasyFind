@@ -53,7 +53,7 @@ class PlanSeeder extends Seeder
                 'direct_contact_info' => true,
                 'analytics_dashboard' => false,
                 'support_level' => "basic_email",
-                'allowed_types' => ['tents', 'caravan', 'apartment'],
+                'allowed_types' => ['tents', 'caravans', 'apartments'],
             ],
             'is_active' => true,
         ]);
@@ -76,7 +76,7 @@ class PlanSeeder extends Seeder
                 'direct_contact_info' => true,
                 'analytics_dashboard' => true,
                 'support_level' => "priority_email",
-                'allowed_types' => ['tents', 'caravan', 'apartment', 'house', 'land'], // جميع الأنواع
+                'allowed_types' => ['tents', 'caravans', 'apartments', 'houses', 'lands'], 
             ],
             'is_active' => true,
         ]);

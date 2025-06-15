@@ -80,7 +80,7 @@ class DashboardController extends Controller
 
             // المعاملات الأخيرة للأدمن/المشرف
             $recentTransactionsQueryForAdmin = Transaction::with(['user', 'property'])->latest();
-            if ($type && in_array($type, ['sale', 'rent', 'lease'])) { // افترض وجود هذه الأنواع
+            if ($type && in_array($type, ['sale', 'rent'])) { // افترض وجود هذه الأنواع
                 $recentTransactionsQueryForAdmin->where('type', $type);
             }
             $applyTimeFilter($recentTransactionsQueryForAdmin, $period, 'transactions.created_at');
@@ -100,7 +100,7 @@ class DashboardController extends Controller
             $recentTransactionsQueryLister = Transaction::with(['user', 'property'])
                 ->whereHas('property', fn($q) => $q->where('user_id', $userId))
                 ->latest();
-            if ($type && in_array($type, ['sale', 'rent', 'lease'])) {
+            if ($type && in_array($type, ['sale', 'rent'])) {
                 $recentTransactionsQueryLister->where('type', $type);
             }
             $applyTimeFilter($recentTransactionsQueryLister, $period, 'transactions.created_at');
@@ -166,7 +166,7 @@ class DashboardController extends Controller
             $responseData['properties'] = [
                 'sale' => Property::where('purpose', 'sale')->count(),
                 'rent' => Property::where('purpose', 'rent')->count(),
-                'lease' => Property::where('purpose', 'lease')->count()
+                
             ];
             $responseData['transactionsStatus'] = [
                 'completed' => Transaction::where('status', 'completed')->count(),

@@ -53,42 +53,75 @@ class FrontendController extends Controller
 
 public function properties(Request $request)
 {
-    
     $query = Property::query()->where('status', 'approved')
                    ->with(['listarea', 'category']);
 
-    // تصفية حسب الغرض (بيع/إيجار)
-    if ($request->filled('purpose')) {
-        $validPurposes = ['sale', 'rent', 'lease'];
-        $requestedPurpose = strtolower($request->input('purpose'));
-        if (in_array($requestedPurpose, $validPurposes)) {
-            $query->where('purpose', $requestedPurpose);
-        }
-    }
+    // ▼▼▼ هذا هو الجزء الجديد والمحسّن للفلترة ▼▼▼
 
-    // تصفية حسب التصنيف
-    if ($request->filled('category_slug')) {
-        $query->whereHas('category', function($q) use ($request) {
-            $q->where('slug', $request->category_slug);
+    // 1. فلترة حسب الكلمة المفتاحية (Keyword Search)
+    if ($request->filled('search')) {
+        $searchTerm = $request->input('search');
+        $query->where(function ($q) use ($searchTerm) {
+            $q->where('title', 'LIKE', "%{$searchTerm}%")
+              ->orWhere('address', 'LIKE', "%{$searchTerm}%")
+              ->orWhere('description', 'LIKE', "%{$searchTerm}%");
         });
     }
-    $properties = $query->orderBy('is_featured', 'desc') // المميز أولاً
-                    ->orderBy('featured_at', 'desc') // الأحدث تمييزاً أولاً
-                    ->latest() // ثم الأحدث تاريخاً
-                    ->paginate(12)
-                    ->withQueryString();
 
+    // 2. فلترة حسب الغرض (Purpose)
+    if ($request->filled('purpose')) {
+        $query->where('purpose', $request->input('purpose'));
+    }
+
+    // 3. فلترة حسب نوع العقار (Property Type)
+    if ($request->filled('category_slug')) {
+        $query->whereHas('category', function($q) use ($request) {
+            $q->where('slug', $request->input('category_slug'));
+        });
+    }
+
+    // 4. فلترة حسب المنطقة (Area) - هذا هو الأهم
+    if ($request->filled('area_id')) {
+        $query->where('area_id', $request->input('area_id'));
+    } 
+    // 5. فلترة حسب المحافظة (Governorate) - إذا لم يتم اختيار منطقة
+    elseif ($request->filled('governorate_id')) {
+        $query->whereHas('listarea', function($q) use ($request) {
+            $q->where('governorate_id', $request->input('governorate_id'));
+        });
+    }
+
+    // 6. فلترة حسب السعر (Price Range)
+    if ($request->filled('min_price')) {
+        $query->where('price', '>=', $request->input('min_price'));
+    }
+    if ($request->filled('max_price')) {
+        $query->where('price', '<=', $request->input('max_price'));
+    }
+
+    // 7. فلترة حسب عدد الغرف والحمامات
+    if ($request->filled('min_rooms') && $request->input('min_rooms') > 0) {
+        $query->where('rooms', '>=', $request->input('min_rooms'));
+    }
+    if ($request->filled('min_bathrooms') && $request->input('min_bathrooms') > 0) {
+        $query->where('bathrooms', '>=', $request->input('min_bathrooms'));
+    }
+
+    // ▲▲▲ نهاية جزء الفلترة ▲▲▲
+
+    // جلب النتائج مع الترتيب والترقيم
+    $properties = $query->orderBy('is_featured', 'desc')
+                        ->latest()
+                        ->paginate(12)
+                        ->withQueryString();
+
+    // ... الكود الحالي لجلب المفضلة يبقى كما هو ...
     $userId = Auth::id();
     if ($userId) {
-
         $propertyIdsOnPage = collect($properties->items())->pluck('id')->toArray();
-
         $favoritePropertyIds = Favorite::where('user_id', $userId)
                                        ->whereIn('property_id', $propertyIdsOnPage)
-                                       ->pluck('property_id')
-                                       ->toArray();
-
-
+                                       ->pluck('property_id')->toArray();
         foreach ($properties->items() as $property) {
             $property->is_favorited = in_array($property->id, $favoritePropertyIds);
         }
@@ -98,7 +131,7 @@ public function properties(Request $request)
         }
     }
 
-
+    // جلب بيانات الفلاتر
     $governorates = Governorate::with('areas')->orderBy('name')->get();
     $categories = Category::whereNull('parent_id')->orderBy('name')->get();
 

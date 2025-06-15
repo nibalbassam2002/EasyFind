@@ -33,7 +33,7 @@
                     'categories' => $categories ?? [],
                     'subCategories' => $subCategories ?? [],
                     'governorates' => $governorates ?? [],
-                    'purpose' => $purpose ?? ['sale', 'rent', 'lease'],
+                    'purpose' => $purpose ?? ['sale', 'rent'],
                     'currencies' => $currencies ?? ['ILS', 'USD', 'JOD'],
                     'currentImages' => [],
                 ])

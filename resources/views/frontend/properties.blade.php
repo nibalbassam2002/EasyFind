@@ -74,8 +74,6 @@
                                 </option>
                                 <option value="rent" {{ request('purpose') == 'rent' ? 'selected' : '' }}>For Rent
                                 </option>
-                                <option value="lease" {{ request('purpose') == 'lease' ? 'selected' : '' }}>For Lease
-                                </option>
                             </select>
                         </div>
 

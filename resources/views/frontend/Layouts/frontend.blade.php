@@ -39,13 +39,16 @@
                     <li class="nav-item">
                         {{-- ▼▼▼ بداية: الكود الصحيح لرابط Sell ▼▼▼ --}}
                         @guest {{-- إذا كان المستخدم زائرًا --}}
-                            <a href="{{ route('login', ['intended' => route('frontend.pricing')]) }}" class="nav-link">Sell</a>
+                            <a href="{{ route('login', ['intended' => route('frontend.pricing')]) }}"
+                                class="nav-link">Sell</a>
                             {{-- أو إذا أردت توجيهه لـ lister.properties.create بعد التسجيل مباشرة إذا كان هذا مسموحًا --}}
                             {{-- <a href="{{ route('login', ['intended' => route('lister.properties.create')]) }}" class="nav-link">Sell</a> --}}
-                        @else {{-- إذا كان المستخدم مسجلاً --}}
+                        @else
+                            {{-- إذا كان المستخدم مسجلاً --}}
                             @if (Auth::user()->role === 'customer')
                                 {{-- إذا كان customer، اعرض modal أو وجهه لصفحة الخطط --}}
-                                <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#subscribeModal">Sell</a>
+                                <a href="#" class="nav-link" data-bs-toggle="modal"
+                                    data-bs-target="#subscribeModal">Sell</a>
                                 {{-- أو <a href="{{ route('frontend.pricing') }}" class="nav-link">Sell</a> --}}
                             @else
                                 {{-- إذا كان property_lister أو admin، وجهه لصفحة إضافة عقار --}}
@@ -503,10 +506,7 @@
     @auth
         <script>
             function markFrontendNotificationAsRead(element, event) {
-                // يمكنك إلغاء التعليق عن event.preventDefault() إذا كنت تريد التحكم الكامل في التوجيه
-                // event.preventDefault();
                 let notificationId = element.dataset.notificationIdFrontend;
-                // let targetUrl = element.href; // إذا كنت ستتحكم في التوجيه يدويًا
 
                 if (notificationId) {
                     fetch(`/notifications/${notificationId}/mark-as-read`, {
@@ -529,43 +529,39 @@
                                     iconElement.classList.remove('text-primary');
                                     iconElement.classList.add('text-muted');
                                 }
-                                updateFrontendNotificationBadge(); // تحديث العداد بعد تمييز الإشعار
+                                // if (typeof updateFrontendNotificationBadge === 'function') {
+                                //     updateFrontendNotificationBadge();
+                                // }
                             } else {
                                 console.error('Failed to mark notification as read:', data.message);
                             }
-                            // إذا استخدمت event.preventDefault()، يمكنك التوجيه هنا:
-                            // window.location.href = targetUrl;
+                          
                         })
                         .catch(error => {
                             console.error('Error in markFrontendNotificationAsRead:', error);
-                            // يمكنك التوجيه للرابط الأصلي حتى لو فشل طلب AJAX
-                            // window.location.href = targetUrl;
+                       
                         });
                 }
             }
 
-            // =========================================================================
-            // دالة مساعدة لـ trans_choice
-            // =========================================================================
+           
             function getTransChoice(key, number) {
                 const parts = key.split('|');
                 if (number === 1) return parts[0];
-                if (number === 2 && parts.length > 1 && parts[1] !== '') return parts[1]; // تأكد أن الجزء الثاني ليس فارغًا
-                if (parts.length > 2 && parts[2] !== '') return parts[2]; // إذا كان هناك جزء ثالث
-                return parts[parts.length - 1]; // الافتراضي هو الجزء الأخير
+                if (number === 2 && parts.length > 1 && parts[1] !== '') return parts[1]; 
+                if (parts.length > 2 && parts[2] !== '') return parts[2]; 
+                return parts[parts.length - 1];
             }
 
-            // =========================================================================
-            // استدعاء تحديث العداد عند تحميل الصفحة
-            // =========================================================================
+            
             document.addEventListener('DOMContentLoaded', function() {
-                // تحقق من وجود عناصر الإشعارات قبل محاولة تحديث العداد
+        
                 if (document.querySelector('.navbar .notification-count') || document.querySelector(
                         '#navbarDropdownNotifications')) {
-                    updateFrontendNotificationBadge();
+                //    updateFrontendNotificationBadge(); 
                 }
 
-                // أي أكواد أخرى تعتمد على DOMContentLoaded وتتطلب مصادقة
+               
             });
         </script>
     @endauth
@@ -576,7 +572,6 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header border-0">
-                    {{-- <h5 class="modal-title" id="subscribeModalLabel">Subscription Required</h5> --}}
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body text-center py-4">
@@ -584,7 +579,6 @@
                     <p class="lead">You cannot sell or rent before subscribing to EasyFind Plus.</p>
                 </div>
                 <div class="modal-footer justify-content-center border-0 pb-4">
-                    {{-- هذا الزر سيوجه لصفحة الخطط --}}
                     <a href="{{ route('frontend.pricing') }}" class="btn btn-primary btn-lg">Subscribe Now</a>
                 </div>
             </div>

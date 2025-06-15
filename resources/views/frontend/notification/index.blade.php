@@ -125,7 +125,7 @@
                         }
                         // قد تحتاج أيضًا لتحديث عداد الإشعارات في الهيدر
                         if (typeof updateFrontendNotificationBadge === 'function') {
-                            updateFrontendNotificationBadge();
+                            // updateFrontendNotificationBadge();
                         }
                     }
                 })

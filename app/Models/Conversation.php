@@ -1,39 +1,33 @@
 <?php
 
 namespace App\Models;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class Conversation extends Model
 {
-   use HasFactory;
-
-    protected $fillable = [
-        'last_message_at' 
-    ];
-
-   
     public function users()
     {
-        return $this->belongsToMany(User::class, 'conversation_user')
-                    ->withTimestamps()
-                    ->withPivot('last_read_at', 'joined_at');
+        return $this->belongsToMany(User::class);
     }
 
-  
     public function messages()
     {
-        return $this->hasMany(Message::class)->latest(); // جلب الرسائل مرتبة بالأحدث
+        return $this->hasMany(Message::class);
     }
-
     
     public function lastMessage()
     {
         return $this->hasOne(Message::class)->latestOfMany();
     }
-
-    public function getOtherParticipant(User $currentUser)
+    
+    protected function otherParticipant(): Attribute
     {
-        return $this->users()->where('users.id', '!=', $currentUser->id)->first();
+        return Attribute::make(
+            // نستخدم ->users التي تكون محملة مسبقاً من الـ Controller
+            get: fn () => $this->users->firstWhere('id', '!=', Auth::id())
+        );
     }
 }

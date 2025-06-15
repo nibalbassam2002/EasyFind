@@ -85,7 +85,6 @@
                                         $purposeConfig = [
                                             'sale' => ['color' => 'primary', 'icon' => 'bi-tag-fill'],
                                             'rent' => ['color' => 'success', 'icon' => 'bi-key-fill'],
-                                            'lease' => ['color' => 'info', 'icon' => 'bi-calendar-week-fill'],
                                         ];
                                         $pConfig = $purposeConfig[strtolower($property->purpose ?? '')] ?? [
                                             'color' => 'secondary',

@@ -99,7 +99,7 @@ class PropertyListerController extends Controller
 
         $subCategories = Category::whereNotNull('parent_id')->orderBy('name')->get();
         $governorates = Governorate::with('areas')->orderBy('name')->get();
-        $purpose_options = ['rent', 'sale', 'lease'];
+        $purpose_options = ['rent', 'sale'];
         $currencies = ['ILS', 'USD', 'JOD'];
         $selected_purpose = $request->input('purpose', '');
 
@@ -148,7 +148,7 @@ class PropertyListerController extends Controller
             'category_id' => 'required|integer|exists:categories,id',
             'sub_category_id' => 'required_if:category_id,'.config('app.commercial_category_id', 5).'|nullable|integer|exists:categories,id',
             'description' => 'required|string',
-            'purpose' => 'required|in:rent,sale,lease',
+            'purpose' => 'required|in:rent,sale',
             'price' => 'required|numeric|min:0',
             'currency' => 'required|in:ILS,USD,JOD',
             //'governorate_id' => 'required|exists:governorates,id', // ليس ضروريًا إذا كان area_id كافيًا
@@ -252,7 +252,7 @@ public function edit(Property $property)
     // 5. جلب باقي البيانات اللازمة للنموذج
     $subCategories = Category::whereNotNull('parent_id')->orderBy('name')->get();
     $governorates = Governorate::with('areas')->orderBy('name')->get();
-    $purpose = ['rent', 'sale', 'lease'];
+    $purpose = ['rent', 'sale'];
     $currencies = ['ILS', 'USD', 'JOD'];
     $isFreePlan = ($activeSubscription->plan->price == 0.00);
     $maxImages = $planFeatures['max_images_per_property'] ?? 5;
@@ -324,7 +324,7 @@ public function update(Request $request, Property $property) // Route Model Bind
         'category_id' => 'required|integer|exists:categories,id',
         'sub_category_id' => 'required_if:category_id,'.config('app.commercial_category_id', 5).'|nullable|integer|exists:categories,id',
         'description' => 'required|string',
-        'purpose' => 'required|in:rent,sale,lease', // <--- تأكد أن اسم الحقل في النموذج هو 'purpose'
+        'purpose' => 'required|in:rent,sale', // <--- تأكد أن اسم الحقل في النموذج هو 'purpose'
         'price' => 'required|numeric|min:0',
         'currency' => 'required|in:ILS,USD,JOD',
         'area_id' => 'required|integer|exists:areas,id',

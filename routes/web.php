@@ -170,6 +170,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/conversations/{conversation}/messages', [ChatController::class, 'sendMessage'])->name('messages.store');
         Route::get('/start/{recipient}', [ChatController::class, 'createOrFindConversation'])->name('conversation.start');
         Route::get('/conversations/{conversation}/messages', [ChatController::class, 'fetchMessages'])->name('messages.fetch');
+        Route::get('/conversations/{conversation}/new-messages', [ChatController::class, 'fetchNewMessages'])->name('messages.fetchNew');
     });
 
     // --- User Feedback Submission ---

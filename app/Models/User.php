@@ -15,6 +15,7 @@ use App\Models\Message;
 class User extends Authenticatable
 {
      use  HasFactory, Notifiable;
+     protected $appends = ['profile_image_url'];
 
 
     protected $fillable = [
@@ -63,7 +64,7 @@ public function getProfileImageUrlAttribute(): string
         return Storage::url('images/' . $this->profile_image);
     }
 
-    return asset('assets/img/profile-img.jpg');
+    return asset('assets/img/profile.jpg'); 
 }
 public function favoriteProperties()
 {

@@ -36,4 +36,7 @@ class NotificationController extends Controller
 
     
 }
+// public function updateFrontendNotificationBadge(){
+
+// }
 }

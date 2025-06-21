@@ -20,7 +20,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     @stack('styles')
-
+    {{-- @vite(['resources/css/app.css', 'resources/js/app.js']) --}}
 </head>
 
 <body>
@@ -327,6 +327,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.favorite-icon').forEach(iconElement => {
@@ -567,6 +568,10 @@
     @endauth
 
     @stack('scripts')
+    @vite('resources/js/app.js')
+    
+    {{-- @vite(['resources/css/app.css', 'resources/js/app.js']) --}}
+
     <div class="modal fade" id="subscribeModal" tabindex="-1" aria-labelledby="subscribeModalLabel"
         aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -584,6 +589,7 @@
             </div>
         </div>
     </div>
+
 
 </body>
 

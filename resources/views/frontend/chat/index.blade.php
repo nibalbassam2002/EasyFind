@@ -4,8 +4,8 @@
 @push('styles')
     <style>
         /*
-                                         * CSS النهائي والمضمون لحل جميع المشاكل
-                                        */
+                                             * CSS النهائي والمضمون لحل جميع المشاكل
+                                            */
 
         .chat-container-wrapper {
             height: calc(100vh - 77px);
@@ -382,7 +382,10 @@
                 messagesArea.classList.add('d-none');
                 chatInputArea.classList.add('d-none');
                 noConversationDiv.style.display = 'flex';
-
+                if (window.currentChannel) {
+                    window.Echo.leave(window.currentChannel);
+                    window.currentChannel = null;
+                }
                 currentConversationId = null; // أهم خطوة
             }
 
@@ -412,6 +415,7 @@
 
                 await fetchAndRenderMessages(`/chat/conversations/${convId}/messages`);
                 messageInput.focus();
+                listenForMessages(convId);
             }
 
             /**
@@ -423,7 +427,7 @@
                 isLoading = true;
                 if (prepend) messagesArea.insertAdjacentHTML('afterbegin',
                     '<div id="loading-more" class="text-center p-2"><div class="spinner-border spinner-border-sm"></div></div>'
-                    );
+                );
                 try {
                     const response = await fetch(url);
                     if (!response.ok) throw new Error('Request failed');
@@ -556,5 +560,29 @@
                     ?.click();
             }
         });
+
+function listenForMessages(conversationId) {
+    if (window.currentChannel) {
+        window.Echo.leave(window.currentChannel);
+    }
+
+    // اسم القناة لا يبدأ بـ "private-" هنا. Echo سيفعل ذلك.
+    const channelName = `conversation.${conversationId}`;
+    window.currentChannel = channelName;
+
+    console.log(`Subscribing to private channel: ${channelName}`);
+
+    // نستخدم .private() لكي يقوم Echo بطلب المصادقة
+    window.Echo.private(channelName)
+        // اسم الحدث يبدأ بنقطة "."
+        .listen('.MessageSent', (event) => {
+            console.log('Real-time message received!', event);
+            // ... بقية الكود لعرض الرسالة
+            const lastMsgEl = messagesArea.querySelector('.message-item:last-child');
+            const showAvatar = !lastMsgEl || lastMsgEl.dataset.userId != event.message.user_id;
+            messagesArea.insertAdjacentHTML('beforeend', createMessageHtml(event.message, showAvatar));
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+        });
+}
     </script>
 @endpush

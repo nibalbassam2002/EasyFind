@@ -49,6 +49,39 @@ class FrontendController extends Controller
 
     return view('frontend.index', compact('latestProperties', 'categories', 'governorates'));
 }
+ public function publicSearch(Request $request)
+    {
+        $query = Property::query()->where('status', 'approved')->with('listarea');
+
+        // بحث بسيط جداً
+        if ($request->filled('search')) {
+            $searchTerm = $request->input('search');
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('title', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('address', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('description', 'LIKE', "%{$searchTerm}%")
+                  ->orWhereHas('listarea', function($areaQuery) use ($searchTerm){
+                      $areaQuery->where('name', 'LIKE', "%{$searchTerm}%");
+                  })
+                  ->orWhereHas('listarea.governorate', function($govQuery) use ($searchTerm){
+                      $govQuery->where('name', 'LIKE', "%{$searchTerm}%");
+                  });
+            });
+        }
+
+        $properties = $query->orderBy('is_featured', 'desc')
+                            ->latest()
+                            ->paginate(12)
+                            ->withQueryString();
+
+        // لا داعي للتحقق من المفضلة هنا لأن المستخدم زائر
+        $properties->each(function ($property) {
+            $property->is_favorited = false;
+        });
+
+        // سنستخدم نفس صفحة العرض `properties.blade.php` ولكن مع إخفاء الفلاتر
+        return view('frontend.properties', compact('properties'));
+    }
 
 
 public function properties(Request $request)

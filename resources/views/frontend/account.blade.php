@@ -501,13 +501,7 @@
                         <a href="./chat.html" class="nav-link"><i class="bi bi-chat-dots	" style="font-size: 15px;"></i>
                             Chats</a>
                     </div>
-                    <!-- notification -->
-                    <div class="mb-3 a-gold">
-                        <!-- زر الإشعارات كأنه نص -->
-                        <button id="notificationBtn" style="all: unset; cursor: pointer;">
-                            <i class="bi bi-bell	" style="font-size: 15px;"></i> Notifications
-                        </button>
-                    </div>
+                   
 
                     <!-- refer friend -->
                     <div class="mb-3 a-gold">
@@ -532,10 +526,6 @@
                         </div>
                     @endif
 
-                    <!-- Setting -->
-                    <div class="mb-3 a-gold">
-                        <a href="#" class="nav-link"><i class="bi bi-gear" style="font-size: 20px;"></i> Settings</a>
-                    </div>
                     <!-- Help center -->
                    <div class="mb-3 a-gold">
                         <a href="{{ route('frontend.help_center') }}" class="nav-link {{ request()->routeIs('frontend.help_center') ? 'active-link' : '' }}">

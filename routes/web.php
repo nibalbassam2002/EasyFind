@@ -20,23 +20,11 @@ use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\AccountController; 
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
-*/
 
-// ============================================
-// == Routes for Frontend (Publicly Accessible)
-// ============================================
 Route::get('/', [FrontendController::class, 'index'])->name('frontend.home');
+Route::get('/search', [FrontendController::class, 'publicSearch'])->name('frontend.public.search');
 Route::get('/properties', [FrontendController::class, 'properties'])->name('frontend.properties');
-// ▼▼▼ هذا هو المسار لعرض تفاصيل العقار في الواجهة الأمامية ▼▼▼
+// هذا هو المسار لعرض تفاصيل العقار في الواجهة الأمامية 
 Route::get('/properties/{property}', [FrontendController::class, 'showProperty'])->name('frontend.property.show');
 Route::get('/pricing-plans', [FrontendController::class, 'showPricingPlans'])->name('frontend.pricing');
 Route::view('/help-center', 'frontend.help-center')->name('frontend.help_center');
@@ -64,8 +52,9 @@ Route::post('reset-password', [ResetPasswordController::class, 'reset'])->middle
 
 // ============================================
 // == Authenticated User Routes
-// ============================================
+
 Route::middleware(['auth'])->group(function () {
+    Route::get('/properties-advanced-search', [FrontendController::class, 'properties'])->name('frontend.properties.advanced');
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
@@ -194,3 +183,10 @@ Route::get('/payment/lahza/cancel', [SubscriptionController::class, 'handleLahza
 Route::fallback(function () {
     return response()->view('errors.404', [], 404);
 });
+// Route::get('/test-500', function () {
+//     abort(500, 'This is a test for Internal Server Error.');
+// });
+
+// Route::get('/test-403', function () {
+//     abort(403, 'This is a test for Access Denied.');
+// });

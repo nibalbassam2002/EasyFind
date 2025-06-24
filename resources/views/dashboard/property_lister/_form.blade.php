@@ -66,7 +66,6 @@
         </div>
     </div>
 
-
     {{-- Purpose --}}
     <div class="col-md-4">
     <label for="purpose" class="form-label required">Purpose</label>

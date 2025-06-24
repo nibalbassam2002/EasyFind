@@ -253,7 +253,7 @@ public function edit(Property $property)
     // 5. جلب باقي البيانات اللازمة للنموذج
     $subCategories = Category::whereNotNull('parent_id')->orderBy('name')->get();
     $governorates = Governorate::with('areas')->orderBy('name')->get();
-    $purpose = ['rent', 'sale'];
+    $purpose_options = ['rent', 'sale'];
     $currencies = ['ILS', 'USD', 'JOD'];
     $isFreePlan = ($activeSubscription->plan->price == 0.00);
     $maxImages = $planFeatures['max_images_per_property'] ?? 5;
@@ -271,7 +271,7 @@ public function edit(Property $property)
         'categories',
         'subCategories',
         'governorates',
-        'purpose',   
+        'purpose_options',   
         'currencies',
         'isFreePlan',
         'maxImages',

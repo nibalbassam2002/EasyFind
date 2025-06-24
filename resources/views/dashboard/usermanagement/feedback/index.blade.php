@@ -44,7 +44,7 @@
                         <tbody>
                             @forelse ($feedbacks as $feedback)
                             <tr>
-                                <th scope="row">{{ $feedback->id }}</th>
+                                <th scope="row">{{ ($feedbacks->currentPage() - 1) * $feedbacks->perPage() + $loop->iteration }}</th>
                                 <td>{{ $feedback->user->name ?? 'Deleted User' }} <br><small>({{ $feedback->user->email ?? 'N/A' }})</small></td>
                                 <td>
                                     @if($feedback->type == 'complaint') <span class="badge bg-danger">Complaint</span>

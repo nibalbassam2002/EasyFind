@@ -71,7 +71,7 @@
                     <tbody>
                         @forelse ($pendingProperties as $property)
                             <tr>
-                                <td>{{ $property->id }}</td>
+                                <td>{{ ($pendingProperties->currentPage() - 1) * $pendingProperties->perPage() + $loop->iteration }}</td>
                                 <td>
                                     <a href="{{ route('moderator.properties.review', $property->id) }}">
                                         <strong>{{ $property->title }}</strong>

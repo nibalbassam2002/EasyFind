@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Models\Property;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Notifications\PropertyApprovedNotification;
 use App\Notifications\PropertyRejectedNotification;
 
 class ModeratorController extends Controller
@@ -39,7 +40,7 @@ class ModeratorController extends Controller
 
         $property->save(); 
         if ($property->user) { 
-            $property->user->notify(new PropertyRejectedNotification($property));
+            $property->user->notify(new PropertyApprovedNotification($property));
         }
       
 
@@ -68,10 +69,9 @@ class ModeratorController extends Controller
 
         $property->save();
 
-         // TODO: إرسال إشعار للمالك مع سبب الرفض (اختياري)
-         // if ($property->user) {
-         //    $property->user->notify(new \App\Notifications\PropertyRejectedNotification($property, $validatedData['rejection_reason']));
-         // }
+         if ($property->user) {
+       $property->user->notify(new PropertyRejectedNotification($property));
+    }
 
         return redirect()->route('moderator.properties.pending')->with('success', "Property '{$property->title}' has been rejected.");
     }

@@ -7,6 +7,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Str;
 
 class PropertyRejectedNotification extends Notification implements ShouldQueue
 {
@@ -54,17 +55,18 @@ class PropertyRejectedNotification extends Notification implements ShouldQueue
      *
      * @return array<string, mixed>
      */
-    public function toArray(object $notifiable): array
-    {
-         return [
-            'property_id' => $this->property->id,
-            'property_title' => Str::limit($this->property->title, 50),
-            'message' => "Your property '{$this->property->title}' was rejected.",
-            'reason' => Str::limit($this->property->rejection_reason ?? 'N/A', 100),
-            'action_text' => 'View & Edit Property',
-            'url' => route('lister.properties.edit', $this->property->id), // رابط لصفحة تعديل العقار في لوحة تحكم البائع
-            'icon' => 'bi bi-x-octagon-fill text-danger', // أيقونة مناسبة
-        ];
-    }
+    public function toDatabase(object $notifiable): array
+{
+    $shortMessage = "Update on your property '" . Str::limit($this->property->title, 25) . "': It has been rejected.";
+    $fullMessage = "Unfortunately, your property '{$this->property->title}' was rejected. Reason: " . ($this->property->rejection_reason ?? 'Please check the property details and resubmit.');
+
+    return [
+        'property_id' => $this->property->id,
+        'message' => $shortMessage,       // المفتاح الذي تتوقعه القائمة المنسدلة
+        'full_message' => $fullMessage, // المفتاح الذي تتوقعه القائمة المنسدلة
+        'url' => route('lister.properties.edit', $this->property->id),
+        'icon' => 'bi bi-x-octagon-fill text-danger',
+    ];
+}
     }
 

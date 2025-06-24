@@ -53,7 +53,7 @@
                     <tbody>
                         @forelse ($users as $user)
                             <tr>
-                                <td>{{ $user->id }}</td>
+                                <td>{{ ($users->currentPage() - 1) * $users->perPage() + $loop->iteration }}</td>
                                 <td>
                                     <img src="{{ $user->profile_image ? asset('storage/images/' . $user->profile_image) : asset('assets/img/profile.jpg') }}"
                                         alt="{{ $user->name }}" width="40" height="40"

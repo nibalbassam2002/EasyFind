@@ -109,89 +109,60 @@
         <div class="row g-4">
             {{-- العمود الأيسر للصور والوصف والمرافق --}}
             <div class="col-lg-7">
-                {{-- بطاقة الوسائط --}}
-                <div class="card property-detail-card">
-                    <div class="card-header">
-                        <i class="bi bi-images me-2"></i>معرض الوسائط
-                    </div>
-                    <br>
-                    <div class="card-body ">
-                        @php
-                            // معالجة الصور
-                            $images = is_string($property->images)
-                                ? json_decode($property->images, true)
-                                : $property->images ?? [];
-                            if (!is_array($images)) {
-                                $images = [];
-                            }
+                {{-- بطاقة الصور --}}
+            <div class="card property-detail-card">
+                <div class="card-header"><i class="bi bi-images me-2"></i>Property Gallery</div>
+              <div class="card-body p-3">
+    @php
+        $images = is_string($property->images) ? json_decode($property->images, true) : ($property->images ?? []);
+        if (!is_array($images)) $images = [];
+        $firstImage = count($images) > 0 ? $images[0] : null;
+        $defaultImageUrl = asset('assets/img/placeholder-property.png');
+    @endphp
 
-                            // معالجة الفيديوهات
-                            $videos = is_string($property->videos)
-                                ? json_decode($property->videos, true)
-                                : $property->videos ?? [];
-                            if (!is_array($videos)) {
-                                $videos = [];
-                            }
+    <div class="row align-items-start">
+        {{-- الصورة الرئيسية على اليسار --}}
+      <div class="row">
+    {{-- الصور المصغّرة على اليسار --}}
+    <div class="col-md-3">
+        @if(count($images) > 1)
+            <div class="d-flex flex-md-column flex-wrap gap-2" id="reviewPropertyImagesContainer">
+                @foreach($images as $index => $imagePath)
+                    @if(Storage::disk('public')->exists($imagePath))
+                        <img src="{{ Storage::url($imagePath) }}" 
+                             alt="Thumbnail {{ $index + 1 }}"
+                             class="img-thumbnail thumb-image {{ $index == 0 ? 'active-thumb' : '' }}"
+                             onclick="document.getElementById('mainPropertyImageReview').src='{{ Storage::url($imagePath) }}'; 
+                                      document.querySelectorAll('#reviewPropertyImagesContainer img').forEach(img => img.classList.remove('active-thumb')); 
+                                      this.classList.add('active-thumb');">
+                    @endif
+                @endforeach
+            </div>
+        @endif
+    </div>
 
-                            $allMedia = array_merge($videos, $images);
-                            $firstMedia = count($allMedia) > 0 ? $allMedia[0] : null;
-                            $defaultImageUrl = asset('assets/img/placeholder-property.png');
-                        @endphp
+    {{-- الصورة الرئيسية على اليمين --}}
+    <div class="col-md-9 text-center">
+        @if($firstImage && Storage::disk('public')->exists($firstImage))
+            <img src="{{ Storage::url($firstImage) }}" 
+                 alt="{{ $property->title }}" 
+                 class="img-fluid border rounded main-property-image-display" 
+                 id="mainPropertyImageReview">
+        @else
+            <img src="{{ $defaultImageUrl }}" 
+                 alt="No Image" 
+                 class="img-fluid border rounded main-property-image-display">
+        @endif
+    </div>
+</div>
 
-                        <div class="row">
-                            {{-- العمود الأيسر للمصغرات --}}
-                            <div class="col-md-3 order-md-1 thumbnails-column">
-                                @if (count($allMedia) > 1)
-                                    <div class="thumbnails-container d-flex flex-md-column flex-wrap gap-2">
-                                        @foreach ($allMedia as $index => $mediaPath)
-                                            @if (in_array(pathinfo($mediaPath, PATHINFO_EXTENSION), ['mp4', 'mov', 'avi']))
-                                                {{-- مصغر الفيديو --}}
-                                                <div class="thumbnail-video-container {{ $index == 0 ? 'active-thumb' : '' }}"
-                                                    onclick="changeMainMedia('{{ Storage::url($mediaPath) }}', 'video', this)">
-                                                    <video class="thumbnail-media">
-                                                        <source src="{{ Storage::url($mediaPath) }}" type="video/mp4">
-                                                    </video>
-                                                    <div class="video-play-icon">
-                                                        <i class="bi bi-play-circle-fill"></i>
-                                                    </div>
-                                                </div>
-                                            @else
-                                                {{-- مصغر الصورة --}}
-                                                <img src="{{ Storage::url($mediaPath) }}" alt="Thumb {{ $index + 1 }}"
-                                                    class="thumbnail-media {{ $index == 0 ? 'active-thumb' : '' }}"
-                                                    onclick="changeMainMedia('{{ Storage::url($mediaPath) }}', 'image', this)">
-                                            @endif
-                                        @endforeach
-                                    </div>
-                                @endif
-                            </div>
+@if(empty($images))
+    <p class="text-muted mt-3 text-center">No images provided for this property.</p>
+@endif
 
-                            {{-- العمود الأيمن للعرض الرئيسي --}}
-                            <div class="col-md-9 order-md-2 ">
-                                <div class="main-media-container">
-                                    @if ($firstMedia)
-                                        @if (in_array(pathinfo($firstMedia, PATHINFO_EXTENSION), ['mp4', 'mov', 'avi']))
-                                            {{-- فيديو رئيسي --}}
-                                            <video id="mainPropertyMedia" controls class="main-media-display">
-                                                <source src="{{ Storage::url($firstMedia) }}" type="video/mp4">
-                                                Your browser does not support the video tag.
-                                            </video>
-                                        @else
-                                            {{-- صورة رئيسية --}}
-                                            <img id="mainPropertyMedia" src="{{ Storage::url($firstMedia) }}"
-                                                alt="{{ $property->title }}" class="main-media-display">
-                                        @endif
-                                    @else
-                                        {{-- صورة افتراضية --}}
-                                        <img id="mainPropertyMedia" src="{{ $defaultImageUrl }}" alt="No Media"
-                                            class="main-media-display">
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
+  </div>
+        </div>
+            </div>
 
 
                 {{-- بطاقة الوصف --}}
@@ -371,73 +342,7 @@
                             <small>No precise location coordinates provided.</small>
                         </div>
                     @endif
-=======
-    {{-- الصف الرئيسي لمحتوى العقار (صور على اليسار، تفاصيل على اليمين) --}}
-    <div class="row g-4">
-        {{-- العمود الأيسر للصور والوصف والمرافق --}}
-        <div class="col-lg-7">
-       {{-- بطاقة الصور --}}
-            <div class="card property-detail-card">
-                <div class="card-header"><i class="bi bi-images me-2"></i>Property Gallery</div>
-              <div class="card-body p-3">
-    @php
-        $images = is_string($property->images) ? json_decode($property->images, true) : ($property->images ?? []);
-        if (!is_array($images)) $images = [];
-        $firstImage = count($images) > 0 ? $images[0] : null;
-        $defaultImageUrl = asset('assets/img/placeholder-property.png');
-    @endphp
 
-    <div class="row align-items-start">
-        {{-- الصورة الرئيسية على اليسار --}}
-      <div class="row">
-    {{-- الصور المصغّرة على اليسار --}}
-    <div class="col-md-3">
-        @if(count($images) > 1)
-            <div class="d-flex flex-md-column flex-wrap gap-2" id="reviewPropertyImagesContainer">
-                @foreach($images as $index => $imagePath)
-                    @if(Storage::disk('public')->exists($imagePath))
-                        <img src="{{ Storage::url($imagePath) }}" 
-                             alt="Thumbnail {{ $index + 1 }}"
-                             class="img-thumbnail thumb-image {{ $index == 0 ? 'active-thumb' : '' }}"
-                             onclick="document.getElementById('mainPropertyImageReview').src='{{ Storage::url($imagePath) }}'; 
-                                      document.querySelectorAll('#reviewPropertyImagesContainer img').forEach(img => img.classList.remove('active-thumb')); 
-                                      this.classList.add('active-thumb');">
-                    @endif
-                @endforeach
-            </div>
-        @endif
-    </div>
-
-    {{-- الصورة الرئيسية على اليمين --}}
-    <div class="col-md-9 text-center">
-        @if($firstImage && Storage::disk('public')->exists($firstImage))
-            <img src="{{ Storage::url($firstImage) }}" 
-                 alt="{{ $property->title }}" 
-                 class="img-fluid border rounded main-property-image-display" 
-                 id="mainPropertyImageReview">
-        @else
-            <img src="{{ $defaultImageUrl }}" 
-                 alt="No Image" 
-                 class="img-fluid border rounded main-property-image-display">
-        @endif
-    </div>
-</div>
-
-@if(empty($images))
-    <p class="text-muted mt-3 text-center">No images provided for this property.</p>
-@endif
-
-  </div>
-        </div>
-            </div>
-
-
-            {{-- بطاقة الوصف --}}
-            <div class="card property-detail-card">
-                <div class="card-header"><i class="bi bi-text-paragraph me-2"></i>Description</div>
-                <div class="card-body">
-                    <p class="property-description-area">{{ $property->description ?? 'No description provided.' }}</p>
->>>>>>> 9496dbd (رسالة توضّح التعديلات)
                 </div>
 
                 @if ($property->video_url)

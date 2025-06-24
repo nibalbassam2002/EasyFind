@@ -104,6 +104,7 @@
             </div>
         </div>
 
+<<<<<<< HEAD
         {{-- الصف الرئيسي لمحتوى العقار (صور على اليسار، تفاصيل على اليمين) --}}
         <div class="row g-4">
             {{-- العمود الأيسر للصور والوصف والمرافق --}}
@@ -370,6 +371,73 @@
                             <small>No precise location coordinates provided.</small>
                         </div>
                     @endif
+=======
+    {{-- الصف الرئيسي لمحتوى العقار (صور على اليسار، تفاصيل على اليمين) --}}
+    <div class="row g-4">
+        {{-- العمود الأيسر للصور والوصف والمرافق --}}
+        <div class="col-lg-7">
+       {{-- بطاقة الصور --}}
+            <div class="card property-detail-card">
+                <div class="card-header"><i class="bi bi-images me-2"></i>Property Gallery</div>
+              <div class="card-body p-3">
+    @php
+        $images = is_string($property->images) ? json_decode($property->images, true) : ($property->images ?? []);
+        if (!is_array($images)) $images = [];
+        $firstImage = count($images) > 0 ? $images[0] : null;
+        $defaultImageUrl = asset('assets/img/placeholder-property.png');
+    @endphp
+
+    <div class="row align-items-start">
+        {{-- الصورة الرئيسية على اليسار --}}
+      <div class="row">
+    {{-- الصور المصغّرة على اليسار --}}
+    <div class="col-md-3">
+        @if(count($images) > 1)
+            <div class="d-flex flex-md-column flex-wrap gap-2" id="reviewPropertyImagesContainer">
+                @foreach($images as $index => $imagePath)
+                    @if(Storage::disk('public')->exists($imagePath))
+                        <img src="{{ Storage::url($imagePath) }}" 
+                             alt="Thumbnail {{ $index + 1 }}"
+                             class="img-thumbnail thumb-image {{ $index == 0 ? 'active-thumb' : '' }}"
+                             onclick="document.getElementById('mainPropertyImageReview').src='{{ Storage::url($imagePath) }}'; 
+                                      document.querySelectorAll('#reviewPropertyImagesContainer img').forEach(img => img.classList.remove('active-thumb')); 
+                                      this.classList.add('active-thumb');">
+                    @endif
+                @endforeach
+            </div>
+        @endif
+    </div>
+
+    {{-- الصورة الرئيسية على اليمين --}}
+    <div class="col-md-9 text-center">
+        @if($firstImage && Storage::disk('public')->exists($firstImage))
+            <img src="{{ Storage::url($firstImage) }}" 
+                 alt="{{ $property->title }}" 
+                 class="img-fluid border rounded main-property-image-display" 
+                 id="mainPropertyImageReview">
+        @else
+            <img src="{{ $defaultImageUrl }}" 
+                 alt="No Image" 
+                 class="img-fluid border rounded main-property-image-display">
+        @endif
+    </div>
+</div>
+
+@if(empty($images))
+    <p class="text-muted mt-3 text-center">No images provided for this property.</p>
+@endif
+
+  </div>
+        </div>
+            </div>
+
+
+            {{-- بطاقة الوصف --}}
+            <div class="card property-detail-card">
+                <div class="card-header"><i class="bi bi-text-paragraph me-2"></i>Description</div>
+                <div class="card-body">
+                    <p class="property-description-area">{{ $property->description ?? 'No description provided.' }}</p>
+>>>>>>> 9496dbd (رسالة توضّح التعديلات)
                 </div>
 
                 @if ($property->video_url)

@@ -39,4 +39,17 @@ class NotificationController extends Controller
 // public function updateFrontendNotificationBadge(){
 
 // }
+public function destroy(DatabaseNotification $notification)
+    {
+        // تحقق من أن المستخدم الحالي هو مالك هذا الإشعار
+        if (auth()->user()->id !== $notification->notifiable_id) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        // قم بحذف الإشعار
+        $notification->delete();
+
+        // أرسل استجابة نجاح
+        return response()->json(['success' => true, 'message' => 'Notification deleted successfully.']);
+    }
 }

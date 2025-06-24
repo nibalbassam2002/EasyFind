@@ -30,4 +30,8 @@ class Conversation extends Model
             get: fn () => $this->users->firstWhere('id', '!=', Auth::id())
         );
     }
+    public function property()
+{
+    return $this->belongsTo(Property::class);
+}
 }

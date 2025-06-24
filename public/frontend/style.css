@@ -532,3 +532,48 @@ color: black;
 background-color: #FFD700;
 color: white;
 }
+.star-rating {
+  display: flex;
+  flex-direction: row-reverse;
+  font-size: 1.5rem; /* Or 2rem if you want it larger */
+  justify-content: flex-end;
+  line-height: 1.5rem;
+}
+
+.star-rating input {
+  display: none;
+}
+
+.star-rating label {
+  color: #ccc;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.star-rating :checked ~ label {
+  color: #ffc107; /* Bootstrap warning color */
+}
+
+.star-rating label:hover,
+.star-rating label:hover ~ label {
+  color: #ffc107;
+}
+/* أضف هذا الكود إلى ملف frontend/style.css */
+
+.notification-item-frontend.unread {
+    background-color: #f0f8ff !important; /* لون أزرق فاتح جدًا للإشعارات الجديدة */
+    font-weight: 500;
+}
+
+.notification-item-frontend {
+    white-space: normal; /* للسماح بالتفاف النص */
+    transition: background-color 0.2s ease-in-out;
+}
+
+.notification-item-frontend:hover {
+    background-color: #f8f9fa !important;
+}
+
+.dropdown-header, .dropdown-footer {
+    font-size: 0.85rem;
+}

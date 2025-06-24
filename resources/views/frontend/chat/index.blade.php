@@ -3,9 +3,7 @@
 
 @push('styles')
     <style>
-        /*
-                                             * CSS النهائي والمضمون لحل جميع المشاكل
-                                            */
+       
 
         .chat-container-wrapper {
             height: calc(100vh - 77px);
@@ -281,7 +279,7 @@
                     @forelse($conversations as $conversation)
                         @php $otherUser = $conversation->other_participant; @endphp
                         @if ($otherUser)
-                            <li class="conversation-item" data-conversation-id="{{ $conversation->id }}">
+                            <li class="conversation-item" data-conversation-id="{{ $conversation->id }}" data-user-id="{{ $otherUser->id }}">
                                 <img src="{{ $otherUser->profile_image_url }}" alt="{{ $otherUser->name }}" class="avatar">
                                 <div class="chat-info">
                                     <div class="name">{{ $otherUser->name }}</div>
@@ -344,9 +342,14 @@
 @endsection
 
 @push('scripts')
+    {{-- Firebase SDKs --}}
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // ================== 1. تعريف العناصر (Constants) ==================
+            // Define all constants for DOM elements
             const chatContainer = document.getElementById('chatContainer');
             const conversationsList = document.getElementById('conversationsList');
             const messagesArea = document.getElementById('messagesArea');
@@ -359,49 +362,69 @@
             const messageInput = sendMessageForm.querySelector('input[name="body"]');
             const backToConversationsBtn = document.getElementById('backToConversationsBtn');
 
-            // ================== 2. متغيرات الحالة (State) ==================
+            // State variables
             let currentConversationId = null;
             const currentUserId = {{ Auth::id() }};
             let nextPageUrl = null;
             let isLoading = false;
+            let db = null;
+            let unsubscribeFromMessages = null;
 
-            // ================== 3. تعريف الدوال (Functions) ==================
+            // Firebase Config
+            const firebaseConfig = {
+                apiKey: "{{ config('services.firebase.api_key') }}",
+                authDomain: "{{ config('services.firebase.auth_domain') }}",
+                projectId: "{{ config('services.firebase.project_id') }}",
+                storageBucket: "{{ config('services.firebase.storage_bucket') }}",
+                messagingSenderId: "{{ config('services.firebase.messaging_sender_id') }}",
+                appId: "{{ config('services.firebase.app_id') }}"
+            };
 
-            /**
-             * تعيد الواجهة إلى الحالة الافتراضية (عرض "اختر محادثة").
-             */
+            // Initialize Firebase App
+            firebase.initializeApp(firebaseConfig);
+            const auth = firebase.auth();
+            const firestoreToken = '{{ $firebaseToken ?? '' }}';
+
+            // Main function to authenticate and start the application
+            async function initializeFirebase() {
+                try {
+                    if (!firestoreToken) throw new Error("Firebase token is missing!");
+                    await auth.signInWithCustomToken(firestoreToken);
+                    console.log("Firebase authentication successful!");
+                    db = firebase.firestore();
+                    setupEventListeners();
+                    initialLoad();
+                } catch (error) {
+                    console.error("Firebase authentication failed:", error);
+                    noConversationDiv.innerHTML = '<div class="alert alert-danger m-2">Could not connect to chat service. Please refresh the page.</div>';
+                }
+            }
+
+            // Helper Functions
             function resetToDefaultView() {
                 const url = new URL(window.location);
                 url.searchParams.delete('activeConversation');
                 window.history.replaceState({}, '', url);
-
                 chatContainer.classList.remove('mobile-chat-view');
                 document.querySelectorAll('.conversation-item.active').forEach(el => el.classList.remove('active'));
-
                 activeChatHeader.classList.add('d-none');
                 messagesArea.classList.add('d-none');
                 chatInputArea.classList.add('d-none');
                 noConversationDiv.style.display = 'flex';
-                if (window.currentChannel) {
-                    window.Echo.leave(window.currentChannel);
-                    window.currentChannel = null;
+                if (unsubscribeFromMessages) {
+                    unsubscribeFromMessages();
+                    unsubscribeFromMessages = null;
                 }
-                currentConversationId = null; // أهم خطوة
+                currentConversationId = null;
             }
 
-            /**
-             * تقوم بتحميل وعرض محادثة معينة.
-             */
             async function loadConversation(convId, convElement) {
+                if (isLoading) return;
                 const url = new URL(window.location);
                 url.searchParams.set('activeConversation', convId);
                 window.history.replaceState({}, '', url);
-
                 currentConversationId = convId;
-                nextPageUrl = null;
-
-                document.querySelectorAll('.conversation-item.active').forEach(el => el.classList.remove(
-                    'active'));
+                document.querySelectorAll('.conversation-item.active').forEach(el => el.classList.remove('active'));
                 convElement.classList.add('active');
                 chatContainer.classList.add('mobile-chat-view');
                 noConversationDiv.style.display = 'none';
@@ -410,179 +433,142 @@
                 chatInputArea.classList.remove('d-none');
                 activeChatUserName.textContent = convElement.querySelector('.name').textContent;
                 activeChatAvatar.src = convElement.querySelector('img.avatar').src;
-                messagesArea.innerHTML =
-                    '<div class="text-center p-3"><div class="spinner-border text-secondary"></div></div>';
-
-                await fetchAndRenderMessages(`/chat/conversations/${convId}/messages`);
+                messagesArea.innerHTML = '<div class="text-center p-3"><div class="spinner-border text-secondary"></div></div>';
+                await fetchAndRenderMessagesFromLaravel(`/chat/conversations/${convId}/messages`);
                 messageInput.focus();
-                listenForMessages(convId);
+                listenForNewMessages(convId);
             }
 
-            /**
-             * تجلب الرسائل من السيرفر وتقوم بعرضها.
-             */
-            async function fetchAndRenderMessages(url, prepend = false) {
-                // ... (هذه الدالة تبقى كما هي بدون تغيير)
+            async function fetchAndRenderMessagesFromLaravel(url, prepend = false) {
                 if (isLoading) return;
                 isLoading = true;
-                if (prepend) messagesArea.insertAdjacentHTML('afterbegin',
-                    '<div id="loading-more" class="text-center p-2"><div class="spinner-border spinner-border-sm"></div></div>'
-                );
+                if (prepend) messagesArea.insertAdjacentHTML('afterbegin', '<div id="loading-more" class="text-center p-2"><div class="spinner-border spinner-border-sm"></div></div>');
                 try {
                     const response = await fetch(url);
                     if (!response.ok) throw new Error('Request failed');
                     const result = await response.json();
                     const messages = result.data.reverse();
                     nextPageUrl = result.next_page_url;
-                    if (!prepend) messagesArea.innerHTML = '';
-                    let lastUserId = prepend ? (messagesArea.firstChild?.dataset.userId || null) : null;
-                    messages.forEach(msg => {
-                        const showAvatar = msg.user_id != lastUserId;
-                        const msgHtml = createMessageHtml(msg, showAvatar);
-                        if (prepend) messagesArea.insertAdjacentHTML('afterbegin', msgHtml);
-                        else messagesArea.insertAdjacentHTML('beforeend', msgHtml);
-                        lastUserId = msg.user_id;
-                    });
-                    if (prepend) {
-                        const firstMessage = messagesArea.querySelector(
-                            `.message-item:nth-child(${messages.length})`);
-                        if (firstMessage) messagesArea.scrollTop = firstMessage.offsetTop - 20;
-                    } else {
-                        setTimeout(() => {
-                            messagesArea.scrollTop = messagesArea.scrollHeight;
-                        }, 0);
+                    if (!prepend && messagesArea.querySelector('.spinner-border')) {
+                        messagesArea.innerHTML = '';
                     }
+                    let lastUserId = prepend ? (messagesArea.firstChild?.dataset.userId || null) : (messages.length > 0 ? messages[0].user_id : null);
+                    messages.forEach((msg, index) => {
+                        const showAvatar = index === 0 ? true : msg.user_id != messages[index - 1].user_id;
+                        messagesArea.insertAdjacentHTML(prepend ? 'afterbegin' : 'beforeend', createMessageHtmlFromLaravel(msg, showAvatar));
+                    });
+                    if (!prepend) scrollToBottom();
                 } catch (error) {
                     console.error("Fetch/Render Error:", error);
-                    if (!prepend) messagesArea.innerHTML =
-                        '<div class="alert alert-danger m-2">Could not load messages.</div>';
+                    if (!prepend) messagesArea.innerHTML = '<div class="alert alert-danger m-2">Could not load messages.</div>';
                 } finally {
                     isLoading = false;
                     document.getElementById('loading-more')?.remove();
                 }
             }
 
-            function createMessageHtml(message, showAvatar) {
+            function scrollToBottom() {
+                setTimeout(() => { messagesArea.scrollTop = messagesArea.scrollHeight; }, 50);
+            }
+
+            function createMessageHtmlFromLaravel(message, showAvatar) {
                 const isSent = message.user_id === currentUserId;
-
-                // 1. تحكم في عرض الصورة: اعرضها دائماً إذا كان showAvatar صحيحاً، بغض النظر عن المرسل.
-                const avatarHtml = showAvatar ?
-                    `<img src="${message.user.profile_image_url}" class="avatar">` :
-                    '<div class="avatar-placeholder"></div>';
-
-                // 2. تحكم في عرض الاسم: اعرضه فقط للرسائل المستلمة.
-                const nameHtml = (showAvatar && !isSent) ?
-                    `<div class="message-sender-name">${message.user.name}</div>` : '';
-
-                // 3. بناء الرسالة النهائية.
-                return `<div class="message-item ${isSent ? 'sent' : 'received'}" data-user-id="${message.user_id}">
-                ${avatarHtml}
-                <div class="message-content">
-                    ${nameHtml}
-                    <div>${message.body.replace(/\n/g, '<br>')}</div>
-                    <span class="message-time">${message.formatted_created_at}</span>
-                </div>
-            </div>`;
+                const avatarHtml = showAvatar ? `<img src="${message.user.profile_image_url}" class="avatar">` : '<div class="avatar-placeholder"></div>';
+                const nameHtml = (showAvatar && !isSent) ? `<div class="message-sender-name">${message.user.name}</div>` : '';
+                return `<div class="message-item ${isSent ? 'sent' : 'received'}" data-user-id="${message.user_id}">${avatarHtml}<div class="message-content">${nameHtml}<div>${message.body.replace(/\n/g, '<br>')}</div><span class="message-time">${message.formatted_created_at}</span></div></div>`;
             }
 
-
-            // ================== 4. ربط الأحداث (Event Listeners) ==================
-
-            // عند الضغط على زر العودة
-            backToConversationsBtn.addEventListener('click', resetToDefaultView);
-
-            // عند الضغط على محادثة من القائمة
-            conversationsList.addEventListener('click', e => {
-                const convElement = e.target.closest('.conversation-item');
-                if (convElement && convElement.dataset.conversationId !== currentConversationId) {
-                    loadConversation(convElement.dataset.conversationId, convElement);
-                }
-            });
-
-            // عند إرسال رسالة
-            sendMessageForm.addEventListener('submit', async e => {
-                e.preventDefault();
-                const body = messageInput.value.trim();
-                if (!body || !currentConversationId) return;
-
-                const originalText = messageInput.value;
-                messageInput.value = '';
-                messageInput.disabled = true;
-                try {
-                    const response = await fetch(
-                        `/chat/conversations/${currentConversationId}/messages`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                'Accept': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                body
-                            })
-                        });
-                    if (!response.ok) throw new Error('Send failed');
-                    const newMessage = await response.json();
-                    const lastMsgEl = messagesArea.querySelector('.message-item:last-child');
-                    const showAvatar = !lastMsgEl || lastMsgEl.dataset.userId != newMessage.user_id;
-                    messagesArea.insertAdjacentHTML('beforeend', createMessageHtml(newMessage,
-                        showAvatar));
-                    messagesArea.scrollTop = messagesArea.scrollHeight;
-                    const convInList = conversationsList.querySelector(
-                        `.conversation-item[data-conversation-id="${currentConversationId}"]`);
-                    if (convInList) {
-                        convInList.querySelector('.last-message').innerHTML =
-                            `<span class="text-muted">You:</span> ${body.substring(0, 25)}...`;
-                        convInList.querySelector('.chat-time').textContent = 'Just now';
-                        conversationsList.prepend(convInList);
-                    }
-                } catch (error) {
-                    console.error('Send Error:', error);
-                    messageInput.value = originalText;
-                } finally {
-                    messageInput.disabled = false;
-                    messageInput.focus();
-                }
-            });
-
-            // عند التمرير لأعلى لتحميل المزيد
-            messagesArea.addEventListener('scroll', () => {
-                if (messagesArea.scrollTop === 0 && nextPageUrl && !isLoading) {
-                    fetchAndRenderMessages(nextPageUrl, true);
-                }
-            });
-
-
-            // ================== 5. التشغيل الأولي (Initial Load) ==================
-            const initialConvId = new URLSearchParams(window.location.search).get('activeConversation');
-            if (initialConvId) {
-                conversationsList.querySelector(`.conversation-item[data-conversation-id="${initialConvId}"]`)
-                    ?.click();
+            function createMessageHtmlFromFirestore(messageData, showAvatar) {
+                const isSent = messageData.userId === currentUserId;
+                const avatarUrl = isSent ? '{{ Auth::user()->profile_image_url }}' : activeChatAvatar.src;
+                const avatarHtml = showAvatar ? `<img src="${avatarUrl}" class="avatar">` : '<div class="avatar-placeholder"></div>';
+                const nameHtml = (showAvatar && !isSent) ? `<div class="message-sender-name">${messageData.userName}</div>` : '';
+                return `<div class="message-item ${isSent ? 'sent' : 'received'}" data-user-id="${messageData.userId}">${avatarHtml}<div class="message-content">${nameHtml}<div>${messageData.message.replace(/\n/g, '<br>')}</div><span class="message-time">Just now</span></div></div>`;
             }
-        });
 
-function listenForMessages(conversationId) {
-    if (window.currentChannel) {
-        window.Echo.leave(window.currentChannel);
+            function listenForNewMessages(conversationId) {
+                if (unsubscribeFromMessages) unsubscribeFromMessages();
+                unsubscribeFromMessages = db.collection('conversations').doc(conversationId).collection('messages')
+                    .orderBy('timestamp').where('timestamp', '>', new Date())
+                    .onSnapshot(querySnapshot => {
+                        
+                    }, error => console.error("Firestore listener error: ", error));
+            }
+
+            // Event Listeners Setup
+            function setupEventListeners() {
+                backToConversationsBtn.addEventListener('click', resetToDefaultView);
+                conversationsList.addEventListener('click', e => {
+                    const convElement = e.target.closest('.conversation-item');
+                    if (convElement && convElement.dataset.conversationId !== currentConversationId) loadConversation(convElement.dataset.conversationId, convElement);
+                });
+                sendMessageForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const body = messageInput.value.trim();
+    if (!body || !currentConversationId) return;
+
+    // === ▼▼▼ هذا هو الجزء الجديد والمهم ▼▼▼ ===
+    
+    // 1. أنشئ نسخة وهمية من الرسالة لعرضها فوراً
+    const optimisticMessage = {
+        userId: currentUserId,
+        userName: '{{ Auth::user()->name }}',
+        message: body,
+    };
+    
+    // 2. تحقق من آخر رسالة لتحديد هل يجب عرض الصورة الرمزية
+    const lastMsgEl = messagesArea.querySelector('.message-item:last-child');
+    const showAvatar = !lastMsgEl || lastMsgEl.dataset.userId != currentUserId;
+
+    // 3. أضف الرسالة إلى الواجهة فوراً
+    messagesArea.insertAdjacentHTML('beforeend', createMessageHtmlFromFirestore(optimisticMessage, showAvatar));
+    scrollToBottom();
+    
+    // 4. قم بتحديث قائمة المحادثات الجانبية
+    const convInList = conversationsList.querySelector(`[data-conversation-id="${currentConversationId}"]`);
+    if (convInList) {
+        convInList.querySelector('.last-message').innerHTML = `<span class="text-muted">You:</span> ${body.substring(0, 25)}...`;
+        convInList.querySelector('.chat-time').textContent = 'Just now';
+        conversationsList.prepend(convInList);
     }
+    // === ▲▲▲ نهاية الجزء الجديد ▲▲▲ ===
 
-    // اسم القناة لا يبدأ بـ "private-" هنا. Echo سيفعل ذلك.
-    const channelName = `conversation.${conversationId}`;
-    window.currentChannel = channelName;
-
-    console.log(`Subscribing to private channel: ${channelName}`);
-
-    // نستخدم .private() لكي يقوم Echo بطلب المصادقة
-    window.Echo.private(channelName)
-        // اسم الحدث يبدأ بنقطة "."
-        .listen('.MessageSent', (event) => {
-            console.log('Real-time message received!', event);
-            // ... بقية الكود لعرض الرسالة
-            const lastMsgEl = messagesArea.querySelector('.message-item:last-child');
-            const showAvatar = !lastMsgEl || lastMsgEl.dataset.userId != event.message.user_id;
-            messagesArea.insertAdjacentHTML('beforeend', createMessageHtml(event.message, showAvatar));
-            messagesArea.scrollTop = messagesArea.scrollHeight;
+    const originalText = messageInput.value;
+    messageInput.value = ''; // امسح حقل الإدخال فوراً
+    
+    // الآن، أرسل الرسالة الحقيقية إلى السيرفر في الخلفية
+    try {
+        const response = await fetch(`/chat/conversations/${currentConversationId}/messages`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+            body: JSON.stringify({ body })
         });
-}
+        if (!response.ok) {
+            // في حالة الفشل، يمكنك إظهار علامة خطأ بجانب الرسالة
+            console.error("Failed to send message to server");
+            messageInput.value = originalText; // أعد النص للمستخدم
+        }
+        // لا نحتاج لعمل أي شيء آخر عند النجاح، لأن الواجهة تم تحديثها بالفعل
+    } catch (error) {
+        console.error('Send Error:', error);
+        messageInput.value = originalText;
+    }
+});
+                messagesArea.addEventListener('scroll', () => { if (messagesArea.scrollTop === 0 && nextPageUrl && !isLoading) fetchAndRenderMessagesFromLaravel(nextPageUrl, true); });
+            }
+
+            // Initial Load Logic
+            function initialLoad() {
+                const initialConvId = new URLSearchParams(window.location.search).get('activeConversation');
+                if (initialConvId) {
+                    const el = conversationsList.querySelector(`[data-conversation-id="${initialConvId}"]`);
+                    if (el) setTimeout(() => el.click(), 250); // Small delay to ensure everything is ready
+                }
+            }
+
+            // Start the entire process
+            initializeFirebase();
+        });
     </script>
 @endpush
+

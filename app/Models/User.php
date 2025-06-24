@@ -165,5 +165,8 @@ public function transactions()
     {
         return $this->hasMany(Property::class, 'user_id');
     }
-
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
 }

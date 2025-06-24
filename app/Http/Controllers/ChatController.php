@@ -9,117 +9,127 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use App\Events\MessageSent; 
-use App\Models\Property;
+use Illuminate\Support\Facades\Log; 
+use Kreait\Firebase\Contract\Firestore; 
+use Kreait\Firebase\Contract\Auth as FirebaseAuth;
+
+
 
 class ChatController extends Controller
 {
+    
+    protected $firestore;
+    protected $firebaseAuth;
+
+    public function __construct(Firestore $firestore, FirebaseAuth $firebaseAuth) // <-- هذا هو التعديل
+{
+        
+        $this->firestore = $firestore;
+        $this->firebaseAuth = $firebaseAuth;
+    }
+
     public function index(Request $request)
     {
         $user = Auth::user();
         $conversations = $user->conversations()
-            ->with(['users', 'lastMessage.user']) // تحميل مسبق للمستخدمين
+            ->with(['users', 'lastMessage.user', 'property']) 
             ->latest('updated_at')
             ->get();
-        return view('frontend.chat.index', compact('conversations', 'user'));
-    }
 
-   // في ملف ChatController.php
+        
+        $customToken = $this->firebaseAuth->createCustomToken((string) $user->id, ['name' => $user->name]);
+
+        // قم بتحويل التوكن إلى سلسلة نصية لتمريره
+        $firebaseToken = $customToken->toString();
+        // ========================
+
+        // **مرر التوكن الجديد إلى الـ view**
+        return view('frontend.chat.index', compact('conversations', 'user', 'firebaseToken'));
+    }
 
     public function fetchMessages(Conversation $conversation): JsonResponse
     {
-        // التحقق من الصلاحية (هذا الجزء سليم)
         if (!Auth::user()->conversations()->find($conversation->id)) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
         
-        // تحديث الرسائل كمقروءة (هذا الجزء سليم)
         $conversation->messages()->where('user_id', '!=', Auth::id())->whereNull('read_at')->update(['read_at' => now()]);
         
-        // ▼▼▼ هذا هو السطر الذي قمنا بتعديله ▼▼▼
         $messages = $conversation->messages()->with('user')->latest()->paginate(20);
 
         return response()->json($messages);
     }
 
+
     public function sendMessage(Request $request, Conversation $conversation): JsonResponse
     {
-        // ... (الكود الحالي للتحقق من الصلاحية والـ validation) ...
+        // 1. التحقق من الصلاحية والبيانات (يبقى كما هو)
         if (!Auth::user()->conversations()->find($conversation->id)) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
         $validated = $request->validate(['body' => 'required|string|max:2000']);
 
-        // ... (الكود الحالي لإنشاء الرسالة) ...
+        // 2. حفظ الرسالة في قاعدة بياناتك الأساسية (MySQL) - هذا ممتاز ويجب أن يبقى
         $message = $conversation->messages()->create([
             'user_id' => Auth::id(),
             'body' => $validated['body']
         ]);
         
-        $conversation->touch(); // تحديث وقت المحادثة
-        
-        $message->load('user'); // تحميل بيانات المستخدم مع الرسالة
+        $conversation->touch();
+        $message->load('user');
 
-        broadcast(new MessageSent($message));// ▼▼▼ السطر الجديد والمهم ▼▼▼
-        // قم ببث الحدث إلى المستخدمين الآخرين
-        
+        // 3. === الجزء الجديد: إرسال الرسالة إلى FIRESTORE ===
+        try {
+            $this->firestore
+                ->database()
+                ->collection('conversations') // أنشئ مجموعة اسمها "conversations"
+                ->document($conversation->id) // بداخلها، أنشئ مستندًا لكل محادثة
+                ->collection('messages')      // وبداخل كل محادثة، أنشئ مجموعة للرسائل
+                ->add([                       // أضف رسالة جديدة كـ مستند
+                    'userId'    => (int) auth()->id(),
+                    'userName'  => auth()->user()->name,
+                    'message'   => $validated['body'],
+                    'timestamp' => new \Google\Cloud\Core\Timestamp(new \DateTime()),
+                ]);
+        } catch (\Exception $e) {
+            // في حالة فشل الاتصال بـ Firebase، سنقوم بتسجيل الخطأ في ملفات log
+            Log::error('FIREBASE_SEND_FAILED: ' . $e->getMessage());
+            // لا توقف العملية، لأن الرسالة تم حفظها في قاعدة بياناتك الأساسية
+        }
 
+        // 4. أزلنا استدعاء broadcast القديم
+        // broadcast(new MessageSent($message));
+
+        // 5. أرجع الرسالة كما كنت تفعل
         return response()->json($message);
     }
     
-   public function createOrFindConversation(Request $request, User $recipient)
+    public function createOrFindConversation(User $recipient, $property_id = null)
 {
     $currentUser = Auth::user();
 
-    // 1. التحقق الأساسي
     if ($currentUser->id === $recipient->id) {
         return redirect()->back()->with('error', 'You cannot start a conversation with yourself.');
     }
 
-    $propertyId = $request->query('property_id');
-    $property = null;
+    // ابحث عن محادثة قائمة بين هذين المستخدمين حول هذا العقار تحديداً
+    $query = $currentUser->conversations()
+        ->whereHas('users', fn($q) => $q->where('user_id', $recipient->id));
 
-    if ($propertyId) {
-        $property = Property::find($propertyId);
-        // إذا كان هناك property_id، تأكدي من أن المستقبل هو مالك العقار
-        if ($property && $property->user_id !== $recipient->id) {
-            // هذا يمنع أي شخص من بدء محادثة مع شخص آخر بحجة عقار لا يملكه
-             return redirect()->route('frontend.home')->with('error', 'Invalid chat request.');
-        }
+    if ($property_id) {
+        $query->where('property_id', $property_id);
     }
 
-    // 2. البحث عن محادثة قائمة بين المستخدمين
-    // البحث عن محادثة مشتركة بين المستخدمين الاثنين فقط.
-    $conversation = $currentUser->conversations()
-        ->whereHas('users', function ($query) use ($recipient) {
-            $query->where('user_id', $recipient->id);
-        })
-        ->has('users', 2) // تأكد من أن المحادثة بين شخصين فقط
-        ->first();
+    $conversation = $query->first();
 
-    // 3. إذا لم توجد محادثة، قم بإنشاء واحدة جديدة
+    // إذا لم يتم العثور على محادثة، أنشئ واحدة جديدة مع ربطها بالعقار
     if (!$conversation) {
-        DB::beginTransaction();
-        try {
-            $conversation = Conversation::create();
-            $conversation->users()->attach([$currentUser->id, $recipient->id]);
-
-            // (اختياري ولكن محبذ جداً) إرسال رسالة نظام تلقائية
-            if ($property) {
-                $initialMessage = "Hello, I'm interested in your property: '{$property->title}'.";
-                $conversation->messages()->create([
-                    'user_id' => $currentUser->id,
-                    'body' => $initialMessage
-                ]);
-            }
-            DB::commit();
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->back()->with('error', 'Could not start the conversation. Please try again.');
-        }
+        $conversation = Conversation::create([
+            'property_id' => $property_id
+        ]);
+        $conversation->users()->attach([$currentUser->id, $recipient->id]);
     }
-    
-    // 4. التوجيه إلى صفحة الشات مع جعل المحادثة الجديدة/الموجودة نشطة
+
     return redirect()->route('chat.index', ['activeConversation' => $conversation->id]);
 }
 }

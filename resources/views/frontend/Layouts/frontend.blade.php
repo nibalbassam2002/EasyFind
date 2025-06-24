@@ -118,45 +118,57 @@
                                     @else
                                         لا توجد إشعارات جديدة
                                     @endif
-                                    <a href="{{ route('frontend.notifications.index') }}" class="float-end small">عرض
-                                        الكل</a>
                                 </li>
+
                                 <li>
-                                    <hr class="dropdown-divider my-1">
+                                    <hr class="dropdown-divider my-0">
                                 </li>
 
                                 @forelse ($latestFrontendNotifications as $notification)
+                                    @php
+                                        // هنا نقوم بتعريف المتغيرات التي كانت مفقودة
+                                        $shortMessage =
+                                            $notification->data['message'] ?? 'Notification details are missing.';
+                                        $fullMessage = $notification->data['full_message'] ?? $shortMessage;
+                                    @endphp
                                     <li>
-                                        <a class="dropdown-item notification-item-frontend {{ $notification->unread() ? 'bg-light-subtle' : '' }}"
+                                        {{-- الآن الكود سيعمل لأن المتغيرات أصبحت معروفة --}}
+                                        <a class="dropdown-item py-2 notification-item-frontend {{ $notification->unread() ? 'unread' : '' }}"
                                             href="{{ $notification->data['url'] ?? '#' }}"
                                             data-notification-id-frontend="{{ $notification->id }}"
+                                            data-full-message="{{ htmlspecialchars($fullMessage) }}"
                                             onclick="markFrontendNotificationAsRead(this, event)">
+
                                             <div class="d-flex align-items-start">
-                                                <i
-                                                    class="{{ $notification->data['icon'] ?? 'bi bi-info-circle' }} me-2 mt-1 fs-5 {{ $notification->unread() ? 'text-primary' : 'text-muted' }}"></i>
-                                                <div class="notification-content">
-                                                    <p class="mb-0 small">{{ $notification->data['message'] }}</p>
-                                                    <small
-                                                        class="text-muted">{{ $notification->created_at->diffForHumans() }}</small>
+                                                <div class="flex-shrink-0 me-3">
+                                                    <i
+                                                        class="{{ $notification->data['icon'] ?? 'bi bi-info-circle' }} fs-4 text-muted"></i>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <p class="mb-1" style="font-size: 0.9rem; line-height: 1.4;">
+                                                        {{ $shortMessage }}
+                                                    </p>
+                                                    <small class="text-muted" style="font-size: 0.75rem;">
+                                                        <i
+                                                            class="bi bi-clock me-1"></i>{{ $notification->created_at->diffForHumans() }}
+                                                    </small>
                                                 </div>
                                             </div>
                                         </a>
                                     </li>
-                                    @if (!$loop->last)
-                                        <li>
-                                            <hr class="dropdown-divider my-1">
-                                        </li>
-                                    @endif
+
                                 @empty
                                     <li>
-                                        <p class="dropdown-item text-center text-muted small py-3">لا توجد إشعارات لعرضها.
-                                        </p>
+                                        <div class="text-center text-muted py-4">
+                                            <i class="bi bi-bell-slash fs-3"></i>
+                                            <p class="mb-0 mt-2 small">لا توجد إشعارات لعرضها.</p>
+                                        </div>
                                     </li>
                                 @endforelse
 
                                 @if ($latestFrontendNotifications->count() > 0)
                                     <li>
-                                        <hr class="dropdown-divider my-1">
+                                        <hr class="dropdown-divider my-0">
                                     </li>
                                     <li class="dropdown-footer text-center py-2">
                                         <a href="{{ route('frontend.notifications.index') }}" class="small">عرض جميع
@@ -506,9 +518,19 @@
     </script>
     @auth
         <script>
+            // في ملف frontend.blade.php، داخل وسم <script>
+
             function markFrontendNotificationAsRead(element, event) {
+                // 1. امنع الرابط من العمل فوراً
+                event.preventDefault();
+
+                // 2. احفظ الرابط الذي نريد الذهاب إليه في متغير
+                const targetUrl = element.href;
+
+                // 3. احصل على ID الإشعار
                 let notificationId = element.dataset.notificationIdFrontend;
 
+                // 4. إذا كان هناك ID، قم بتمييز الإشعار كمقروء
                 if (notificationId) {
                     fetch(`/notifications/${notificationId}/mark-as-read`, {
                             method: 'PATCH',
@@ -518,58 +540,45 @@
                                 'Content-Type': 'application/json'
                             },
                         })
-                        .then(response => {
-                            if (!response.ok) throw new Error('Network response was not ok for markAsRead.');
-                            return response.json();
-                        })
-                        .then(data => {
-                            if (data.success) {
-                                element.classList.remove('bg-light-subtle'); // إزالة تمييز الخلفية
-                                const iconElement = element.querySelector('i.fs-5'); // استهداف الأيقونة داخل الرابط
-                                if (iconElement) {
-                                    iconElement.classList.remove('text-primary');
-                                    iconElement.classList.add('text-muted');
-                                }
-                                // if (typeof updateFrontendNotificationBadge === 'function') {
-                                //     updateFrontendNotificationBadge();
-                                // }
-                            } else {
-                                console.error('Failed to mark notification as read:', data.message);
-                            }
-                          
-                        })
                         .catch(error => {
-                            console.error('Error in markFrontendNotificationAsRead:', error);
-                       
+                            // حتى لو فشل الطلب، لا يهم، سننتقل إلى الصفحة على أي حال
+                            console.error('Could not mark notification as read, but will redirect anyway.', error);
+                        })
+                        .finally(() => {
+                            // 5. (أهم خطوة) بعد انتهاء كل شيء (سواء نجح أو فشل)، انتقل إلى الرابط الذي حفظناه
+                            window.location.href = targetUrl;
                         });
+                } else {
+                    // إذا لم يكن هناك ID لسبب ما، انتقل إلى الرابط مباشرة
+                    window.location.href = targetUrl;
                 }
             }
 
-           
+
             function getTransChoice(key, number) {
                 const parts = key.split('|');
                 if (number === 1) return parts[0];
-                if (number === 2 && parts.length > 1 && parts[1] !== '') return parts[1]; 
-                if (parts.length > 2 && parts[2] !== '') return parts[2]; 
+                if (number === 2 && parts.length > 1 && parts[1] !== '') return parts[1];
+                if (parts.length > 2 && parts[2] !== '') return parts[2];
                 return parts[parts.length - 1];
             }
 
-            
+
             document.addEventListener('DOMContentLoaded', function() {
-        
+
                 if (document.querySelector('.navbar .notification-count') || document.querySelector(
                         '#navbarDropdownNotifications')) {
-                //    updateFrontendNotificationBadge(); 
+                    //    updateFrontendNotificationBadge(); 
                 }
 
-               
+
             });
         </script>
     @endauth
 
     @stack('scripts')
     @vite('resources/js/app.js')
-    
+
     {{-- @vite(['resources/css/app.css', 'resources/js/app.js']) --}}
 
     <div class="modal fade" id="subscribeModal" tabindex="-1" aria-labelledby="subscribeModalLabel"

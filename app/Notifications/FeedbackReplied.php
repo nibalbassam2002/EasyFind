@@ -28,7 +28,7 @@ class FeedbackReplied extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'mail'];
+        return ['database'];
     }
 
     /**
@@ -51,18 +51,32 @@ class FeedbackReplied extends Notification implements ShouldQueue
                     // ->action('View Details', $myFeedbackUrl) // If you have a dedicated page
                     ->line('Thank you for helping us improve our services.');
     }
-    public function toDatabase(object $notifiable): array
+
+
+// في ملف app/Notifications/FeedbackReplied.php
+
+public function toDatabase(object $notifiable): array
 {
-    // $myFeedbackUrl = route('frontend.my-feedback.show', $this->feedback->id);
-    $myFeedbackUrl = '#'; // Temporarily, or link to "My Notifications" page
-    $subject = $this->feedback->subject ? Str::limit($this->feedback->subject, 30) : Str::limit($this->feedback->message, 30);
+    $notificationPageUrl = route('frontend.notifications.index');
+    
+    // احصل على موضوع الطلب الأصلي
+    $originalSubject = $this->feedback->subject ? Str::limit($this->feedback->subject, 30) : Str::limit($this->feedback->message, 30);
+
+    // ▼▼▼ هذا هو التعديل الأهم ▼▼▼
+    
+    // 1. إنشاء رسالة قصيرة (مقتطف) للعرض في القائمة
+    $shortMessage = 'A response has been added to your feedback on "' . $originalSubject . '": "' . Str::limit($this->feedback->admin_reply, 35, '...') . '"';
+    
+    // 2. الرسالة الكاملة للعرض في الـ Modal
+    $fullMessage = 'A response has been added to your feedback on "' . $originalSubject . '": ' . $this->feedback->admin_reply;
 
     return [
-        'feedback_id' => $this->feedback->id,
-        'feedback_subject' => $subject,
-        'message' => 'Your feedback regarding: "' . $subject . '" has received a response',
-        'url' => $myFeedbackUrl,
-        'icon' => 'bi bi-reply-all-fill text-success'
+        'feedback_id'      => $this->feedback->id,
+        'feedback_subject' => $originalSubject,
+        'message'          => $shortMessage, // <-- الرسالة القصيرة هنا
+        'full_message'     => $fullMessage,  // <-- الرسالة الكاملة هنا
+        'url'              => $notificationPageUrl, 
+        'icon'             => 'bi bi-reply-all-fill text-success'
     ];
 }
 

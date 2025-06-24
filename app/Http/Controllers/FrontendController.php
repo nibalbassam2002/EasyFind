@@ -19,6 +19,8 @@ class FrontendController extends Controller
 {
     $latestProperties = Property::where('status', 'approved')
                               ->with('listarea')
+                              ->withCount('reviews')
+                              ->withAvg('reviews', 'rating')
                               ->orderBy('is_featured', 'desc') 
                               ->latest()
                               ->take(8)
@@ -87,11 +89,10 @@ class FrontendController extends Controller
 public function properties(Request $request)
 {
     $query = Property::query()->where('status', 'approved')
-                   ->with(['listarea', 'category']);
+                   ->with(['listarea', 'category'])
+                   ->withCount('reviews')
+                   ->withAvg('reviews', 'rating');
 
-    // ▼▼▼ هذا هو الجزء الجديد والمحسّن للفلترة ▼▼▼
-
-    // 1. فلترة حسب الكلمة المفتاحية (Keyword Search)
     if ($request->filled('search')) {
         $searchTerm = $request->input('search');
         $query->where(function ($q) use ($searchTerm) {
@@ -177,8 +178,11 @@ public function showProperty(Property $property)
     if ($property->status !== 'approved') {
         abort(404);
     }
-    $property->load(['user', 'listarea', 'category', 'subCategory']);
+    $property->load(['user', 'listarea.governorate', 'category', 'subCategory', 'reviews.user']);
     $property->increment('views_count');
+    $avgRating = $property->reviews()->avg('rating');
+    $reviewsCount = $property->reviews()->count();
+
 
     $userId = Auth::id();
     if ($userId) {
@@ -210,7 +214,12 @@ public function showProperty(Property $property)
         });
     }
 
-    return view('frontend.property-detail', compact('property', 'similarProperties'));
+     return view('frontend.property-detail', compact(
+        'property', 
+        'similarProperties', 
+        'avgRating', 
+        'reviewsCount'
+    ));
 }
 public function favorites()
 {

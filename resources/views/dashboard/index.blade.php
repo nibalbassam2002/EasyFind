@@ -39,6 +39,7 @@
                                 <div class="fs-4 fw-bold">{{ $totalUsers ?? 0 }}</div>
                             </div>
                         </div>
+                        
                     </div>
                 </div>
                 <div class="col-lg-3 col-md-6 col-sm-6 mb-4">

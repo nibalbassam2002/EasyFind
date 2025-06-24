@@ -40,6 +40,7 @@
                             <th scope="col">Code</th>
                             <th scope="col">Image</th>
                             <th scope="col">Title</th>
+                            <th scope="col">Rating</th>
                             <th scope="col">Area</th>
                             <th scope="col" class="text-end">Price</th>
                             <th scope="col">Purpose</th>
@@ -76,6 +77,17 @@
                                             / {{ $property->subCategory?->name }}
                                         @endif
                                     </div>
+                                </td>
+                                <td>
+                                    @if($property->reviews_count > 0)
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-star-fill text-warning me-1"></i>
+                                            <span class="fw-bold">{{ rtrim(rtrim(number_format($property->reviews_avg_rating, 1), '0'), '.') }}</span>
+                                            <span class="text-muted small ms-1">({{ $property->reviews_count }})</span>
+                                        </div>
+                                    @else
+                                        <span class="text-muted small">No ratings</span>
+                                    @endif
                                 </td>
                                 <td>{{ $property->listarea?->name ?? 'N/A' }}</td>
                                 <td class="text-end">{{ number_format($property->price, 0) }} {{ $property->currency }}

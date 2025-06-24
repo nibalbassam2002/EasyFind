@@ -6,35 +6,36 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <style>
-    
         .main-media-container {
-        position: relative;
-        background-color: #f0f0f0;
-        border-radius: 0.375rem;
-        overflow: hidden;
-        height: 400px; /* يمكنك تعديل هذا الارتفاع حسب احتياجك */
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
+            position: relative;
+            background-color: #f0f0f0;
+            border-radius: 0.375rem;
+            overflow: hidden;
+            height: 400px;
+            /* يمكنك تعديل هذا الارتفاع حسب احتياجك */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-    #mainContentPlayer {
-        max-width: 100%;
-        max-height: 100%;
-        width: auto;
-        height: auto;
-        display: block;
-        margin: 0 auto;
-    }
+        #mainContentPlayer {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
 
-    /* إذا كنت تريد تأثيرًا أكثر سلاسة عند التكبير/التصغير */
-    #mainContentPlayer {
-        transition: transform 0.3s ease;
-    }
+        /* إذا كنت تريد تأثيرًا أكثر سلاسة عند التكبير/التصغير */
+        #mainContentPlayer {
+            transition: transform 0.3s ease;
+        }
 
-    #mainContentPlayer:hover {
-        transform: scale(1.02);
-    }
+        #mainContentPlayer:hover {
+            transform: scale(1.02);
+        }
+
         .thumbnails-column {
             max-height: 500px;
             /* نفس ارتفاع الوسائط الرئيسية */
@@ -92,6 +93,33 @@
                 flex-basis: auto;
                 /* يعود للسلوك الافتراضي (بجانب بعض) */
             }
+        }
+
+        .star-rating {
+            display: flex;
+            flex-direction: row-reverse;
+            font-size: 1.5rem;
+            justify-content: flex-end;
+            line-height: 1.5rem;
+        }
+
+        .star-rating input {
+            display: none;
+        }
+
+        .star-rating label {
+            color: #ccc;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .star-rating :checked~label {
+            color: #ffc107;
+        }
+
+        .star-rating label:hover,
+        .star-rating label:hover~label {
+            color: #ffc107;
         }
     </style>
 @endpush
@@ -229,9 +257,8 @@
                                         allowfullscreen title="Property Video"></iframe>
                                 </div>
                             @else
-                                <img id="mainContentPlayer" src="{{ $mainDisplayItem['src'] }}"
-                                    alt="{{ $property->title }}"
-                                         class="img-fluid main-media-image">
+                                <img id="mainContentPlayer" src="{{ $mainDisplayItem['src'] }}" alt="{{ $property->title }}"
+                                    class="img-fluid main-media-image">
                             @endif
                         </div>
                     </div>
@@ -274,7 +301,30 @@
                                 </div>
                             @endif
                         </div>
-
+                        {{-- هذا هو الكود الجديد والمحسن --}}
+                        @if ($reviewsCount > 0)
+                            {{-- هذا الجزء يبقى كما هو، ويعمل عندما يكون هناك تقييمات --}}
+                            <div class="d-flex align-items-center my-3">
+                                <strong
+                                    class="me-2">{{ rtrim(rtrim(number_format($avgRating, 1), '0'), '.') }}/5</strong>
+                                <div class="rating-stars me-2">
+                                    @for ($i = 1; $i <= 5; $i++)
+                                        @if ($i <= round($avgRating))
+                                        <i class="fas fa-star text-warning"></i>@else<i
+                                                class="far fa-star text-warning"></i>
+                                        @endif
+                                    @endfor
+                                </div>
+                                <span class="text-muted small">({{ $reviewsCount }}
+                                    {{ Str::plural('review', $reviewsCount) }})</span>
+                            </div>
+                        @else
+                            {{-- ▼▼▼ هذا هو الجزء الجديد الذي سيظهر عندما لا تكون هناك تقييمات ▼▼▼ --}}
+                            <div class="text-muted small my-3 text-center border-top pt-3">
+                                <i class="bi bi-star me-1"></i>
+                                No reviews yet.
+                            </div>
+                        @endif
                         @auth
                             <button
                                 class="btn {{ $property->is_favorited ? 'btn-gold' : 'btn-outline-gold' }} w-100 mb-2 favorite-toggle-button"
@@ -374,79 +424,171 @@
                         </div>
                     </div>
                 @endif
+                <div class="card shadow-sm mt-4" id="reviews-section">
+                    <div class="card-header bg-light py-3">
+                        <h5 class="mb-0 fw-semibold">Ratings & Reviews</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (session('success'))
+                            <div class="alert alert-success">{{ session('success') }}</div>
+                        @endif
+                        @if (session('error'))
+                            <div class="alert alert-danger">{{ session('error') }}</div>
+                        @endif
+
+                        @auth
+                            @if (Auth::id() != $property->user_id && !$property->reviews->contains('user_id', Auth::id()))
+                                <div class="p-3 mb-4">
+                                    <h6 class="mb-3">Leave a Review</h6>
+                                    <form action="{{ route('reviews.store', $property) }}" method="POST">
+                                        @csrf
+                                        <div class="mb-3">
+                                            <label for="rating" class="form-label">Your Rating <span
+                                                    class="text-danger">*</span></label>
+                                            <div class="star-rating">
+                                                <input type="radio" id="5-stars" name="rating" value="5"
+                                                    required /><label for="5-stars" class="star">★</label>
+                                                <input type="radio" id="4-stars" name="rating" value="4" /><label
+                                                    for="4-stars" class="star">★</label>
+                                                <input type="radio" id="3-stars" name="rating" value="3" /><label
+                                                    for="3-stars" class="star">★</label>
+                                                <input type="radio" id="2-stars" name="rating" value="2" /><label
+                                                    for="2-stars" class="star">★</label>
+                                                <input type="radio" id="1-star" name="rating" value="1" /><label
+                                                    for="1-star" class="star">★</label>
+                                            </div>
+                                            @error('rating')
+                                                <small class="text-danger d-block mt-1">{{ $message }}</small>
+                                            @enderror
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="comment" class="form-label">Your Comment (optional)</label>
+                                            <textarea class="form-control @error('comment') is-invalid @enderror" id="comment" name="comment" rows="3"
+                                                placeholder="Share your experience...">{{ old('comment') }}</textarea>
+                                            @error('comment')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                        <button type="submit" class="btn btn-warning">Submit Review</button>
+                                    </form>
+                                </div>
+                            @endif
+                        @else
+                            <div class="alert alert-info">
+                                <a href="{{ route('login') }}?redirect={{ url()->current() }}#reviews-section"
+                                    class="alert-link">Log in</a> or <a href="{{ route('register') }}"
+                                    class="alert-link">Sign up</a> to leave a review.
+                            </div>
+                        @endauth
+
+                        @forelse ($property->reviews->sortByDesc('created_at') as $review)
+                            <div class="review-item border-top pt-3 mt-3">
+                                <div class="d-flex align-items-center mb-2">
+                                    <img src="{{ $review->user->profile_image_url }}" alt="{{ $review->user->name }}"
+                                        class="rounded-circle me-3 object-fit-cover" width="50" height="50">
+                                    <div>
+                                        <h6 class="mb-0">{{ $review->user->name }}</h6>
+                                        <div class="rating-stars small">
+                                            @for ($i = 1; $i <= 5; $i++)
+                                                @if ($i <= $review->rating)
+                                                <i class="fas fa-star text-warning"></i>@else<i
+                                                        class="far fa-star text-warning"></i>
+                                                @endif
+                                            @endfor
+                                        </div>
+                                    </div>
+                                    <small class="text-muted ms-auto">{{ $review->created_at->diffForHumans() }}</small>
+                                </div>
+                                @if ($review->comment)
+                                    <p class="mb-0 text-muted">{{ nl2br(e($review->comment)) }}</p>
+                                @endif
+                            </div>
+                        @empty
+                            <p class="text-center text-muted mt-3">This property has no reviews yet.</p>
+                        @endforelse
+                    </div>
+                </div>
             </div>
             {{-- يمكنك إضافة عمود جانبي هنا إذا أردت بجانب الوصف --}}
         </div>
 
         {{-- قسم العقارات المشابهة --}}
-@if ($similarProperties && $similarProperties->count() > 0)
-    <div class="container py-4 px-0">
-        <hr class="my-4">
-        <h3 class="mb-4 fw-semibold">Similar Properties</h3>
-        <div class="row g-3">
-            @foreach ($similarProperties as $simProperty)
-                <div class="col-md-6 col-lg-3 d-flex">
-                    <div class="card property-card h-100 shadow-sm w-100">
-                        @php
-                            $cardImages = $simProperty->images;
-                            if (is_string($simProperty->images)) {
-                                $cardImages = json_decode($simProperty->images, true) ?? [];
-                            }
-                            $cardFirstImage = $cardImages[0] ?? null;
-                            $cardImageUrl = asset('frontend/assets/home.jpg');
+        @if ($similarProperties && $similarProperties->count() > 0)
+            <div class="container py-4 px-0">
+                <hr class="my-4">
+                <h3 class="mb-4 fw-semibold">Similar Properties</h3>
+                <div class="row g-3">
+                    @foreach ($similarProperties as $simProperty)
+                        <div class="col-md-6 col-lg-3 d-flex">
+                            <div class="card property-card h-100 shadow-sm w-100">
+                                @php
+                                    $cardImages = $simProperty->images;
+                                    if (is_string($simProperty->images)) {
+                                        $cardImages = json_decode($simProperty->images, true) ?? [];
+                                    }
+                                    $cardFirstImage = $cardImages[0] ?? null;
+                                    $cardImageUrl = asset('frontend/assets/home.jpg');
 
-                            if ($cardFirstImage) {
-                                $cleanCardPath = trim($cardFirstImage, '"\'/\\');
-                                if (filter_var($cleanCardPath, FILTER_VALIDATE_URL)) {
-                                    $cardImageUrl = $cleanCardPath;
-                                } elseif (Storage::disk('public')->exists($cleanCardPath)) {
-                                    $cardImageUrl = Storage::url($cleanCardPath);
-                                }
-                            }
-                        @endphp
-                        <a href="{{ route('frontend.property.show', $simProperty->id) }}" class="text-decoration-none">
-                            <img src="{{ $cardImageUrl }}" class="property-image card-img-top" alt="{{ Str::limit($simProperty->title, 40) }}">
-                        </a>
-
-                        @auth
-                            <div class="favorite-icon" data-property-id="{{ $simProperty->id }}">
-                                <i class="bi {{ $simProperty->is_favorited ?? false ? 'bi-heart-fill text-danger' : 'bi-heart' }}"></i>
-                            </div>
-                        @endauth
-
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title fw-bold text-primary mb-1">
-                                {{ $simProperty->currency ?? 'USD' }}
-                                {{ number_format($simProperty->price, 0) }}
-                            </h5>
-                            <p class="fw-semibold mb-2 property-title-clamp" title="{{ $simProperty->title }}">
-                                <a href="{{ route('frontend.property.show', $simProperty->id) }}" class="text-dark text-decoration-none stretched-link">
-                                    {{ Str::limit($simProperty->title, 45) }}
+                                    if ($cardFirstImage) {
+                                        $cleanCardPath = trim($cardFirstImage, '"\'/\\');
+                                        if (filter_var($cleanCardPath, FILTER_VALIDATE_URL)) {
+                                            $cardImageUrl = $cleanCardPath;
+                                        } elseif (Storage::disk('public')->exists($cleanCardPath)) {
+                                            $cardImageUrl = Storage::url($cleanCardPath);
+                                        }
+                                    }
+                                @endphp
+                                <a href="{{ route('frontend.property.show', $simProperty->id) }}"
+                                    class="text-decoration-none">
+                                    <img src="{{ $cardImageUrl }}" class="property-image card-img-top"
+                                        alt="{{ Str::limit($simProperty->title, 40) }}">
                                 </a>
-                            </p>
-                            <div class="d-flex text-muted property-info mb-2 small">
-                                @if ($simProperty->rooms)
-                                    <div class="me-3"><i class="bi bi-door-closed"></i> {{ $simProperty->rooms }} bed</div>
-                                @endif
-                                @if ($simProperty->bathrooms)
-                                    <div class="me-3"><i class="bi bi-droplet"></i> {{ $simProperty->bathrooms }} bath</div>
-                                @endif
-                                @if ($simProperty->area)
-                                    <div class="me-3"><i class="bi bi-arrows-fullscreen"></i><strong>{{ number_format($simProperty->area) }}</strong> sqm</div>
-                                @endif
-                            </div>
-                            <div class="property-address text-muted small mt-auto">
-                                <i class="bi bi-geo-alt-fill me-1"></i>
-                                {{ Str::limit($simProperty->address, 25) }},
-                                {{ $simProperty->listarea?->name ?? 'N/A' }}
+
+                                @auth
+                                    <div class="favorite-icon" data-property-id="{{ $simProperty->id }}">
+                                        <i
+                                            class="bi {{ $simProperty->is_favorited ?? false ? 'bi-heart-fill text-danger' : 'bi-heart' }}"></i>
+                                    </div>
+                                @endauth
+
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title fw-bold text-primary mb-1">
+                                        {{ $simProperty->currency ?? 'USD' }}
+                                        {{ number_format($simProperty->price, 0) }}
+                                    </h5>
+                                    <p class="fw-semibold mb-2 property-title-clamp" title="{{ $simProperty->title }}">
+                                        <a href="{{ route('frontend.property.show', $simProperty->id) }}"
+                                            class="text-dark text-decoration-none stretched-link">
+                                            {{ Str::limit($simProperty->title, 45) }}
+                                        </a>
+                                    </p>
+                                    <div class="d-flex text-muted property-info mb-2 small">
+                                        @if ($simProperty->rooms)
+                                            <div class="me-3"><i class="bi bi-door-closed"></i>
+                                                {{ $simProperty->rooms }} bed</div>
+                                        @endif
+                                        @if ($simProperty->bathrooms)
+                                            <div class="me-3"><i class="bi bi-droplet"></i>
+                                                {{ $simProperty->bathrooms }} bath</div>
+                                        @endif
+                                        @if ($simProperty->area)
+                                            <div class="me-3"><i
+                                                    class="bi bi-arrows-fullscreen"></i><strong>{{ number_format($simProperty->area) }}</strong>
+                                                sqm</div>
+                                        @endif
+                                    </div>
+                                    <div class="property-address text-muted small mt-auto">
+                                        <i class="bi bi-geo-alt-fill me-1"></i>
+                                        {{ Str::limit($simProperty->address, 25) }},
+                                        {{ $simProperty->listarea?->name ?? 'N/A' }}
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    @endforeach
                 </div>
-            @endforeach
-        </div>
-    </div>
-@endif
+            </div>
+        @endif
     </div>
 @endsection
 

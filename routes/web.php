@@ -19,6 +19,7 @@ use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\AccountController; 
+use App\Http\Controllers\ReviewController;
 
 
 Route::get('/', [FrontendController::class, 'index'])->name('frontend.home');
@@ -135,7 +136,7 @@ Route::middleware(['auth'])->group(function () {
             Route::delete('properties/{property}', [PropertyListerController::class, 'destroy'])->name('properties.destroy');
             Route::patch('properties/{property}/feature', [PropertyListerController::class, 'featureProperty'])->name('properties.feature');
         });
-
+    Route::post('/properties/{property}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
 
     // --- Moderator Specific Routes (Admin can also access these) ---
     Route::middleware(['role:admin,content_moderator'])
@@ -157,6 +158,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('chat')->name('chat.')->group(function () {
         Route::get('/{activeConversation?}', [ChatController::class, 'index'])->name('index');
         Route::post('/conversations/{conversation}/messages', [ChatController::class, 'sendMessage'])->name('messages.store');
+         Route::delete('/messages/delete/{message}', [ChatController::class, 'deleteMessage'])->name('messages.delete');
         Route::get('/start/{recipient}', [ChatController::class, 'createOrFindConversation'])->name('conversation.start');
         Route::get('/conversations/{conversation}/messages', [ChatController::class, 'fetchMessages'])->name('messages.fetch');
         Route::get('/conversations/{conversation}/new-messages', [ChatController::class, 'fetchNewMessages'])->name('messages.fetchNew');
@@ -167,6 +169,7 @@ Route::middleware(['auth'])->group(function () {
 
     // --- Notifications ---
     Route::patch('/notifications/{notification}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
+    Route::delete('/notifications/{notification}', [App\Http\Controllers\NotificationController::class, 'destroy'])->name('notifications.destroy');
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread.count');
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index'); // Dashboard notifications
     Route::get('/my-notifications', [NotificationController::class, 'index'])->name('frontend.notifications.index')->defaults('view_path', 'frontend.notifications.index'); // Frontend notifications

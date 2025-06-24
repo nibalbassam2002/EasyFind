@@ -268,6 +268,21 @@
                                         title="{{ $property->title }}">
                                         {{ Str::limit($property->title, 45) }} {{-- قللت الحد قليلاً لسطرين عادةً --}}
                                     </p>
+                                    @if ($property->reviews_count > 0)
+                                        <div class="d-flex align-items-center mb-2">
+                                            <div class="rating-stars me-2"
+                                                title="{{ number_format($property->reviews_avg_rating, 1) }} out of 5 stars">
+                                                @for ($i = 1; $i <= 5; $i++)
+                                                    @if ($i <= round($property->reviews_avg_rating))
+                                                        <i class="fas fa-star text-warning"></i>
+                                                    @else
+                                                        <i class="far fa-star text-warning"></i>
+                                                    @endif
+                                                @endfor
+                                            </div>
+                                            <span class="text-muted small">({{ $property->reviews_count }})</span>
+                                        </div>
+                                    @endif
                                     <div class="d-flex text-muted property-info mb-2 small">
                                         @if ($property->rooms)
                                             <div class="me-3"><i class="bi bi-door-closed"></i> {{ $property->rooms }}

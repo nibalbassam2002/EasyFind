@@ -33,7 +33,8 @@ class PropertyListerController extends Controller
         $activeSubscription = $this->getActiveSubscriptionForCurrentUser();
 
         $propertiesQuery = Property::where('user_id', $user->id)
-                              ->with('listarea', 'category', 'subCategory');
+                              ->with('listarea', 'category', 'subCategory')
+                              ->withCount('reviews')->withAvg('reviews', 'rating');
 
     // فلترة حسب الحالة إذا كانت موجودة في الرابط
     if ($request->filled('status')) {
@@ -451,7 +452,7 @@ public function update(Request $request, Property $property) // Route Model Bind
         abort(403, 'Unauthorized action.');
     }
 
-    $property->load(['category', 'subCategory', 'listarea.governorate', 'user']); // تحميل العلاقات اللازمة
+    $property->load(['category', 'subCategory', 'listarea.governorate', 'user', 'reviews.user']); // تحميل العلاقات اللازمة
 
     // يمكنك تمرير بيانات إضافية إذا أردت، مثل حالة الاشتراك
     $activeSubscription = Auth::user()->activeSubscriptionWithPlan();

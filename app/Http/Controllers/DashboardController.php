@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use App\Models\Review;
 
 class DashboardController extends Controller
 {
@@ -43,6 +44,7 @@ class DashboardController extends Controller
             'pendingPropertiesCount' => 0, 'myPropertiesCount' => 0,
             'activeListingsCount' => 0, 'pendingListingsCount' => 0,
             'totalEarnings' => 0, 'recentTransactions' => collect(),
+            'totalReviewsCount' => 0,
             'planName' => null, 'propertiesLimit' => null, 'propertiesListed' => null,
             'propertiesRemaining' => null, 'planEndsAt' => null, 'isFreePlan' => false,
             'allowedPropertyTypesString' => null, 'message' => null,
@@ -90,7 +92,9 @@ class DashboardController extends Controller
             $viewData['myPropertiesCount'] = Property::where('user_id', $userId)->count();
             $viewData['activeListingsCount'] = Property::where('user_id', $userId)->where('status', 'approved')->count();
             $viewData['pendingListingsCount'] = Property::where('user_id', $userId)->where('status', 'pending')->count();
-
+            $viewData['totalReviewsCount'] = Review::whereHas('property', function($query) use ($userId) {
+                $query->where('user_id', $userId);
+            })->count();
             $earningsQuery = Transaction::where('status', 'completed')
                                       ->whereHas('property', fn($q) => $q->where('user_id', $userId));
             $applyTimeFilter($earningsQuery, $period, 'transactions.created_at');

@@ -173,8 +173,9 @@ public function properties(Request $request)
 }
 
 
-public function showProperty(Property $property)
+public function showProperty($property_id)
 {
+    $property = Property::findOrFail($property_id);
     if ($property->status !== 'approved') {
         abort(404);
     }

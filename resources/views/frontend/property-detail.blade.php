@@ -339,8 +339,8 @@
                         @endauth
 
                         @if (Auth::check() && Auth::id() !== $property->user_id)
-                            <a href="{{ route('chat.conversation.start', ['recipient' => $property->user_id, 'property_id' => $property->id]) }}"
-                                class="btn btn-gold w-100"><i class="bi bi-chat-dots me-1"></i> Chat with Lister</a>
+                            <a href="{{ route('chat.initiate', ['property_id' => $property->id]) }}"
+                                 class="btn btn-gold w-100"><i class="bi bi-chat-dots me-1"></i> Chat with Lister</a>
                         @elseif(!Auth::check())
                             <a href="{{ route('login', ['redirect' => url()->current()]) }}"
                                 class="btn btn-success w-100"><i class="bi bi-chat-dots me-1"></i> Chat with Lister</a>

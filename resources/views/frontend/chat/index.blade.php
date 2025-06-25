@@ -3,8 +3,6 @@
 
 @push('styles')
     <style>
-       
-
         .chat-container-wrapper {
             height: calc(100vh - 77px);
             display: flex;
@@ -44,6 +42,7 @@
         }
 
         .conversation-item {
+            position: relative;
             display: flex;
             align-items: center;
             padding: 0.75rem 1rem;
@@ -54,7 +53,7 @@
 
         .conversation-item:hover,
         .conversation-item.active {
-            background-color: #fff8e1;
+            background-color: #f1f3f5;
         }
 
         .conversation-item.active {
@@ -91,6 +90,8 @@
             font-size: 0.75rem;
             color: #9e9e9e;
             margin-left: 10px;
+            flex-shrink: 0;
+            transition: opacity 0.2s;
         }
 
         .chat-window {
@@ -125,31 +126,60 @@
             overflow-y: auto;
             padding: 1rem;
             background-color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
         }
 
-        /* أنماط الرسائل تبقى كما هي */
         .message-item {
             display: flex;
             max-width: 75%;
-            margin-bottom: 1rem;
             align-items: flex-end;
+            margin-bottom: 2px;
         }
 
         .message-item.sent {
-            margin-left: auto;
-            flex-direction: row-reverse;
+           align-self: flex-end;
         }
+        .message-item.received {
+        align-self: flex-start;
+    }
+
+    .message-item .avatar {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        object-fit: cover;
+        flex-shrink: 0;
+        transition: visibility 0.1s;
+        visibility: hidden;
+    }
 
         .message-item .avatar {
             width: 30px;
             height: 30px;
             border-radius: 50%;
             object-fit: cover;
-            margin: 0 8px;
+            flex-shrink: 0;
+            transition: visibility 0.1s;
+            visibility: hidden;
         }
 
-        .avatar-placeholder {
-            width: 38px;
+        .message-item.is-first-in-group {
+            margin-top: 1rem;
+        }
+
+        .message-item.is-first-in-group .avatar {
+            visibility: visible;
+        }
+
+        .message-item.sent .avatar {
+            margin-left: 8px;
+            margin-right: 0;
+        }
+
+        .message-item.received .avatar {
+            margin-right: 8px;
+            margin-left: 0;
         }
 
         .message-content {
@@ -159,8 +189,13 @@
             word-break: break-word;
         }
 
+        .message-content a {
+            color: #0d6efd;
+            text-decoration: underline;
+        }
+
         .message-item.sent .message-content {
-            background-color: #FFD699;
+            background-color: #ffca28;
             color: #333;
             border-bottom-right-radius: 4px;
         }
@@ -171,13 +206,6 @@
             border-bottom-left-radius: 4px;
         }
 
-        .message-sender-name {
-            font-weight: 600;
-            font-size: 0.8rem;
-            margin-bottom: 4px;
-            color: #555;
-        }
-
         .message-time {
             display: block;
             font-size: 0.7rem;
@@ -186,43 +214,47 @@
             text-align: right;
         }
 
-        .message-item.received .message-time {
+        .message-content {
+            direction: rtl;
+            text-align: right;
+        }
+
+        .message-content a,
+        .message-content span[dir="ltr"] {
+            direction: ltr;
+            display: inline-block;
             text-align: left;
         }
 
-        /* ▼▼▼ تعديل تصميم منطقة الإدخال ▼▼▼ */
-        .chat-input-area {
-            padding: 1rem;
-            /* زيادة الحشوة لرفعها عن الحافة */
-            border-top: 1px solid #e0e0e0;
-            background-color: #f8f9fa;
-            /* تغيير الخلفية للتمييز */
-            flex-shrink: 0;
-            /* منعها من التقلص */
-        }
-
-        .chat-input-area .input-group {
-            align-items: center;
-            /* لمحاذاة الزر مع حقل الإدخال عمودياً */
-        }
-
-        .chat-input-area .form-control {
-            border-radius: 20px;
-            border-color: #ced4da;
-        }
-
-        .chat-input-area .form-control:focus {
-            box-shadow: 0 0 0 0.2rem rgba(255, 202, 40, 0.25);
-            border-color: #ffca28;
-        }
-
-        .chat-input-area .btn {
-            background-color: transparent;
+        .delete-conversation-btn {
+            position: absolute;
+            top: 50%;
+            right: 0.5rem;
+            transform: translateY(-50%);
+            background: none;
             border: none;
+            color: #adb5bd;
+            cursor: pointer;
+            padding: 0.4rem;
+            line-height: 1;
+            border-radius: 50%;
+            display: block;
+            z-index: 10;
+            transition: all 0.2s ease;
+            opacity: 0;
         }
 
-        .chat-input-area .btn:hover i {
-            color: #ffb400 !important;
+        .conversation-item:hover .delete-conversation-btn {
+            opacity: 1;
+        }
+
+        .conversation-item:hover .chat-time {
+            opacity: 0;
+        }
+
+        .delete-conversation-btn:hover {
+            color: #fff;
+            background-color: #dc3545;
         }
 
         #no-conversation-selected {
@@ -239,38 +271,26 @@
             font-size: 4rem;
         }
 
-        /* ▼▼▼ CSS جديد ومبسط للمعالجة على الشاشات الصغيرة (Responsive) ▼▼▼ */
         @media (max-width: 991.98px) {
-            /* نقطة التحول لشاشات lg في بوتستراب */
-
-            /* في الوضع الافتراضي للموبايل، نخفي نافذة الدردشة */
             .chat-window {
                 display: none;
             }
 
-            /* عندما يتم اختيار محادثة، نطبق هذا الكلاس */
             .mobile-chat-view .chat-sidebar {
                 display: none;
-                /* إخفاء قائمة المحادثات */
             }
 
             .mobile-chat-view .chat-window {
                 display: flex;
-                /* إظهار نافذة الدردشة */
                 width: 100%;
-                /* جعلها تملأ الشاشة */
             }
         }
     </style>
 @endpush
 
 @section('content')
-    {{-- الحاوية الرئيسية الآن تستخدم الكلاس للتحكم في العرض على الموبايل --}}
     <div class="container-fluid chat-container-wrapper" id="chatContainer">
-
         <div class="row g-0 h-100 w-100">
-
-            {{-- 1. الشريط الجانبي للمحادثات --}}
             <div class="col-lg-4 col-xl-3 chat-sidebar" id="chatSidebar">
                 <div class="chat-sidebar-header">
                     <h5>Chats</h5>
@@ -279,7 +299,7 @@
                     @forelse($conversations as $conversation)
                         @php $otherUser = $conversation->other_participant; @endphp
                         @if ($otherUser)
-                            <li class="conversation-item" data-conversation-id="{{ $conversation->id }}" data-user-id="{{ $otherUser->id }}">
+                            <li class="conversation-item" data-conversation-id="{{ $conversation->id }}">
                                 <img src="{{ $otherUser->profile_image_url }}" alt="{{ $otherUser->name }}" class="avatar">
                                 <div class="chat-info">
                                     <div class="name">{{ $otherUser->name }}</div>
@@ -295,6 +315,8 @@
                                     </div>
                                 </div>
                                 <div class="chat-time">{{ $conversation->updated_at->shortAbsoluteDiffForHumans() }}</div>
+                                <button class="delete-conversation-btn" title="Delete Conversation"><i
+                                        class="bi bi-trash3-fill"></i></button>
                             </li>
                         @endif
                     @empty
@@ -303,272 +325,308 @@
                     @endforelse
                 </ul>
             </div>
-
-            {{-- 2. نافذة الدردشة النشطة --}}
             <div class="col-lg-8 col-xl-9 chat-window" id="chatWindow">
-                <div id="no-conversation-selected"><i class="bi bi-chat-square-dots"></i>
+                <div id="no-conversation-selected"
+                    class="d-flex align-items-center justify-content-center h-100 flex-column text-center text-muted">
+                    <i class="bi bi-chat-square-dots fs-1"></i>
                     <p class="lead mt-3">Select a conversation to start chatting</p>
                 </div>
-
-                <div class="chat-window-header d-none" id="activeChatHeader">
-                    {{-- ▼▼ قمنا بتعديل هذا الزر وإزالة "d-lg-none" ليظهر دائماً ▼▼ --}}
-                    <button class="btn me-2 p-1" id="backToConversationsBtn" type="button" title="Back to chats">
-                        <i class="bi bi-arrow-left fs-5"></i>
-                    </button>
-                    <img src="" alt="Avatar" class="avatar" id="activeChatAvatar">
-                    <div>
-                        <div class="user-name" id="activeChatUserName"></div>
-                        <div class="user-status text-muted small">Offline</div>
-                    </div>
-                    {{-- قمنا بحذف زر الإغلاق (X) بالكامل --}}
-                </div>
-
-                <div class="messages-area d-none" id="messagesArea"></div>
-                <div class="chat-input-area d-none" id="chatInputArea">
-                    <form id="sendMessageForm">
-                        <div class="input-group">
-                            <input type="text" class="form-control" name="body" placeholder="Type a message..."
-                                autocomplete="off" required>
-                            <button class="btn" type="submit" title="Send Message">
-                                <i class="bi bi-send-fill fs-5 text-warning"></i>
-                            </button>
+                <!-- ## تم إصلاح الـ ID هنا ## -->
+                <div class="d-flex flex-column h-100 d-none" id="active-chat-container">
+                    <div class="chat-window-header" id="activeChatHeader">
+                        <button class="btn me-2 p-1" id="backToConversationsBtn" type="button" title="Back to chats"><i
+                                class="bi bi-arrow-left fs-5"></i></button>
+                        <img src="" alt="Avatar" class="avatar" id="activeChatAvatar">
+                        <div>
+                            <div class="user-name" id="activeChatUserName"></div>
                         </div>
-                    </form>
+                    </div>
+                    <div class="messages-area" id="messagesArea"></div>
+                    <div class="chat-input-area" id="chatInputArea">
+                        <form id="sendMessageForm">
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="body" placeholder="Type a message..."
+                                    autocomplete="off" required>
+                                <button class="btn" type="submit" title="Send Message"><i
+                                        class="bi bi-send-fill fs-5 text-warning"></i></button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
-
         </div>
     </div>
 @endsection
 
 @push('scripts')
-    {{-- Firebase SDKs --}}
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Define all constants for DOM elements
-            const chatContainer = document.getElementById('chatContainer');
+            // ## تم إصلاح اسم المتغير هنا ##
+            const activeChatContainer = document.getElementById('active-chat-container');
             const conversationsList = document.getElementById('conversationsList');
-            const messagesArea = document.getElementById('messagesArea');
-            const activeChatHeader = document.getElementById('activeChatHeader');
-            const activeChatAvatar = document.getElementById('activeChatAvatar');
-            const activeChatUserName = document.getElementById('activeChatUserName');
             const noConversationDiv = document.getElementById('no-conversation-selected');
-            const chatInputArea = document.getElementById('chatInputArea');
+            const messagesArea = document.getElementById('messagesArea');
             const sendMessageForm = document.getElementById('sendMessageForm');
-            const messageInput = sendMessageForm.querySelector('input[name="body"]');
             const backToConversationsBtn = document.getElementById('backToConversationsBtn');
-
-            // State variables
             let currentConversationId = null;
-            const currentUserId = {{ Auth::id() }};
-            let nextPageUrl = null;
             let isLoading = false;
-            let db = null;
-            let unsubscribeFromMessages = null;
+            let pollingInterval = null;
 
-            // Firebase Config
-            const firebaseConfig = {
-                apiKey: "{{ config('services.firebase.api_key') }}",
-                authDomain: "{{ config('services.firebase.auth_domain') }}",
-                projectId: "{{ config('services.firebase.project_id') }}",
-                storageBucket: "{{ config('services.firebase.storage_bucket') }}",
-                messagingSenderId: "{{ config('services.firebase.messaging_sender_id') }}",
-                appId: "{{ config('services.firebase.app_id') }}"
-            };
-
-            // Initialize Firebase App
-            firebase.initializeApp(firebaseConfig);
-            const auth = firebase.auth();
-            const firestoreToken = '{{ $firebaseToken ?? '' }}';
-
-            // Main function to authenticate and start the application
-            async function initializeFirebase() {
-                try {
-                    if (!firestoreToken) throw new Error("Firebase token is missing!");
-                    await auth.signInWithCustomToken(firestoreToken);
-                    console.log("Firebase authentication successful!");
-                    db = firebase.firestore();
-                    setupEventListeners();
-                    initialLoad();
-                } catch (error) {
-                    console.error("Firebase authentication failed:", error);
-                    noConversationDiv.innerHTML = '<div class="alert alert-danger m-2">Could not connect to chat service. Please refresh the page.</div>';
-                }
-            }
-
-            // Helper Functions
-            function resetToDefaultView() {
-                const url = new URL(window.location);
-                url.searchParams.delete('activeConversation');
-                window.history.replaceState({}, '', url);
-                chatContainer.classList.remove('mobile-chat-view');
-                document.querySelectorAll('.conversation-item.active').forEach(el => el.classList.remove('active'));
-                activeChatHeader.classList.add('d-none');
-                messagesArea.classList.add('d-none');
-                chatInputArea.classList.add('d-none');
-                noConversationDiv.style.display = 'flex';
-                if (unsubscribeFromMessages) {
-                    unsubscribeFromMessages();
-                    unsubscribeFromMessages = null;
-                }
-                currentConversationId = null;
-            }
-
-            async function loadConversation(convId, convElement) {
-                if (isLoading) return;
-                const url = new URL(window.location);
-                url.searchParams.set('activeConversation', convId);
-                window.history.replaceState({}, '', url);
-                currentConversationId = convId;
-                document.querySelectorAll('.conversation-item.active').forEach(el => el.classList.remove('active'));
-                convElement.classList.add('active');
-                chatContainer.classList.add('mobile-chat-view');
-                noConversationDiv.style.display = 'none';
-                activeChatHeader.classList.remove('d-none');
-                messagesArea.classList.remove('d-none');
-                chatInputArea.classList.remove('d-none');
-                activeChatUserName.textContent = convElement.querySelector('.name').textContent;
-                activeChatAvatar.src = convElement.querySelector('img.avatar').src;
-                messagesArea.innerHTML = '<div class="text-center p-3"><div class="spinner-border text-secondary"></div></div>';
-                await fetchAndRenderMessagesFromLaravel(`/chat/conversations/${convId}/messages`);
-                messageInput.focus();
-                listenForNewMessages(convId);
-            }
-
-            async function fetchAndRenderMessagesFromLaravel(url, prepend = false) {
-                if (isLoading) return;
-                isLoading = true;
-                if (prepend) messagesArea.insertAdjacentHTML('afterbegin', '<div id="loading-more" class="text-center p-2"><div class="spinner-border spinner-border-sm"></div></div>');
-                try {
-                    const response = await fetch(url);
-                    if (!response.ok) throw new Error('Request failed');
-                    const result = await response.json();
-                    const messages = result.data.reverse();
-                    nextPageUrl = result.next_page_url;
-                    if (!prepend && messagesArea.querySelector('.spinner-border')) {
-                        messagesArea.innerHTML = '';
-                    }
-                    let lastUserId = prepend ? (messagesArea.firstChild?.dataset.userId || null) : (messages.length > 0 ? messages[0].user_id : null);
-                    messages.forEach((msg, index) => {
-                        const showAvatar = index === 0 ? true : msg.user_id != messages[index - 1].user_id;
-                        messagesArea.insertAdjacentHTML(prepend ? 'afterbegin' : 'beforeend', createMessageHtmlFromLaravel(msg, showAvatar));
-                    });
-                    if (!prepend) scrollToBottom();
-                } catch (error) {
-                    console.error("Fetch/Render Error:", error);
-                    if (!prepend) messagesArea.innerHTML = '<div class="alert alert-danger m-2">Could not load messages.</div>';
-                } finally {
-                    isLoading = false;
-                    document.getElementById('loading-more')?.remove();
-                }
+            function linkify(text) {
+                if (!text) return '';
+                const urlRegex = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+                return text.replace(urlRegex, url =>
+                    `<span dir="ltr"><a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a></span>`
+                );
             }
 
             function scrollToBottom() {
-                setTimeout(() => { messagesArea.scrollTop = messagesArea.scrollHeight; }, 50);
+                setTimeout(() => {
+                    messagesArea.scrollTop = messagesArea.scrollHeight;
+                }, 50);
             }
 
-            function createMessageHtmlFromLaravel(message, showAvatar) {
-                const isSent = message.user_id === currentUserId;
-                const avatarHtml = showAvatar ? `<img src="${message.user.profile_image_url}" class="avatar">` : '<div class="avatar-placeholder"></div>';
-                const nameHtml = (showAvatar && !isSent) ? `<div class="message-sender-name">${message.user.name}</div>` : '';
-                return `<div class="message-item ${isSent ? 'sent' : 'received'}" data-user-id="${message.user_id}">${avatarHtml}<div class="message-content">${nameHtml}<div>${message.body.replace(/\n/g, '<br>')}</div><span class="message-time">${message.formatted_created_at}</span></div></div>`;
+            // ## تم إصلاح الدالة هنا ##
+            function createMessageHtml(message, isFirstInGroup) {
+                const currentUserId = {{ Auth::id() }};
+                const isSent = message.user_id == currentUserId;
+                // الحصول على الصورة من القائمة الجانبية في حال كانت رسالة مستلمة
+                const otherUserAvatar = document.getElementById('activeChatAvatar').src;
+                const avatarUrl = isSent ? '{{ Auth::user()->profile_image_url }}' : otherUserAvatar;
+
+                const avatarHtml = `<img src="${avatarUrl}" alt="Avatar" class="avatar">`;
+                const timeHtml = `<span class="message-time">${message.formatted_created_at || 'Just now'}</span>`;
+                const messageBody = linkify(message.body).replace(/\n/g, '<br>');
+                const groupClass = isFirstInGroup ? 'is-first-in-group' : '';
+                const itemHtml = `
+            <div class="message-item ${isSent ? 'sent' : 'received'} ${groupClass}" data-message-id="${message.id}" data-user-id="${message.user_id}">
+                ${!isSent ? avatarHtml : ''}
+                <div class="message-content">
+                    <div>${messageBody}</div>
+                    ${timeHtml}
+                </div>
+                ${isSent ? avatarHtml : ''}
+            </div>
+        `;
+                return itemHtml;
             }
 
-            function createMessageHtmlFromFirestore(messageData, showAvatar) {
-                const isSent = messageData.userId === currentUserId;
-                const avatarUrl = isSent ? '{{ Auth::user()->profile_image_url }}' : activeChatAvatar.src;
-                const avatarHtml = showAvatar ? `<img src="${avatarUrl}" class="avatar">` : '<div class="avatar-placeholder"></div>';
-                const nameHtml = (showAvatar && !isSent) ? `<div class="message-sender-name">${messageData.userName}</div>` : '';
-                return `<div class="message-item ${isSent ? 'sent' : 'received'}" data-user-id="${messageData.userId}">${avatarHtml}<div class="message-content">${nameHtml}<div>${messageData.message.replace(/\n/g, '<br>')}</div><span class="message-time">Just now</span></div></div>`;
-            }
+            async function fetchNewMessages() {
+                if (!currentConversationId || document.hidden) return;
+                try {
+                    const lastMessageElement = messagesArea.querySelector('.message-item:last-child');
+                    const lastMessageId = lastMessageElement ? lastMessageElement.dataset.messageId : 0;
+                    if (String(lastMessageId).startsWith('temp-')) return;
 
-            function listenForNewMessages(conversationId) {
-                if (unsubscribeFromMessages) unsubscribeFromMessages();
-                unsubscribeFromMessages = db.collection('conversations').doc(conversationId).collection('messages')
-                    .orderBy('timestamp').where('timestamp', '>', new Date())
-                    .onSnapshot(querySnapshot => {
-                        
-                    }, error => console.error("Firestore listener error: ", error));
-            }
+                    const response = await fetch(
+                        `/chat/conversations/${currentConversationId}/messages?since=${lastMessageId}`);
+                    if (!response.ok) return;
 
-            // Event Listeners Setup
-            function setupEventListeners() {
-                backToConversationsBtn.addEventListener('click', resetToDefaultView);
-                conversationsList.addEventListener('click', e => {
-                    const convElement = e.target.closest('.conversation-item');
-                    if (convElement && convElement.dataset.conversationId !== currentConversationId) loadConversation(convElement.dataset.conversationId, convElement);
-                });
-                sendMessageForm.addEventListener('submit', async e => {
-    e.preventDefault();
-    const body = messageInput.value.trim();
-    if (!body || !currentConversationId) return;
-
-    // === ▼▼▼ هذا هو الجزء الجديد والمهم ▼▼▼ ===
-    
-    // 1. أنشئ نسخة وهمية من الرسالة لعرضها فوراً
-    const optimisticMessage = {
-        userId: currentUserId,
-        userName: '{{ Auth::user()->name }}',
-        message: body,
-    };
-    
-    // 2. تحقق من آخر رسالة لتحديد هل يجب عرض الصورة الرمزية
-    const lastMsgEl = messagesArea.querySelector('.message-item:last-child');
-    const showAvatar = !lastMsgEl || lastMsgEl.dataset.userId != currentUserId;
-
-    // 3. أضف الرسالة إلى الواجهة فوراً
-    messagesArea.insertAdjacentHTML('beforeend', createMessageHtmlFromFirestore(optimisticMessage, showAvatar));
-    scrollToBottom();
-    
-    // 4. قم بتحديث قائمة المحادثات الجانبية
-    const convInList = conversationsList.querySelector(`[data-conversation-id="${currentConversationId}"]`);
-    if (convInList) {
-        convInList.querySelector('.last-message').innerHTML = `<span class="text-muted">You:</span> ${body.substring(0, 25)}...`;
-        convInList.querySelector('.chat-time').textContent = 'Just now';
-        conversationsList.prepend(convInList);
-    }
-    // === ▲▲▲ نهاية الجزء الجديد ▲▲▲ ===
-
-    const originalText = messageInput.value;
-    messageInput.value = ''; // امسح حقل الإدخال فوراً
-    
-    // الآن، أرسل الرسالة الحقيقية إلى السيرفر في الخلفية
-    try {
-        const response = await fetch(`/chat/conversations/${currentConversationId}/messages`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
-            body: JSON.stringify({ body })
-        });
-        if (!response.ok) {
-            // في حالة الفشل، يمكنك إظهار علامة خطأ بجانب الرسالة
-            console.error("Failed to send message to server");
-            messageInput.value = originalText; // أعد النص للمستخدم
-        }
-        // لا نحتاج لعمل أي شيء آخر عند النجاح، لأن الواجهة تم تحديثها بالفعل
-    } catch (error) {
-        console.error('Send Error:', error);
-        messageInput.value = originalText;
-    }
-});
-                messagesArea.addEventListener('scroll', () => { if (messagesArea.scrollTop === 0 && nextPageUrl && !isLoading) fetchAndRenderMessagesFromLaravel(nextPageUrl, true); });
-            }
-
-            // Initial Load Logic
-            function initialLoad() {
-                const initialConvId = new URLSearchParams(window.location.search).get('activeConversation');
-                if (initialConvId) {
-                    const el = conversationsList.querySelector(`[data-conversation-id="${initialConvId}"]`);
-                    if (el) setTimeout(() => el.click(), 250); // Small delay to ensure everything is ready
+                    const result = await response.json();
+                    const newMessages = result.data.slice().reverse();
+                    if (newMessages.length > 0) {
+                        let lastMessageUserId = messagesArea.querySelector('.message-item:last-child')?.dataset
+                            .userId;
+                        newMessages.forEach(msg => {
+                            if (!messagesArea.querySelector(`[data-message-id="${msg.id}"]`)) {
+                                const isFirst = msg.user_id != lastMessageUserId;
+                                messagesArea.insertAdjacentHTML('beforeend', createMessageHtml(msg,
+                                    isFirst));
+                                lastMessageUserId = msg.user_id;
+                            }
+                        });
+                        scrollToBottom();
+                    }
+                } catch (error) {
+                    console.error('Polling error:', error);
                 }
             }
 
-            // Start the entire process
-            initializeFirebase();
+            async function loadConversation(convId, convElement) {
+                if (isLoading && currentConversationId == convId) return;
+                isLoading = true;
+                currentConversationId = convId;
+                if (pollingInterval) clearInterval(pollingInterval);
+
+                document.querySelectorAll('.conversation-item.active').forEach(el => el.classList.remove(
+                    'active'));
+                if (convElement) convElement.classList.add('active');
+
+                noConversationDiv.classList.add('d-none');
+                activeChatContainer.classList.remove('d-none');
+                activeChatContainer.classList.add('d-flex');
+                if (window.innerWidth < 992) {
+                    document.getElementById('chatContainer').classList.add('mobile-chat-view');
+                }
+                if (convElement) {
+                    document.getElementById('activeChatUserName').textContent = convElement.querySelector(
+                        '.name').textContent;
+                    document.getElementById('activeChatAvatar').src = convElement.querySelector('img.avatar')
+                        .src;
+                }
+                messagesArea.innerHTML =
+                    '<div class="text-center p-5"><div class="spinner-border text-secondary"></div></div>';
+
+                try {
+                    const response = await fetch(`/chat/conversations/${convId}/messages`);
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    const result = await response.json();
+                    messagesArea.innerHTML = '';
+                    let lastMessageUserId = null;
+                    result.data.slice().reverse().forEach(msg => {
+                        const isFirstInGroup = (msg.user_id != lastMessageUserId);
+                        messagesArea.insertAdjacentHTML('beforeend', createMessageHtml(msg,
+                            isFirstInGroup));
+                        lastMessageUserId = msg.user_id;
+                    });
+                    scrollToBottom();
+                    pollingInterval = setInterval(fetchNewMessages, 7000); // 7 seconds
+                } catch (error) {
+                    console.error('Error loading messages:', error);
+                    messagesArea.innerHTML =
+                        '<div class="alert alert-danger m-2">Could not load messages.</div>';
+                } finally {
+                    isLoading = false;
+                }
+            }
+
+            async function deleteConversation(convId, convItemElement) {
+                try {
+                    const response = await fetch(`/chat/conversations/${convId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        }
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        if (currentConversationId == convId) {
+                            resetToDefaultView();
+                        }
+                        convItemElement.style.transition = 'opacity 0.3s';
+                        convItemElement.style.opacity = '0';
+                        setTimeout(() => {
+                            convItemElement.remove();
+                        }, 300);
+                    } else {
+                        Swal.fire('Failed!', data.message || 'Could not delete.', 'error');
+                    }
+                } catch (error) {
+                    Swal.fire('Error!', 'An error occurred.', 'error');
+                }
+            }
+
+            function resetToDefaultView() {
+                if (pollingInterval) clearInterval(pollingInterval);
+                pollingInterval = null;
+                document.getElementById('chatContainer').classList.remove('mobile-chat-view');
+                currentConversationId = null;
+                document.querySelectorAll('.conversation-item.active').forEach(el => el.classList.remove('active'));
+                activeChatContainer.classList.add('d-none');
+                activeChatContainer.classList.remove('d-flex');
+                noConversationDiv.classList.remove('d-none');
+                const url = new URL(window.location);
+                url.searchParams.delete('activeConversation');
+                window.history.replaceState({}, '', url.toString());
+            }
+
+            conversationsList.addEventListener('click', e => {
+                const deleteBtn = e.target.closest('.delete-conversation-btn');
+                if (deleteBtn) {
+                    e.stopPropagation();
+                    const convItem = deleteBtn.closest('.conversation-item');
+                    const convId = convItem.dataset.conversationId;
+                    Swal.fire({
+                        title: 'Are you sure?',
+                        text: "This action cannot be undone!",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Yes, delete it!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            deleteConversation(convId, convItem);
+                        }
+                    });
+                    return;
+                }
+                const convElement = e.target.closest('.conversation-item');
+                if (convElement) {
+                    loadConversation(convElement.dataset.conversationId, convElement);
+                }
+            });
+
+            backToConversationsBtn.addEventListener('click', resetToDefaultView);
+
+            sendMessageForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const messageInput = e.target.querySelector('input[name="body"]');
+                const body = messageInput.value.trim();
+                if (!body || !currentConversationId) return;
+                const originalText = messageInput.value;
+                messageInput.value = '';
+                messageInput.focus();
+
+                const tempMessage = {
+                    id: 'temp-' + Date.now(),
+                    user_id: {{ Auth::id() }},
+                    body: originalText,
+                    formatted_created_at: 'Sending...'
+                };
+                const lastMsgEl = messagesArea.querySelector('.message-item:last-child');
+                const lastUserId = lastMsgEl ? lastMsgEl.dataset.userId : null;
+                const isFirst = String(tempMessage.user_id) !== lastUserId;
+                messagesArea.insertAdjacentHTML('beforeend', createMessageHtml(tempMessage, isFirst));
+                scrollToBottom();
+
+                try {
+                    const response = await fetch(
+                        `/chat/conversations/${currentConversationId}/messages`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                body: originalText
+                            })
+                        });
+                    const sentMessage = await response.json();
+                    const tempElement = messagesArea.querySelector(
+                        `[data-message-id="${tempMessage.id}"]`);
+                    if (tempElement) {
+                        // استبدال العنصر المؤقت بالعنصر الحقيقي
+                        tempElement.outerHTML = createMessageHtml(sentMessage, isFirst);
+                    }
+                } catch (error) {
+                    console.error('Failed to send message:', error);
+                    const tempElement = messagesArea.querySelector(
+                        `[data-message-id="${tempMessage.id}"]`);
+                    if (tempElement) {
+                        tempElement.querySelector('.message-time').textContent = 'Failed';
+                        tempElement.style.opacity = '0.5';
+                    }
+                }
+            });
+
+            function initialLoad() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const initialConvId = urlParams.get('activeConversation');
+                if (initialConvId) {
+                    const conversationElement = conversationsList.querySelector(
+                        `li[data-conversation-id="${initialConvId}"]`);
+                    if (conversationElement) {
+                        setTimeout(() => {
+                            conversationElement.click();
+                        }, 200); // زيادة طفيفة في التأخير لضمان تحميل كل شيء
+                    }
+                }
+            }
+            initialLoad();
         });
     </script>
 @endpush
-

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\Storage;
 
 class Property extends Model
 {
@@ -86,5 +87,15 @@ class Property extends Model
     public function reviews()
 {
     return $this->hasMany(Review::class);
+}
+public function getFirstImageUrlAttribute()
+{
+    if ($this->images) {
+        $images = json_decode($this->images, true);
+        if (is_array($images) && !empty($images[0])) {
+            return Storage::url($images[0]);
+        }
+    }
+    return asset('frontend/assets/no-image-available.jpg'); // صورة افتراضية
 }
 }

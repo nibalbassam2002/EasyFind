@@ -8,6 +8,10 @@ use Illuminate\Support\Facades\Auth;
 
 class Conversation extends Model
 {
+    protected $fillable = [
+        'property_id',
+        
+    ];
     public function users()
     {
         return $this->belongsToMany(User::class);
@@ -34,4 +38,5 @@ class Conversation extends Model
 {
     return $this->belongsTo(Property::class);
 }
+
 }

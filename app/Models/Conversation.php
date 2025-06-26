@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 
 class Conversation extends Model
 {
+    protected $appends = ['unread_messages_count'];
     protected $fillable = [
         'property_id',
         
@@ -38,5 +39,17 @@ class Conversation extends Model
 {
     return $this->belongsTo(Property::class);
 }
+public function getUnreadMessagesCountAttribute()
+{
+    // إذا لم يكن المستخدم مسجلاً، لا يوجد رسائل غير مقروءة
+    if (!Auth::check()) {
+        return 0;
+    }
 
+    // احسب عدد الرسائل في هذه المحادثة التي لم يقرأها المستخدم الحالي
+    return $this->messages()
+                ->where('user_id', '!=', Auth::id())
+                ->whereNull('read_at')
+                ->count();
+}
 }

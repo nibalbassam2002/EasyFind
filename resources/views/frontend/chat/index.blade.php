@@ -72,6 +72,14 @@
         .conversation-item .chat-info {
             flex-grow: 1;
             overflow: hidden;
+            margin-right: 10px;
+        }
+
+        .conversation-item .chat-time-and-badge {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            flex-shrink: 0;
         }
 
         .conversation-item .name {
@@ -327,31 +335,13 @@
                 </div>
                 <ul class="list-group list-group-flush conversations-list" id="conversationsList">
                     @forelse($conversations as $conversation)
-                        @php $otherUser = $conversation->other_participant; @endphp
-                        @if ($otherUser)
-                            <li class="conversation-item" data-conversation-id="{{ $conversation->id }}">
-                                <img src="{{ $otherUser->profile_image_url }}" alt="{{ $otherUser->name }}" class="avatar">
-                                <div class="chat-info">
-                                    <div class="name">{{ $otherUser->name }}</div>
-                                    <div class="last-message">
-                                        @if ($conversation->lastMessage)
-                                            @if ($conversation->lastMessage->user_id == Auth::id())
-                                                <span class="text-muted">You: </span>
-                                            @endif
-                                            {{ Str::limit($conversation->lastMessage->body, 25) }}
-                                        @else
-                                            No messages yet.
-                                        @endif
-                                    </div>
-                                </div>
-                                <div class="chat-time">{{ $conversation->updated_at->shortAbsoluteDiffForHumans() }}</div>
-                                <button class="delete-conversation-btn" title="Delete Conversation"><i
-                                        class="bi bi-trash3-fill"></i></button>
-                            </li>
-                        @endif
+                        @include('frontend.chat.partials.conversation-item', [
+                            'conversation' => $conversation,
+                        ])
                     @empty
-                        <li class="text-center text-muted p-5 list-group-item"><i
-                                class="bi bi-chat-dots fs-1 d-block mb-2"></i>No conversations yet.</li>
+                        <li class="text-center text-muted p-5 list-group-item">
+                            <i class="bi bi-chat-dots fs-1 d-block mb-2"></i>No conversations yet.
+                        </li>
                     @endforelse
                 </ul>
             </div>
@@ -638,6 +628,12 @@
 
             async function loadConversation(convId, convElement) {
                 if (isLoading && currentConversationId == convId) return;
+                if (convElement) {
+                    const unreadBadge = convElement.querySelector('.unread-count');
+                    if (unreadBadge) {
+                        unreadBadge.style.display = 'none';
+                    }
+                }
                 isLoading = true;
                 currentConversationId = convId;
                 if (pollingInterval) clearInterval(pollingInterval);
@@ -784,12 +780,36 @@
                                 body: originalText
                             })
                         });
-                    const sentMessage = await response.json();
+
+                    const result = await response.json(); // نحصل على النتيجة الكاملة
+                    if (!response.ok) throw new Error(result.message || 'Failed to send message.');
+
+                    const sentMessage = result.message; // نستخرج الرسالة
+
+                    // تحديث منطقة الرسائل (كما كان)
                     const tempElement = messagesArea.querySelector(
                         `[data-message-id="${tempMessage.id}"]`);
                     if (tempElement) {
                         tempElement.outerHTML = createMessageHtml(sentMessage, isFirst);
                     }
+
+                    // --- الجزء الجديد: تحديث القائمة الجانبية ---
+                    if (result.sidebar_html) {
+                        const conversationInList = conversationsList.querySelector(
+                            `li[data-conversation-id="${currentConversationId}"]`);
+                        // 1. احذفي العنصر القديم من القائمة إذا كان موجوداً
+                        if (conversationInList) {
+                            conversationInList.remove();
+                        }
+                        // 2. أضيفي العنصر المحدث في بداية القائمة
+                        conversationsList.insertAdjacentHTML('afterbegin', result.sidebar_html);
+                        // 3. تأكدي من أن العنصر الجديد هو النشط
+                        const newConvItem = conversationsList.querySelector(
+                            `li[data-conversation-id="${currentConversationId}"]`);
+                        if (newConvItem) newConvItem.classList.add('active');
+                    }
+                    // --- نهاية الجزء الجديد ---
+
                 } catch (error) {
                     console.error('Failed to send message:', error);
                     const tempElement = messagesArea.querySelector(

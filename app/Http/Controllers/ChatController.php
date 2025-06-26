@@ -64,52 +64,77 @@ class ChatController extends Controller
         return response()->json($messages);
     }
 
-    public function sendMessage(Request $request, Conversation $conversation): JsonResponse
-    {
-        if (!$this->isUserInConversation($conversation)) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
+// في ChatController.php
 
-        $validated = $request->validate(['body' => 'required|string|max:2000']);
-
-        $message = $conversation->messages()->create([
-            'user_id' => Auth::id(),
-            'body' => $validated['body']
-        ]);
-        $recipient = $conversation->other_participant;
-        if ($recipient && $recipient->fcm_token) {
-            try {
-                $notification = FirebaseNotification::create(
-                    'New Message from ' . Auth::user()->name,
-                    Str::limit($validated['body'], 100)
-                );
-                $messageToSend = CloudMessage::withTarget('token', $recipient->fcm_token)
-                    ->withNotification($notification)
-                    ->withData(['click_action' => route('chat.index', ['activeConversation' => $conversation->id])]);
-                $this->messaging->send($messageToSend);
-            } catch (\Throwable $e) {
-                Log::error('FCM_SEND_ERROR: ' . $e->getMessage());
-            }
-        }
-        
-        $conversation->touch();
-        $message->load('user');
-
-        try {
-            $this->firestore->database()->collection('conversations')->document($conversation->id)
-                ->collection('messages')->add([
-                    'userId'    => (int) Auth::id(),
-                    'userName'  => Auth::user()->name,
-                    'message'   => $validated['body'],
-                    'timestamp' => new \Google\Cloud\Core\Timestamp(new \DateTime()),
-                ]);
-        } catch (\Exception $e) {
-            Log::error('FIREBASE_SEND_FAILED: ' . $e->getMessage());
-        }
-
-        $message->formatted_created_at = $message->created_at->format('h:i A');
-        return response()->json($message);
+public function sendMessage(Request $request, Conversation $conversation): JsonResponse
+{
+    // --- 1. الجزء الحالي للتحقق وحفظ الرسالة (لا تغيير هنا) ---
+    if (!$this->isUserInConversation($conversation)) {
+        return response()->json(['error' => 'Unauthorized'], 403);
     }
+
+    $validated = $request->validate(['body' => 'required|string|max:2000']);
+
+    $message = $conversation->messages()->create([
+        'user_id' => Auth::id(),
+        'body' => $validated['body']
+    ]);
+
+    // --- 2. الجزء الحالي لإرسال الإشعار (لا تغيير هنا) ---
+    $recipient = $conversation->other_participant;
+    if ($recipient && $recipient->fcm_token) {
+        try {
+            $notification = FirebaseNotification::create(
+                'New Message from ' . Auth::user()->name,
+                Str::limit($validated['body'], 100)
+            );
+            $messageToSend = CloudMessage::withTarget('token', $recipient->fcm_token)
+                ->withNotification($notification)
+                ->withData(['click_action' => route('chat.index', ['activeConversation' => $conversation->id])]);
+            $this->messaging->send($messageToSend);
+        } catch (\Throwable $e) {
+            Log::error('FCM_SEND_ERROR: ' . $e->getMessage());
+        }
+    }
+    
+    // --- 3. الجزء الحالي لتحديث المحادثة وتحميل البيانات (لا تغيير هنا) ---
+    $conversation->touch(); // هذا السطر مهم جداً لتحديث updated_at
+    $message->load('user');
+
+    // --- 4. الجزء الحالي لإرسال الرسالة إلى Firestore (لا تغيير هنا) ---
+    try {
+        $this->firestore->database()->collection('conversations')->document($conversation->id)
+            ->collection('messages')->add([
+                'userId'    => (int) Auth::id(),
+                'userName'  => Auth::user()->name,
+                'message'   => $validated['body'],
+                'timestamp' => new \Google\Cloud\Core\Timestamp(new \DateTime()),
+            ]);
+    } catch (\Exception $e) {
+        Log::error('FIREBASE_SEND_FAILED: ' . $e->getMessage());
+    }
+
+    // ▼▼▼▼▼ بداية الكود الجديد والمضاف ▼▼▼▼▼
+
+    // --- 5. تحميل بيانات المحادثة المحدثة ---
+    // نحن نحتاج `lastMessage` و `users` لعرضها في القائمة الجانبية
+    $conversation->load(['users', 'lastMessage.user']);
+    
+    // --- 6. إنشاء كود HTML باستخدام ملف Blade منفصل ---
+    // هذا يجعل الكود أنظف وأسهل للتعديل مستقبلاً
+    $sidebarHtml = view('frontend.chat.partials.conversation-item', ['conversation' => $conversation])->render();
+    
+    // --- 7. تجهيز بيانات الرسالة لإرسالها للواجهة الأمامية ---
+    $message->formatted_created_at = $message->created_at->format('h:i A');
+
+    // --- 8. إرسال استجابة JSON تحتوي على كل ما نحتاجه ---
+    return response()->json([
+        'message' => $message,          // بيانات الرسالة لعرضها في منطقة الشات
+        'sidebar_html' => $sidebarHtml, // كود HTML لتحديث القائمة الجانبية
+    ]);
+    
+    // ▲▲▲▲▲ نهاية الكود الجديد والمضاف ▲▲▲▲▲
+}
     
     public function initiateChatFromPropertyId($property_id)
     {

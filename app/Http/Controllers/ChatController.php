@@ -13,16 +13,23 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Kreait\Firebase\Contract\Firestore;
 use Kreait\Firebase\Contract\Auth as FirebaseAuth;
+use Illuminate\Support\Str;
+use Kreait\Firebase\Contract\Messaging;
+use Kreait\Firebase\Messaging\CloudMessage;
+use Kreait\Firebase\Messaging\Notification as FirebaseNotification;
+use Illuminate\Support\Carbon;
 
 class ChatController extends Controller
 {
     protected $firestore;
     protected $firebaseAuth;
+    protected $messaging;
 
-    public function __construct(Firestore $firestore, FirebaseAuth $firebaseAuth)
+    public function __construct(Firestore $firestore, FirebaseAuth $firebaseAuth, Messaging $messaging)
     {
         $this->firestore = $firestore;
         $this->firebaseAuth = $firebaseAuth;
+        $this->messaging = $messaging;
     }
 
     public function index()
@@ -69,6 +76,21 @@ class ChatController extends Controller
             'user_id' => Auth::id(),
             'body' => $validated['body']
         ]);
+        $recipient = $conversation->other_participant;
+        if ($recipient && $recipient->fcm_token) {
+            try {
+                $notification = FirebaseNotification::create(
+                    'New Message from ' . Auth::user()->name,
+                    Str::limit($validated['body'], 100)
+                );
+                $messageToSend = CloudMessage::withTarget('token', $recipient->fcm_token)
+                    ->withNotification($notification)
+                    ->withData(['click_action' => route('chat.index', ['activeConversation' => $conversation->id])]);
+                $this->messaging->send($messageToSend);
+            } catch (\Throwable $e) {
+                Log::error('FCM_SEND_ERROR: ' . $e->getMessage());
+            }
+        }
         
         $conversation->touch();
         $message->load('user');
@@ -151,4 +173,159 @@ class ChatController extends Controller
         return response()->json(['success' => false, 'message' => 'Could not delete the conversation.'], 500);
     }
 }
+public function requestViewing(Request $request, Conversation $conversation)
+{
+    if (!$this->isUserInConversation($conversation)) {
+        return response()->json(['error' => 'Unauthorized'], 403);
+    }
+
+    $validated = $request->validate([
+        'slots' => 'required|array|min:1|max:3',
+        // التحقق من أن كل عنصر هو تاريخ ووقت صحيح
+        'slots.*' => 'required|date_format:Y-m-d H:i', 
+    ]);
+    
+    // تحويل التواريخ إلى صيغة ISO 8601 للتخزين الموحد
+    $suggestedSlots = array_map(function($slot) {
+        return Carbon::parse($slot)->toIso8601String();
+    }, $validated['slots']);
+    
+    $otherUser = $conversation->other_participant;
+    $body = "A viewing request has been sent to {$otherUser->name}.";
+
+    $message = $conversation->messages()->create([
+        'user_id' => Auth::id(),
+        'body' => $body,
+        'type' => 'viewing_request',
+        'metadata' => ['slots' => $suggestedSlots]
+    ]);
+
+    $conversation->touch();
+    $message->load('user');
+
+    $message->formatted_created_at = $message->created_at->format('h:i A');
+    return response()->json($message);
+}
+public function acceptViewing(Request $request, Message $message)
+{
+    // التأكد من أن الرسالة هي طلب معاينة
+    if ($message->type !== 'viewing_request') {
+        return response()->json(['error' => 'Invalid message type.'], 400);
+    }
+    
+    $conversation = $message->conversation;
+    // التأكد من أن المستخدم الحالي هو الطرف الآخر (البائع) وليس من أرسل الطلب
+    if ($message->user_id == Auth::id() || !$this->isUserInConversation($conversation)) {
+        return response()->json(['error' => 'Unauthorized'], 403);
+    }
+
+    $validated = $request->validate([
+        'slot_index' => 'required|integer'
+    ]);
+
+    $slots = $message->metadata['slots'];
+    $selectedIndex = $validated['slot_index'];
+
+    if (!isset($slots[$selectedIndex])) {
+        return response()->json(['error' => 'Invalid slot selected.'], 422);
+    }
+
+    $confirmedSlot = $slots[$selectedIndex];
+    
+    // **مهم جداً:** قم بتحديث الرسالة الأصلية لتعطيل الأزرار (أو إزالتها)
+    // لتجنب قبول الموعد مرتين. يمكننا إضافة حالة 'processed'
+    $originalMetadata = $message->metadata;
+    $originalMetadata['status'] = 'processed';
+    $originalMetadata['confirmed_slot'] = $confirmedSlot;
+    $originalMetadata['confirmed_by'] = Auth::id();
+    $message->metadata = $originalMetadata;
+    $message->save();
+
+    // إنشاء رسالة "تأكيد" جديدة
+    $newMessage = $conversation->messages()->create([
+        'user_id' => Auth::id(), // يمكن جعله system user ID لاحقاً
+        'body' => 'A viewing appointment has been confirmed.',
+        'type' => 'viewing_confirmed',
+        'metadata' => [
+            'confirmed_slot' => $confirmedSlot,
+            'original_message_id' => $message->id,
+        ]
+    ]);
+
+    $conversation->touch();
+    $newMessage->load('user');
+
+    // أضف إشعارات Firebase هنا إذا أردت...
+
+    $newMessage->formatted_created_at = $newMessage->created_at->format('h:i A');
+    return response()->json($newMessage);
+}
+public function rejectViewing(Request $request, Message $message)
+{
+    // التأكد من أن الرسالة هي طلب معاينة وأنها لم تعالج بعد
+    if ($message->type !== 'viewing_request' || isset($message->metadata['status'])) {
+        return response()->json(['error' => 'Invalid or already processed message.'], 400);
+    }
+    
+    $conversation = $message->conversation;
+    // التأكد من أن المستخدم الحالي هو الطرف الآخر (المستقبل) وليس من أرسل الطلب
+    if ($message->user_id == Auth::id() || !$this->isUserInConversation($conversation)) {
+        return response()->json(['error' => 'Unauthorized'], 403);
+    }
+
+    // تحديث الرسالة الأصلية
+    $originalMetadata = $message->metadata;
+    $originalMetadata['status'] = 'rejected';
+    $originalMetadata['processed_by'] = Auth::id();
+    $message->metadata = $originalMetadata;
+    $message->save();
+
+    // إنشاء رسالة نظام جديدة
+    $otherUser = User::find($message->user_id);
+    $newMessage = $conversation->messages()->create([
+        'user_id' => Auth::id(), // رسالة من النظام
+        'body' => 'Your viewing request was rejected by ' . Auth::user()->name,
+        'type' => 'viewing_rejected',
+        'metadata' => [
+            'original_message_id' => $message->id,
+        ]
+    ]);
+
+    $conversation->touch();
+    return response()->json(['success' => true, 'message' => $newMessage]);
+}
+
+public function cancelViewing(Request $request, Message $message)
+{
+    // التأكد من أن الرسالة هي طلب معاينة وأنها لم تعالج بعد
+    if ($message->type !== 'viewing_request' || isset($message->metadata['status'])) {
+        return response()->json(['error' => 'Invalid or already processed message.'], 400);
+    }
+
+    $conversation = $message->conversation;
+    // التأكد من أن المستخدم الحالي هو من أرسل الطلب
+    if ($message->user_id != Auth::id() || !$this->isUserInConversation($conversation)) {
+        return response()->json(['error' => 'Unauthorized'], 403);
+    }
+
+    // تحديث الرسالة الأصلية
+    $originalMetadata = $message->metadata;
+    $originalMetadata['status'] = 'cancelled';
+    $message->metadata = $originalMetadata;
+    $message->save();
+
+    // إنشاء رسالة نظام جديدة
+    $newMessage = $conversation->messages()->create([
+        'user_id' => Auth::id(), // رسالة من النظام
+        'body' => 'The viewing request was cancelled by the sender.',
+        'type' => 'viewing_cancelled',
+        'metadata' => [
+            'original_message_id' => $message->id,
+        ]
+    ]);
+
+    $conversation->touch();
+    return response()->json(['success' => true, 'message' => $newMessage]);
+}
+
 }

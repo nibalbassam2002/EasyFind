@@ -2,6 +2,7 @@
 @section('title', 'My Chats - EasyFind')
 
 @push('styles')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
         .chat-container-wrapper {
             height: calc(100vh - 77px);
@@ -138,21 +139,12 @@
         }
 
         .message-item.sent {
-           align-self: flex-end;
+            align-self: flex-end;
         }
-        .message-item.received {
-        align-self: flex-start;
-    }
 
-    .message-item .avatar {
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        object-fit: cover;
-        flex-shrink: 0;
-        transition: visibility 0.1s;
-        visibility: hidden;
-    }
+        .message-item.received {
+            align-self: flex-start;
+        }
 
         .message-item .avatar {
             width: 30px;
@@ -271,6 +263,44 @@
             font-size: 4rem;
         }
 
+        .system-message {
+            width: 100%;
+            max-width: 100%;
+            justify-content: center;
+        }
+
+        .system-message .card,
+        .system-message .alert {
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .flatpickr-months .flatpickr-month {
+            height: 34px !important;
+            line-height: 34px !important;
+            background: transparent !important;
+            color: inherit !important;
+        }
+
+        .flatpickr-months .flatpickr-prev-month,
+        .flatpickr-months .flatpickr-next-month {
+            height: 34px !important;
+            width: 14% !important;
+            top: 0 !important;
+            padding: 0 !important;
+        }
+
+        .message-card {
+            width: 450px;
+            /* عرض ثابت للبطاقة لتبدو مرتبة */
+            max-width: 100%;
+            /* للتأكد من أنها لا تتجاوز الشاشة على الأجهزة الصغيرة */
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            /* ظل خفيف لتحسين المظهر */
+            border: 1px solid #e9ecef;
+        }
+
         @media (max-width: 991.98px) {
             .chat-window {
                 display: none;
@@ -331,7 +361,6 @@
                     <i class="bi bi-chat-square-dots fs-1"></i>
                     <p class="lead mt-3">Select a conversation to start chatting</p>
                 </div>
-                <!-- ## تم إصلاح الـ ID هنا ## -->
                 <div class="d-flex flex-column h-100 d-none" id="active-chat-container">
                     <div class="chat-window-header" id="activeChatHeader">
                         <button class="btn me-2 p-1" id="backToConversationsBtn" type="button" title="Back to chats"><i
@@ -342,13 +371,18 @@
                         </div>
                     </div>
                     <div class="messages-area" id="messagesArea"></div>
-                    <div class="chat-input-area" id="chatInputArea">
+                    <div class="chat-input-area p-2 bg-white border-top">
                         <form id="sendMessageForm">
                             <div class="input-group">
+                                <button class="btn" type="button" id="requestViewingBtn" title="Request a Viewing"
+                                    data-bs-toggle="modal" data-bs-target="#requestViewingModal">
+                                    <i class="bi bi-calendar-check-fill fs-5 text-secondary"></i>
+                                </button>
                                 <input type="text" class="form-control" name="body" placeholder="Type a message..."
                                     autocomplete="off" required>
-                                <button class="btn" type="submit" title="Send Message"><i
-                                        class="bi bi-send-fill fs-5 text-warning"></i></button>
+                                <button class="btn" type="submit" title="Send Message">
+                                    <i class="bi bi-send-fill fs-5 text-warning"></i>
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -356,23 +390,81 @@
             </div>
         </div>
     </div>
+
+    <!-- Request Viewing Modal -->
+    <div class="modal fade" id="requestViewingModal" tabindex="-1" aria-labelledby="requestViewingModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="requestViewingModalLabel">Suggest Viewing Times</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Please suggest up to 3 preferred time slots for the property viewing.</p>
+                    <form id="requestViewingForm">
+                        <div class="mb-3">
+                            <label class="form-label">Suggestion 1</label>
+                            <input type="text" class="form-control datetime-picker" placeholder="Select Date and Time"
+                                name="slots[]" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Suggestion 2 (Optional)</label>
+                            <input type="text" class="form-control datetime-picker" placeholder="Select Date and Time"
+                                name="slots[]">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Suggestion 3 (Optional)</label>
+                            <input type="text" class="form-control datetime-picker" placeholder="Select Date and Time"
+                                name="slots[]">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-warning" id="sendViewingRequestBtn">Send Request</button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('scripts')
+    {{-- 1. استدعاء مكتبة SweetAlert2 --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    {{-- 2. استدعاء مكتبة Flatpickr --}}
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+    {{-- 3. الكود الخاص بك في وسم منفصل ومستقل --}}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // ## تم إصلاح اسم المتغير هنا ##
+
+            // --- تفعيل المكتبات أولاً ---
+            flatpickr(".datetime-picker", {
+                enableTime: true,
+                dateFormat: "Y-m-d H:i",
+                minDate: "today",
+                time_24hr: false
+            });
+
+            // --- تعريف المتغيرات ---
             const activeChatContainer = document.getElementById('active-chat-container');
             const conversationsList = document.getElementById('conversationsList');
             const noConversationDiv = document.getElementById('no-conversation-selected');
             const messagesArea = document.getElementById('messagesArea');
             const sendMessageForm = document.getElementById('sendMessageForm');
             const backToConversationsBtn = document.getElementById('backToConversationsBtn');
+            const requestViewingModalEl = document.getElementById('requestViewingModal');
+            const requestViewingModal = requestViewingModalEl ? new bootstrap.Modal(requestViewingModalEl) : null;
+            const sendViewingRequestBtn = document.getElementById('sendViewingRequestBtn');
+            const requestViewingForm = document.getElementById('requestViewingForm');
+
             let currentConversationId = null;
             let isLoading = false;
             let pollingInterval = null;
 
+            // --- الدوال المساعدة ---
             function linkify(text) {
                 if (!text) return '';
                 const urlRegex = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
@@ -387,42 +479,143 @@
                 }, 50);
             }
 
-            // ## تم إصلاح الدالة هنا ##
             function createMessageHtml(message, isFirstInGroup) {
+                // ---- 1. التحضيرات الأولية ----
+                if (typeof message.metadata === 'string') {
+                    try {
+                        message.metadata = JSON.parse(message.metadata);
+                    } catch (e) {
+                        console.error('Failed to parse message metadata:', e);
+                        message.metadata = null;
+                    }
+                }
                 const currentUserId = {{ Auth::id() }};
                 const isSent = message.user_id == currentUserId;
-                // الحصول على الصورة من القائمة الجانبية في حال كانت رسالة مستلمة
                 const otherUserAvatar = document.getElementById('activeChatAvatar').src;
                 const avatarUrl = isSent ? '{{ Auth::user()->profile_image_url }}' : otherUserAvatar;
-
-                const avatarHtml = `<img src="${avatarUrl}" alt="Avatar" class="avatar">`;
-                const timeHtml = `<span class="message-time">${message.formatted_created_at || 'Just now'}</span>`;
-                const messageBody = linkify(message.body).replace(/\n/g, '<br>');
                 const groupClass = isFirstInGroup ? 'is-first-in-group' : '';
-                const itemHtml = `
-            <div class="message-item ${isSent ? 'sent' : 'received'} ${groupClass}" data-message-id="${message.id}" data-user-id="${message.user_id}">
-                ${!isSent ? avatarHtml : ''}
-                <div class="message-content">
-                    <div>${messageBody}</div>
-                    ${timeHtml}
-                </div>
-                ${isSent ? avatarHtml : ''}
-            </div>
-        `;
-                return itemHtml;
+                const avatarHtml = `<img src="${avatarUrl}" alt="Avatar" class="avatar">`;
+
+                // ---- 2. التعامل مع أنواع الرسائل المختلفة (if...else if...else) ----
+
+                // ---- النوع 1: طلب معاينة ----
+                if (message.type === 'viewing_request' && message.metadata?.slots) {
+                    const hasBeenProcessed = message.metadata.status && message.metadata.status !== 'pending';
+                    const slotsHtml = message.metadata.slots.map((slot, index) => {
+                        const date = new Date(slot);
+                        const formattedDate = date.toLocaleDateString('en-GB', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        });
+                        const formattedTime = date.toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true
+                        });
+                        let actionButton = '';
+
+                        if (!isSent && !hasBeenProcessed) {
+                            actionButton =
+                                `<button class="btn btn-sm btn-success accept-viewing-btn" data-slot-index="${index}">Accept</button>`;
+                        } else if (message.metadata.status === 'processed' && message.metadata
+                            .confirmed_slot === slot) {
+                            actionButton = `<span class="badge bg-success">Accepted</span>`;
+                        }
+
+                        return `<li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div><i class="bi bi-calendar-event me-2"></i> ${formattedDate}<br><i class="bi bi-clock me-2"></i> ${formattedTime}</div>
+                        <div>${actionButton}</div>
+                    </li>`;
+                    }).join('');
+
+                    const requestorName = isSent ? 'You' : (message.user ? message.user.name : 'User');
+                    let cardFooter = '';
+                    if (!hasBeenProcessed) {
+                        if (isSent) {
+                            cardFooter =
+                                `<div class="card-footer bg-transparent border-0 text-end py-2 px-1"><button class="btn btn-outline-secondary btn-sm cancel-request-btn">Cancel Request</button></div>`;
+                        } else {
+                            cardFooter =
+                                `<div class="card-footer bg-transparent border-0 text-end py-2 px-1"><button class="btn btn-outline-danger btn-sm reject-request-btn">Reject All Suggestions</button></div>`;
+                        }
+                    }
+
+                    const cardContent = `<div class="card message-card">
+                                <div class="card-header bg-light"><i class="bi bi-calendar-check-fill me-2 text-primary"></i><strong>Viewing Request</strong></div>
+                                <div class="card-body p-0">
+                                    <p class="card-text p-3 pb-2">${requestorName} requested a viewing:</p>
+                                    <ul class="list-group list-group-flush">${slotsHtml}</ul>
+                                    ${cardFooter}
+                                </div>
+                            </div>`;
+
+                    return `<div class="message-item ${isSent ? 'sent' : 'received'} ${groupClass}" data-message-id="${message.id}" data-user-id="${message.user_id}">
+                    ${!isSent ? avatarHtml : ''}
+                    ${cardContent}
+                    ${isSent ? avatarHtml : ''}
+                </div>`;
+                }
+
+                // ---- النوع 2: رسائل النظام (مؤكد، مرفوض، ملغي) ----
+                else if (['viewing_confirmed', 'viewing_rejected', 'viewing_cancelled'].includes(message.type)) {
+                    let alertHtml = '';
+                    if (message.type === 'viewing_confirmed' && message.metadata?.confirmed_slot) {
+                        const confirmedDate = new Date(message.metadata.confirmed_slot);
+                        const formattedDate = confirmedDate.toLocaleDateString('en-GB', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        });
+                        const formattedTime = confirmedDate.toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true
+                        });
+                        alertHtml = `<div class="alert alert-success text-center w-100 my-2">
+                            <h5 class="alert-heading"><i class="bi bi-check-circle-fill me-2"></i> Viewing Confirmed!</h5>
+                            <p class="mb-1">Your appointment is set for:</p>
+                            <p class="fw-bold fs-5">${formattedDate} at ${formattedTime}</p>
+                            <hr><p class="mb-0 small">A reminder will be sent to both parties.</p>
+                        </div>`;
+                    } else if (message.type === 'viewing_rejected' || message.type === 'viewing_cancelled') {
+                        const alertClass = message.type === 'viewing_rejected' ? 'alert-danger' : 'alert-warning';
+                        const alertIcon = message.type === 'viewing_rejected' ? 'bi-x-circle-fill' :
+                            'bi-slash-circle-fill';
+                        const alertTitle = message.type === 'viewing_rejected' ? 'Request Rejected' :
+                            'Request Cancelled';
+                        alertHtml = `<div class="alert ${alertClass} text-center w-100 my-2 small py-2">
+                            <i class="bi ${alertIcon} me-2"></i> <strong>${alertTitle}:</strong> ${message.body}
+                        </div>`;
+                    }
+                    return `<div class="message-item system-message" data-message-id="${message.id}">${alertHtml}</div>`;
+                }
+
+                // ---- النوع 3: الرسائل النصية العادية (الحالة الافتراضية) ----
+                else {
+                    const timeHtml =
+                        `<span class="message-time">${message.formatted_created_at || 'Just now'}</span>`;
+                    const messageBody = linkify(message.body).replace(/\n/g, '<br>');
+                    return `<div class="message-item ${isSent ? 'sent' : 'received'} ${groupClass}" data-message-id="${message.id}" data-user-id="${message.user_id}">
+                    ${!isSent ? avatarHtml : ''}
+                    <div class="message-content"><div>${messageBody}</div>${timeHtml}</div>
+                    ${isSent ? avatarHtml : ''}
+                </div>`;
+                }
             }
 
+            // --- دوال التحكم الرئيسية (AJAX, Loading) ---
             async function fetchNewMessages() {
                 if (!currentConversationId || document.hidden) return;
                 try {
                     const lastMessageElement = messagesArea.querySelector('.message-item:last-child');
                     const lastMessageId = lastMessageElement ? lastMessageElement.dataset.messageId : 0;
                     if (String(lastMessageId).startsWith('temp-')) return;
-
                     const response = await fetch(
                         `/chat/conversations/${currentConversationId}/messages?since=${lastMessageId}`);
                     if (!response.ok) return;
-
                     const result = await response.json();
                     const newMessages = result.data.slice().reverse();
                     if (newMessages.length > 0) {
@@ -448,11 +641,9 @@
                 isLoading = true;
                 currentConversationId = convId;
                 if (pollingInterval) clearInterval(pollingInterval);
-
                 document.querySelectorAll('.conversation-item.active').forEach(el => el.classList.remove(
                     'active'));
                 if (convElement) convElement.classList.add('active');
-
                 noConversationDiv.classList.add('d-none');
                 activeChatContainer.classList.remove('d-none');
                 activeChatContainer.classList.add('d-flex');
@@ -467,7 +658,6 @@
                 }
                 messagesArea.innerHTML =
                     '<div class="text-center p-5"><div class="spinner-border text-secondary"></div></div>';
-
                 try {
                     const response = await fetch(`/chat/conversations/${convId}/messages`);
                     if (!response.ok) throw new Error('Network response was not ok');
@@ -481,7 +671,7 @@
                         lastMessageUserId = msg.user_id;
                     });
                     scrollToBottom();
-                    pollingInterval = setInterval(fetchNewMessages, 7000); // 7 seconds
+                    pollingInterval = setInterval(fetchNewMessages, 7000);
                 } catch (error) {
                     console.error('Error loading messages:', error);
                     messagesArea.innerHTML =
@@ -489,6 +679,20 @@
                 } finally {
                     isLoading = false;
                 }
+            }
+
+            function resetToDefaultView() {
+                if (pollingInterval) clearInterval(pollingInterval);
+                pollingInterval = null;
+                document.getElementById('chatContainer').classList.remove('mobile-chat-view');
+                currentConversationId = null;
+                document.querySelectorAll('.conversation-item.active').forEach(el => el.classList.remove('active'));
+                activeChatContainer.classList.add('d-none');
+                activeChatContainer.classList.remove('d-flex');
+                noConversationDiv.classList.remove('d-none');
+                const url = new URL(window.location);
+                url.searchParams.delete('activeConversation');
+                window.history.replaceState({}, '', url.toString());
             }
 
             async function deleteConversation(convId, convItemElement) {
@@ -518,20 +722,7 @@
                 }
             }
 
-            function resetToDefaultView() {
-                if (pollingInterval) clearInterval(pollingInterval);
-                pollingInterval = null;
-                document.getElementById('chatContainer').classList.remove('mobile-chat-view');
-                currentConversationId = null;
-                document.querySelectorAll('.conversation-item.active').forEach(el => el.classList.remove('active'));
-                activeChatContainer.classList.add('d-none');
-                activeChatContainer.classList.remove('d-flex');
-                noConversationDiv.classList.remove('d-none');
-                const url = new URL(window.location);
-                url.searchParams.delete('activeConversation');
-                window.history.replaceState({}, '', url.toString());
-            }
-
+            // --- مستمعات الأحداث (Event Listeners) ---
             conversationsList.addEventListener('click', e => {
                 const deleteBtn = e.target.closest('.delete-conversation-btn');
                 if (deleteBtn) {
@@ -569,7 +760,6 @@
                 const originalText = messageInput.value;
                 messageInput.value = '';
                 messageInput.focus();
-
                 const tempMessage = {
                     id: 'temp-' + Date.now(),
                     user_id: {{ Auth::id() }},
@@ -581,7 +771,6 @@
                 const isFirst = String(tempMessage.user_id) !== lastUserId;
                 messagesArea.insertAdjacentHTML('beforeend', createMessageHtml(tempMessage, isFirst));
                 scrollToBottom();
-
                 try {
                     const response = await fetch(
                         `/chat/conversations/${currentConversationId}/messages`, {
@@ -599,7 +788,6 @@
                     const tempElement = messagesArea.querySelector(
                         `[data-message-id="${tempMessage.id}"]`);
                     if (tempElement) {
-                        // استبدال العنصر المؤقت بالعنصر الحقيقي
                         tempElement.outerHTML = createMessageHtml(sentMessage, isFirst);
                     }
                 } catch (error) {
@@ -613,6 +801,161 @@
                 }
             });
 
+            if (sendViewingRequestBtn) {
+                sendViewingRequestBtn.addEventListener('click', async function() {
+                    if (!currentConversationId) return Swal.fire('Error',
+                        'No active conversation selected.', 'error');
+                    const formData = new FormData(requestViewingForm);
+                    const slots = formData.getAll('slots[]').filter(slot => slot.trim() !== '');
+                    if (slots.length === 0) {
+                        return Swal.fire('Error',
+                            'Please provide at least one full date and time slot.', 'error');
+                    }
+                    this.disabled = true;
+                    this.innerHTML =
+                        '<span class="spinner-border spinner-border-sm"></span> Sending...';
+                    try {
+                        const response = await fetch(
+                            `/chat/conversations/${currentConversationId}/request-viewing`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'Accept': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    slots: slots
+                                })
+                            });
+                        const sentMessage = await response.json();
+                        if (!response.ok) throw new Error(sentMessage.message ||
+                            'Failed to send request.');
+                        requestViewingModal.hide();
+                        requestViewingForm.reset();
+                        document.querySelectorAll('.datetime-picker').forEach(picker => picker
+                            ._flatpickr.clear());
+                        const activeConvElement = conversationsList.querySelector(
+                            '.conversation-item.active');
+                        if (activeConvElement) loadConversation(currentConversationId,
+                            activeConvElement);
+                    } catch (error) {
+                        Swal.fire('Failed!', error.message, 'error');
+                    } finally {
+                        this.disabled = false;
+                        this.innerHTML = 'Send Request';
+                    }
+                });
+            }
+
+            messagesArea.addEventListener('click', async function(e) {
+                const acceptBtn = e.target.closest('.accept-viewing-btn');
+                const rejectBtn = e.target.closest('.reject-request-btn');
+                const cancelBtn = e.target.closest('.cancel-request-btn');
+
+                // --- المنطق 1: قبول الموعد ---
+                if (acceptBtn) {
+                    e.preventDefault();
+                    const messageElement = acceptBtn.closest('.message-item');
+                    const messageId = messageElement.dataset.messageId;
+                    const slotIndex = acceptBtn.dataset.slotIndex;
+                    // نستخدم الدالة المساعدة ونمرر لها الـ body مع slot_index
+                    processRequest(acceptBtn, `/chat/messages/${messageId}/accept-viewing`, {
+                        slot_index: slotIndex
+                    });
+                }
+
+                // --- المنطق 2: رفض الطلب ---
+                if (rejectBtn) {
+                    e.preventDefault();
+                    const messageElement = rejectBtn.closest('.message-item');
+                    const messageId = messageElement.dataset.messageId;
+
+                    Swal.fire({
+                        title: 'Reject Request',
+                        text: "Do you want to propose new times instead?",
+                        icon: 'warning',
+                        showDenyButton: true,
+                        showCancelButton: true,
+                        confirmButtonText: `Propose New Times`,
+                        denyButtonText: `Just Reject`,
+                        cancelButtonText: 'Go Back'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            requestViewingModal.show();
+                            requestViewingModalEl.dataset.originalMessageId = messageId;
+                        } else if (result.isDenied) {
+                            processRequest(rejectBtn,
+                                `/chat/messages/${messageId}/reject-viewing`);
+                        }
+                    });
+                }
+
+                // --- المنطق 3: إلغاء الطلب ---
+                if (cancelBtn) {
+                    e.preventDefault();
+                    const messageElement = cancelBtn.closest('.message-item');
+                    const messageId = messageElement.dataset.messageId;
+
+                    Swal.fire({
+                        title: 'Are you sure?',
+                        text: "You are about to cancel this viewing request.",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes, cancel it!',
+                        confirmButtonColor: '#d33',
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            processRequest(cancelBtn,
+                                `/chat/messages/${messageId}/cancel-viewing`);
+                        }
+                    });
+                }
+            });
+
+
+            async function processRequest(btn, url, body = null) {
+                btn.disabled = true;
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+                try {
+                    const options = {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                            'Accept': 'application/json'
+                        }
+                    };
+                    if (body) {
+                        options.body = JSON.stringify(body);
+                    }
+
+                    const response = await fetch(url, options);
+                    const data = await response.json();
+                    if (!response.ok) {
+                        // استخراج رسالة الخطأ من Laravel Validation
+                        let errorMessage = data.message || 'An error occurred.';
+                        if (data.errors) {
+                            errorMessage = Object.values(data.errors).flat().join(' ');
+                        }
+                        throw new Error(errorMessage);
+                    }
+
+                    // إعادة تحميل المحادثة لعرض التحديثات
+                    const activeConvElement = conversationsList.querySelector('.conversation-item.active');
+                    if (activeConvElement) loadConversation(currentConversationId, activeConvElement);
+
+                } catch (error) {
+                    Swal.fire('Error', error.message, 'error');
+                    // إعادة الزر إلى حالته الأصلية عند حدوث خطأ
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                }
+            }
+
+
+            // --- التحميل المبدئي ---
             function initialLoad() {
                 const urlParams = new URLSearchParams(window.location.search);
                 const initialConvId = urlParams.get('activeConversation');
@@ -622,7 +965,7 @@
                     if (conversationElement) {
                         setTimeout(() => {
                             conversationElement.click();
-                        }, 200); // زيادة طفيفة في التأخير لضمان تحميل كل شيء
+                        }, 200);
                     }
                 }
             }

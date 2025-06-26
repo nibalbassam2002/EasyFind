@@ -598,7 +598,69 @@
             </div>
         </div>
     </div>
+@auth
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
 
+<script>
+const firebaseConfig = {
+
+  apiKey: "AIzaSyABOQOeenk68g5swkqpiDmAHnso87Twvo0",
+
+  authDomain: "easyfind-realestate.firebaseapp.com",
+
+  projectId: "easyfind-realestate",
+
+  storageBucket: "easyfind-realestate.firebasestorage.app",
+
+  messagingSenderId: "1027579634327",
+
+  appId: "1:1027579634327:web:9717b0d643a803a63bbfd2",
+
+  measurementId: "G-CLBV7E2018"
+
+};
+    
+    firebase.initializeApp(firebaseConfig);
+    const messaging = firebase.messaging();
+
+    function requestPermissionAndSaveToken() {
+        messaging.getToken({ vapidKey: 'BIZyjY5XT0ckpb4tZ1Kf4FwVLA8Xsl0sTbtlQlq1S9-S52vZVUtwwy_BMI5ItpQ8jcuDl2n9-OVPOpszt4AlNgo' }) 
+        .then((currentToken) => {
+            if (currentToken) {
+                fetch('/update-fcm-token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ fcm_token: currentToken })
+                });
+            }
+        }).catch((err) => {
+            console.log('An error occurred while retrieving token. ', err);
+        });
+    }
+    
+    // اطلبي الإذن عند تحميل الصفحة
+    requestPermissionAndSaveToken();
+
+    // استمعي للرسائل القادمة والموقع مفتوح في الشاشة
+    messaging.onMessage((payload) => {
+        console.log('Message received while app is in foreground. ', payload);
+        Swal.fire({
+            title: payload.notification.title,
+            text: payload.notification.body,
+            icon: 'info',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 5000
+        });
+    });
+</script>
+@endauth
 
 </body>
 

@@ -14,11 +14,14 @@ class Message extends Model
         'conversation_id',
         'user_id',
         'body',
-        'read_at'
+        'read_at',
+        'type', 
+        'metadata'
     ];
 
     protected $casts = [
         'read_at' => 'datetime',
+        'metadata' => 'array',
     ];
 
     public function user()

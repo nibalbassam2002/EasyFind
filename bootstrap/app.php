@@ -23,10 +23,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'guest' => \Illuminate\Auth\Middleware\RedirectIfAuthenticated::class,
             'password.notset' => \App\Http\Middleware\RedirectIfPasswordIsSet::class,
         ]);
-         
+        
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
     })->withProviders([
         \App\Providers\BroadcastServiceProvider::class,
     ])->create();
+    

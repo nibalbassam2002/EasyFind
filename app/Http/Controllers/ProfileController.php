@@ -241,4 +241,11 @@ class ProfileController extends Controller
         session(['active_tab' => 'profile-overview']); // *** تحديد التبويب النشط بعد النجاح ***
         return redirect()->route('frontend.account')->with('initial_password_success', 'Your password has been set successfully!'); // *** رسالة نجاح مخصصة ***
     }
+    public function updateFcmToken(Request $request)
+{
+    $request->validate(['fcm_token' => 'required']);
+    Auth::user()->update(['fcm_token' => $request->fcm_token]);
+    return response()->json(['success' => true]);
+}
+
 }

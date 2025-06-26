@@ -164,6 +164,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/conversations/{conversation}/messages', [ChatController::class, 'fetchMessages'])->name('messages.fetch');
         Route::get('/conversations/{conversation}/new-messages', [ChatController::class, 'fetchNewMessages'])->name('messages.fetchNew');
         Route::delete('/conversations/{conversation}', [ChatController::class, 'destroyConversation'])->name('conversation.destroy');
+         Route::post('conversations/{conversation}/request-viewing', [ChatController::class, 'requestViewing'])->name('request-viewing');
+    Route::post('messages/{message}/accept-viewing', [ChatController::class, 'acceptViewing'])->name('accept-viewing');
+    Route::post('messages/{message}/reject-viewing', [ChatController::class, 'rejectViewing'])->name('chat.request.reject');
+Route::post('messages/{message}/cancel-viewing', [ChatController::class, 'cancelViewing'])->name('chat.request.cancel');
     });
 
     // --- User Feedback Submission ---
@@ -182,7 +186,7 @@ Route::get('/payment/lahza/cancel', [SubscriptionController::class, 'handleLahza
     // Route::get('/set-initial-password', [AccountController::class, 'showSetInitialPasswordForm'])->name('frontend.social.set_initial_password_form');
     // Route::post('/set-initial-password', [AccountController::class, 'processSetInitialPassword'])->name('frontend.social.process_initial_password');
 
-});
+});Route::post('/update-fcm-token', [ProfileController::class, 'updateFcmToken'])->middleware('auth');
 Route::get('/initiate-chat/{property_id}', [ChatController::class, 'initiateChatFromPropertyId'])
     ->middleware('auth')
     ->name('chat.initiate');

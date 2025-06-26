@@ -183,7 +183,27 @@ max-width: 1400px; /* أو أي قيمة تناسبك */
           padding: 0.2rem 0.5rem;
           border-radius: 5px;
         }
-        
+        @media (max-width: 576px) {
+      .fhs {
+          background-color: rgba(0, 0, 0, 0.6); /* أبيض شفاف */
+          padding: 0.2rem 0.5rem;
+          border-radius: 5px;
+          font-size: 12px;
+        }
+        .fhs1 {
+          background-color: rgba(0, 0, 0, 0.6); /* أبيض شفاف */
+          padding: 0.2rem 0.5rem;
+          border-radius: 5px;
+          font-size: 18px;
+        }
+         .search-input {
+      width: 150px; /* نص الحجم */
+    }
+      }
+.search-input {
+    width: 300px;
+    max-width: 80%;
+  }
         .navbar-toggler:not(.collapsed) .navbar-toggler-icon {
           background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='gold' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
         }

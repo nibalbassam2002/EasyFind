@@ -20,12 +20,12 @@
                 <img src="{{ asset('frontend/assets/better_cropped_villa.png') }}" class="d-block w-100"
                     alt="Buy properties">
                 <div class="container">
-                    <div class="carousel-caption text-center">
-                        <h1><span class="highlighted-word">Buy</span></h1>
-                        <p><span class="highlighted-word">All you want in real estate you will find it here</span></p>
+                    <div class="carousel-caption text-center fs-6">
+                        <h1><span class="highlighted-word fhs1">Buy</span></h1>
+                        <p><span class="highlighted-word fhs">All you want in real estate you will find it here</span></p>
                         <form class="d-flex justify-content-center mt-3" role="search" method="GET"
                             action="{{ route('frontend.public.search') }}">
-                            <input style="width: 300px; max-width: 80%;" class="form-control me-2" type="search"
+                            <input  class="form-control me-2 search-input" type="search"
                                 name="search" placeholder="Search by title, address..." aria-label="Search"
                                 value="{{ request('search') }}">
                             <button class="btn btn-gold" type="submit">Search</button>
@@ -37,37 +37,62 @@
             <div class="carousel-item">
                 <img src="{{ asset('frontend/assets/cropped_A_high-resolution_digital_photograph_showcases_a_s.png') }}"
                     class="d-block w-100" alt="Sell properties">
-                <div class="carousel-caption text-center">
-                    <h1><span class="highlighted-word">Sell</span></h1>
-                    <p><span class="highlighted-word">Showcase your property to thousands of potential buyers.</span></p>
-                    <p>
-                        @guest
-                            {{-- حالة الزائر --}}
-                            <a class="btn btn-lg btn-dark"
-                                href="{{ route('login', ['intended' => route('frontend.pricing')]) }}">Login to Sell</a>
-                        @else
-                            {{-- حالة المستخدم المسجل --}}
-                            @if (Auth::user()->role === 'customer')
-                                {{-- إذا كان زبوناً، وجهه لصفحة الخطط --}}
-                                <a class="btn btn-lg btn-gold2" href="{{ route('frontend.pricing') }}">Become a Seller</a>
-                            @else
-                                {{-- إذا كان بائعاً أو أدمن، وجهه لصفحة إضافة عقار --}}
-                                <a class="btn btn-lg btn-outline-light" href="{{ route('lister.properties.create') }}">List Your
-                                    Property</a>
-                            @endif
-                        @endguest
-                    </p>
+                <div class="carousel-caption text-center fs-6">
+                    <h1><span class="highlighted-word fhs1">Sell</span></h1>
+                    <p><span class="highlighted-word fhs">Showcase your property to thousands of potential buyers.</span></p>
+                   <p>
+    @guest
+        {{-- حالة الزائر --}}
+        {{-- زر صغير للموبايل --}}
+        <a class="btn btn-sm btn-dark d-lg-none"
+            href="{{ route('login', ['intended' => route('frontend.pricing')]) }}">
+            Login to Sell
+        </a>
+        {{-- زر كبير للديسكتوب --}}
+        <a class="btn btn-lg btn-dark d-none d-lg-inline-block"
+            href="{{ route('login', ['intended' => route('frontend.pricing')]) }}">
+            Login to Sell
+        </a>
+    @else
+        @if (Auth::user()->role === 'customer')
+            {{-- زبون: توجهه لصفحة الخطط --}}
+            <a class="btn btn-sm btn-gold2 d-lg-none" href="{{ route('frontend.pricing') }}">
+                Become a Seller
+            </a>
+            <a class="btn btn-lg btn-gold2 d-none d-lg-inline-block" href="{{ route('frontend.pricing') }}">
+                Become a Seller
+            </a>
+        @else
+            {{-- بائع أو أدمن: توجهه لصفحة إضافة عقار --}}
+            <a class="btn btn-sm btn-outline-light d-lg-none" href="{{ route('lister.properties.create') }}">
+                List Your Property
+            </a>
+            <a class="btn btn-lg btn-outline-light d-none d-lg-inline-block" href="{{ route('lister.properties.create') }}">
+                List Your Property
+            </a>
+        @endif
+    @endguest
+</p>
+
                 </div>
             </div>
             <div class="carousel-item">
                 <img src="{{ asset('frontend/assets/homepage2_LE_upscale_balanced_x4.jpg') }}" class="d-block w-100"
                     alt="Rent properties">
-                <div class="carousel-caption text-center">
-                    <h1><span class="highlighted-word">Rent</span></h1>
-                    <p class="opacity-75"><span class="highlighted-word">Helping millions find their perfect rental
+                <div class="carousel-caption text-center fs-6">
+                    <h1><span class="highlighted-word fhs1">Rent</span></h1>
+                    <p class="opacity-75"><span class="highlighted-word fhs">Helping millions find their perfect rental
                             fit.</span></p>
-                    <p><a class="btn btn-lg btn-gold2" href="{{ route('frontend.properties', ['purpose' => 'rent']) }}">View
-                            Rentals</a></p>
+                    <p>
+         {{-- زر صغير للموبايل --}}
+           <a class="btn btn-gold2 btn-sm  d-lg-none" href="{{ route('frontend.properties', ['purpose' => 'rent']) }}">
+          View Rentals
+          </a>
+           {{-- زر كبير للديسكتوب --}}
+          <a class="btn btn-lg btn-gold2 d-none d-lg-inline-block" href="{{ route('frontend.properties', ['purpose' => 'rent']) }}">View
+                            Rentals</a>
+         </p>
+
                 </div>
             </div>
         </div>
@@ -80,6 +105,7 @@
     </div>
     @auth
         @if (Auth::user()->role == 'property_lister')
+        <br>
             <div class="container mt-3 mb-4" id="lister-quick-actions">
                 <div class="card shadow-sm">
                     <div class="card-body p-2 p-md-3">

@@ -8,6 +8,7 @@
     "require": {
         "php": "^8.2",
         "doctrine/dbal": "^4.2",
+        "google/auth": "^1.47",
         "google/cloud-firestore": "^1.51",
         "kreait/laravel-firebase": "^6.1",
         "laravel/framework": "^12.0",

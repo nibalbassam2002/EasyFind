@@ -599,32 +599,36 @@
         </div>
     </div>
 @auth
-<!-- Firebase SDKs -->
+<!-- =================== Firebase SDKs =================== -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
 
 <script>
-const firebaseConfig = {
-
-  apiKey: "AIzaSyABOQOeenk68g5swkqpiDmAHnso87Twvo0",
-
-  authDomain: "easyfind-realestate.firebaseapp.com",
-
-  projectId: "easyfind-realestate",
-
-  storageBucket: "easyfind-realestate.firebasestorage.app",
-
-  messagingSenderId: "1027579634327",
-
-  appId: "1:1027579634327:web:9717b0d643a803a63bbfd2",
-
-  measurementId: "G-CLBV7E2018"
-
-};
+    // ▼▼▼ هذا هو المكان الوحيد لتهيئة Firebase ▼▼▼
+    const firebaseConfig = {
+      apiKey: "AIzaSyABOQOeenk68g5swkqpiDmAHnso87Twvo0",
+      authDomain: "easyfind-realestate.firebaseapp.com",
+      projectId: "easyfind-realestate",
+      storageBucket: "easyfind-realestate.appspot.com",
+      messagingSenderId: "1027579634327",
+      appId: "1:1027579634327:web:9717b0d643a803a63bbfd2"
+      // measurementId لا نحتاجه هنا حالياً
+    };
     
-    firebase.initializeApp(firebaseConfig);
-    const messaging = firebase.messaging();
+    // تحقق إذا لم يكن التطبيق قد تم تهيئته بالفعل لمنع الخطأ
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
 
+    // الآن، عرّفي المتغيرات بشكل عام لتكون متاحة في الصفحات الأخرى
+    // هذه المتغيرات ستقرأها صفحة الشات
+    var auth = firebase.auth();
+    var db = firebase.firestore();
+    var messaging = firebase.messaging();
+
+    // --- كود إشعارات FCM (يبقى كما هو) ---
     function requestPermissionAndSaveToken() {
         messaging.getToken({ vapidKey: 'BIZyjY5XT0ckpb4tZ1Kf4FwVLA8Xsl0sTbtlQlq1S9-S52vZVUtwwy_BMI5ItpQ8jcuDl2n9-OVPOpszt4AlNgo' }) 
         .then((currentToken) => {
@@ -643,10 +647,8 @@ const firebaseConfig = {
         });
     }
     
-    // اطلبي الإذن عند تحميل الصفحة
     requestPermissionAndSaveToken();
 
-    // استمعي للرسائل القادمة والموقع مفتوح في الشاشة
     messaging.onMessage((payload) => {
         console.log('Message received while app is in foreground. ', payload);
         Swal.fire({

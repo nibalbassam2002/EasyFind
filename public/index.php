@@ -1,5 +1,5 @@
 <?php
-
+putenv('GRPC_DNS_RESOLVER=native');
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 

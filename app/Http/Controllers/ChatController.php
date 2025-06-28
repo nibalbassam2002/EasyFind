@@ -13,18 +13,21 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Kreait\Firebase\Contract\Firestore;
 use Kreait\Firebase\Contract\Auth as FirebaseAuth;
-use Illuminate\Support\Str;
 use Kreait\Firebase\Contract\Messaging;
-use Kreait\Firebase\Messaging\CloudMessage;
-use Kreait\Firebase\Messaging\Notification as FirebaseNotification;
+use Illuminate\Support\Str;
 use Illuminate\Support\Carbon;
 
 class ChatController extends Controller
 {
-    protected $firestore;
-    protected $firebaseAuth;
-    protected $messaging;
+    // استخدام protected مع تحديد النوع (Type Hinting) هو أفضل ممارسة
+    protected Firestore $firestore;
+    protected FirebaseAuth $firebaseAuth;
+    protected Messaging $messaging;
 
+    /**
+     * هذا هو الـ Constructor النظيف الذي يستخدم الحقن التلقائي من Laravel.
+     * هذا هو الكود القياسي الذي سيعمل على الاستضافة.
+     */
     public function __construct(Firestore $firestore, FirebaseAuth $firebaseAuth, Messaging $messaging)
     {
         $this->firestore = $firestore;
@@ -32,6 +35,9 @@ class ChatController extends Controller
         $this->messaging = $messaging;
     }
 
+    /**
+     * عرض صفحة الشات الرئيسية.
+     */
     public function index()
     {
         $user = Auth::user();
@@ -39,132 +45,121 @@ class ChatController extends Controller
             ->with(['users', 'lastMessage.user'])
             ->latest('updated_at')
             ->get();
+            
+        $firebaseToken = null;
+        try {
+            // استخدام $this->firebaseAuth التي تم حقنها في الـ constructor
+            $customToken = $this->firebaseAuth->createCustomToken((string) $user->id, ['name' => $user->name]);
+            $firebaseToken = $customToken->toString();
+        } catch (\Exception $e) {
+            // تسجيل الخطأ وعرض رسالة للمستخدم في حال فشل الاتصال
+            Log::error('FIREBASE_AUTH_ERROR_IN_INDEX: ' . $e->getMessage());
+            session()->flash('error', 'Could not connect to the chat service. Please try again later.');
+        }
 
-        $customToken = $this->firebaseAuth->createCustomToken((string) $user->id, ['name' => $user->name]);
-        $firebaseToken = $customToken->toString();
-        
         return view('frontend.chat.index', compact('conversations', 'user', 'firebaseToken'));
     }
+
+    /**
+     * إرسال رسالة جديدة.
+     */
+    public function sendMessage(Request $request, Conversation $conversation): JsonResponse
+    {
+        if (!$this->isUserInConversation($conversation)) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+        $validated = $request->validate(['body' => 'required|string|max:2000']);
+        
+        $message = $conversation->messages()->create([
+            'user_id' => Auth::id(),
+            'body' => $validated['body']
+        ]);
+        $conversation->touch();
+
+        // إرسال إشعار للمستقبل (Push Notification)
+        $recipient = $conversation->other_participant;
+        if ($recipient && $recipient->fcm_token) {
+            try {
+                $notification = \Kreait\Firebase\Messaging\Notification::create('New Message from ' . Auth::user()->name, Str::limit($validated['body'], 100));
+                $messageToSend = \Kreait\Firebase\Messaging\CloudMessage::withTarget('token', $recipient->fcm_token)
+                    ->withNotification($notification)
+                    ->withData(['click_action' => route('chat.index', ['activeConversation' => $conversation->id])]);
+                
+                // استخدام $this->messaging التي تم حقنها
+                $this->messaging->send($messageToSend);
+            } catch (\Throwable $e) {
+                Log::error('FCM_SEND_ERROR: ' . $e->getMessage());
+            }
+        }
+
+        // الكتابة في Firestore لتفعيل الـ Real-time
+        try {
+            // استخدام $this->firestore التي تم حقنها
+            $db = $this->firestore->database();
+            $timestamp = new \Google\Cloud\Core\Timestamp(new \DateTime());
+            
+            // 1. إضافة الرسالة إلى المجموعة الفرعية
+            $db->collection('conversations')->document($conversation->id)
+               ->collection('messages')->add([
+                    'userId' => (int) Auth::id(), 
+                    'userName' => Auth::user()->name,
+                    'message' => $validated['body'], 
+                    'timestamp' => $timestamp,
+                ]);
+
+            // 2. تحديث المستند الرئيسي للمحادثة (هذا هو مفتاح الـ Real-time)
+            $db->collection('conversations')->document($conversation->id)
+               ->set([
+                    'lastMessage' => ['text' => $validated['body'], 'senderId' => (int) Auth::id(), 'senderName' => Auth::user()->name],
+                    'updatedAt' => $timestamp,
+                    'participants' => $conversation->users()->pluck('id')->toArray() 
+                ], ['merge' => true]);
+
+        } catch (\Exception $e) {
+            Log::error('FIREBASE_SEND_FAILED: ' . $e->getMessage());
+            // لا نرجع خطأ هنا حتى لا يفشل إرسال الرسالة للمرسل في واجهته
+        }
+
+        // إرجاع بيانات الرسالة للـ JavaScript ليقوم بتحديث الواجهة فوراً للمرسل
+        $message->load('user');
+        $message->formatted_created_at = $message->created_at->format('h:i A');
+        return response()->json(['success' => true, 'data' => $message]);
+    }
+    
+    // --- الدوال الأخرى (لا حاجة لتغييرها) ---
 
     public function fetchMessages(Conversation $conversation): JsonResponse
     {
         if (!$this->isUserInConversation($conversation)) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
-
         $conversation->messages()->where('user_id', '!=', Auth::id())->whereNull('read_at')->update(['read_at' => now()]);
-        
         $messages = $conversation->messages()->with('user')->latest()->paginate(20);
-        
         $messages->getCollection()->transform(function ($message) {
             $message->formatted_created_at = $message->created_at->format('h:i A');
             return $message;
         });
-
         return response()->json($messages);
     }
-
-// في ChatController.php
-
-public function sendMessage(Request $request, Conversation $conversation): JsonResponse
-{
-    // --- 1. الجزء الحالي للتحقق وحفظ الرسالة (لا تغيير هنا) ---
-    if (!$this->isUserInConversation($conversation)) {
-        return response()->json(['error' => 'Unauthorized'], 403);
-    }
-
-    $validated = $request->validate(['body' => 'required|string|max:2000']);
-
-    $message = $conversation->messages()->create([
-        'user_id' => Auth::id(),
-        'body' => $validated['body']
-    ]);
-
-    // --- 2. الجزء الحالي لإرسال الإشعار (لا تغيير هنا) ---
-    $recipient = $conversation->other_participant;
-    if ($recipient && $recipient->fcm_token) {
-        try {
-            $notification = FirebaseNotification::create(
-                'New Message from ' . Auth::user()->name,
-                Str::limit($validated['body'], 100)
-            );
-            $messageToSend = CloudMessage::withTarget('token', $recipient->fcm_token)
-                ->withNotification($notification)
-                ->withData(['click_action' => route('chat.index', ['activeConversation' => $conversation->id])]);
-            $this->messaging->send($messageToSend);
-        } catch (\Throwable $e) {
-            Log::error('FCM_SEND_ERROR: ' . $e->getMessage());
-        }
-    }
-    
-    // --- 3. الجزء الحالي لتحديث المحادثة وتحميل البيانات (لا تغيير هنا) ---
-    $conversation->touch(); // هذا السطر مهم جداً لتحديث updated_at
-    $message->load('user');
-
-    // --- 4. الجزء الحالي لإرسال الرسالة إلى Firestore (لا تغيير هنا) ---
-    try {
-        $this->firestore->database()->collection('conversations')->document($conversation->id)
-            ->collection('messages')->add([
-                'userId'    => (int) Auth::id(),
-                'userName'  => Auth::user()->name,
-                'message'   => $validated['body'],
-                'timestamp' => new \Google\Cloud\Core\Timestamp(new \DateTime()),
-            ]);
-    } catch (\Exception $e) {
-        Log::error('FIREBASE_SEND_FAILED: ' . $e->getMessage());
-    }
-
-    // ▼▼▼▼▼ بداية الكود الجديد والمضاف ▼▼▼▼▼
-
-    // --- 5. تحميل بيانات المحادثة المحدثة ---
-    // نحن نحتاج `lastMessage` و `users` لعرضها في القائمة الجانبية
-    $conversation->load(['users', 'lastMessage.user']);
-    
-    // --- 6. إنشاء كود HTML باستخدام ملف Blade منفصل ---
-    // هذا يجعل الكود أنظف وأسهل للتعديل مستقبلاً
-    $sidebarHtml = view('frontend.chat.partials.conversation-item', ['conversation' => $conversation])->render();
-    
-    // --- 7. تجهيز بيانات الرسالة لإرسالها للواجهة الأمامية ---
-    $message->formatted_created_at = $message->created_at->format('h:i A');
-
-    // --- 8. إرسال استجابة JSON تحتوي على كل ما نحتاجه ---
-    return response()->json([
-        'message' => $message,          // بيانات الرسالة لعرضها في منطقة الشات
-        'sidebar_html' => $sidebarHtml, // كود HTML لتحديث القائمة الجانبية
-    ]);
-    
-    // ▲▲▲▲▲ نهاية الكود الجديد والمضاف ▲▲▲▲▲
-}
     
     public function initiateChatFromPropertyId($property_id)
     {
         $property = Property::with('user')->findOrFail($property_id);
         $currentUser = Auth::user();
         $lister = $property->user;
-
         if (!$lister || $currentUser->id === $lister->id) {
             return redirect()->back()->with('error', 'Action not allowed.');
         }
-
         $conversation = $currentUser->conversations()
-            ->whereHas('users', function ($q) use ($lister) {
-                $q->where('user_id', $lister->id);
-            })->first();
-
+            ->whereHas('users', function ($q) use ($lister) { $q->where('user_id', $lister->id); })
+            ->first();
         if (!$conversation) {
             $conversation = Conversation::create();
             $conversation->users()->attach([$currentUser->id, $lister->id]);
         }
-        
         $initialMessageBody = "Hello, I'm interested in your property: '{$property->title}'. You can view it here: " . route('frontend.property.show', ['property_id' => $property->id]);
-        
-        $conversation->messages()->create([
-            'user_id' => $currentUser->id,
-            'body' => $initialMessageBody,
-        ]);
-        
+        $conversation->messages()->create(['user_id' => $currentUser->id, 'body' => $initialMessageBody]);
         $conversation->touch();
-
         return redirect()->route('chat.index', ['activeConversation' => $conversation->id]);
     }
 
@@ -172,32 +167,25 @@ public function sendMessage(Request $request, Conversation $conversation): JsonR
     {
         return $conversation->users()->where('user_id', Auth::id())->exists();
     }
+
     public function destroyConversation(Conversation $conversation)
-{
-    // تحقق من أن المستخدم الحالي هو جزء من هذه المحادثة
-    if (!$this->isUserInConversation($conversation)) {
-        return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+    {
+        if (!$this->isUserInConversation($conversation)) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+        try {
+            DB::transaction(function () use ($conversation) {
+                // يمكنك هنا إضافة منطق لحذف البيانات من Firestore أيضاً إذا أردت
+                $conversation->messages()->delete();
+                $conversation->users()->detach();
+                $conversation->delete();
+            });
+            return response()->json(['success' => true, 'message' => 'Conversation deleted successfully.']);
+        } catch (\Exception $e) {
+            Log::error("Failed to delete conversation ID {$conversation->id}: " . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Could not delete the conversation.'], 500);
+        }
     }
-
-    // يمكنك إما حذف المحادثة نهائياً أو إخفاؤها عن المستخدم فقط
-    // الخيار الأفضل هو إخفاؤها عن المستخدم الحالي فقط
-    // هذا يتطلب إضافة جدول وسيط أو عمود في جدول conversation_user
-
-    // للتبسيط الآن، سنقوم بحذفها نهائياً (احذري، هذا سيحذفها عند كلا الطرفين)
-    try {
-        DB::transaction(function () use ($conversation) {
-            $conversation->messages()->delete(); // حذف كل الرسائل
-            $conversation->users()->detach();    // فك ارتباط المستخدمين
-            $conversation->delete();             // حذف المحادثة نفسها
-        });
-
-        return response()->json(['success' => true, 'message' => 'Conversation deleted successfully.']);
-
-    } catch (\Exception $e) {
-        Log::error("Failed to delete conversation ID {$conversation->id}: " . $e->getMessage());
-        return response()->json(['success' => false, 'message' => 'Could not delete the conversation.'], 500);
-    }
-}
 public function requestViewing(Request $request, Conversation $conversation)
 {
     if (!$this->isUserInConversation($conversation)) {

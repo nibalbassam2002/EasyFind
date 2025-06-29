@@ -35,24 +35,50 @@ class ChatController extends Controller
         $this->messaging = $messaging;
     }
 
-    /**
-     * عرض صفحة الشات الرئيسية.
-     */
+// في app/Http/Controllers/ChatController.php
+
     public function index()
     {
         $user = Auth::user();
+        // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+        //     هنا هو السطر الذي كان ناقصاً
+        // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+        $userId = $user->id;
+
         $conversations = $user->conversations()
             ->with(['users', 'lastMessage.user'])
             ->latest('updated_at')
             ->get();
+
+        // جلب كل العقارات التي يملكها المستخدم الحالي مرة واحدة فقط
+        $userOwnedPropertyIds = Property::where('user_id', $userId)->pluck('id')->toArray();
+
+        $conversations->each(function ($conversation) use ($userOwnedPropertyIds) { // أزلنا $userId من هنا لأنه لم يعد ضرورياً داخل الـ closure
+            // البحث عن آخر رسالة تحتوي على رابط عقار
+            $lastPropertyMessage = $conversation->messages()
+                ->where('body', 'like', '%/properties/show/%')
+                ->latest()
+                ->first();
             
+            $propertyId = null;
+            if ($lastPropertyMessage) {
+                preg_match('/\/properties\/show\/(\d+)/', $lastPropertyMessage->body, $matches);
+                if (isset($matches[1])) {
+                    $propertyId = (int) $matches[1];
+                }
+            }
+            
+            // نضيف خاصيتين جديدتين لكل محادثة
+            $conversation->last_discussed_property_id = $propertyId;
+            // هل المستخدم الحالي هو مالك العقار الذي تتم مناقشته؟
+            $conversation->is_current_user_property_owner = $propertyId ? in_array($propertyId, $userOwnedPropertyIds) : false;
+        });
+
         $firebaseToken = null;
         try {
-            // استخدام $this->firebaseAuth التي تم حقنها في الـ constructor
             $customToken = $this->firebaseAuth->createCustomToken((string) $user->id, ['name' => $user->name]);
             $firebaseToken = $customToken->toString();
         } catch (\Exception $e) {
-            // تسجيل الخطأ وعرض رسالة للمستخدم في حال فشل الاتصال
             Log::error('FIREBASE_AUTH_ERROR_IN_INDEX: ' . $e->getMessage());
             session()->flash('error', 'Could not connect to the chat service. Please try again later.');
         }
@@ -142,26 +168,53 @@ class ChatController extends Controller
         return response()->json($messages);
     }
     
-    public function initiateChatFromPropertyId($property_id)
-    {
-        $property = Property::with('user')->findOrFail($property_id);
-        $currentUser = Auth::user();
-        $lister = $property->user;
-        if (!$lister || $currentUser->id === $lister->id) {
-            return redirect()->back()->with('error', 'Action not allowed.');
-        }
-        $conversation = $currentUser->conversations()
-            ->whereHas('users', function ($q) use ($lister) { $q->where('user_id', $lister->id); })
-            ->first();
-        if (!$conversation) {
-            $conversation = Conversation::create();
-            $conversation->users()->attach([$currentUser->id, $lister->id]);
-        }
-        $initialMessageBody = "Hello, I'm interested in your property: '{$property->title}'. You can view it here: " . route('frontend.property.show', ['property_id' => $property->id]);
-        $conversation->messages()->create(['user_id' => $currentUser->id, 'body' => $initialMessageBody]);
-        $conversation->touch();
-        return redirect()->route('chat.index', ['activeConversation' => $conversation->id]);
+// في ChatController.php
+
+public function initiateChatFromPropertyId($property_id)
+{
+    $property = Property::with('user')->findOrFail($property_id);
+    $currentUser = Auth::user();
+    $lister = $property->user;
+
+    if (!$lister || $currentUser->id === $lister->id) {
+        return redirect()->back()->with('error', 'Action not allowed.');
     }
+
+    $conversation = Conversation::whereHas('users', function ($query) use ($currentUser) {
+            $query->where('user_id', $currentUser->id);
+        })
+        ->whereHas('users', function ($query) use ($lister) {
+            $query->where('user_id', $lister->id);
+        })
+        ->withCount('users')
+        ->having('users_count', 2)
+        ->first();
+
+    if (!$conversation) {
+        $conversation = DB::transaction(function () use ($currentUser, $lister) {
+            $conv = Conversation::create();
+            $conv->users()->attach([$currentUser->id, $lister->id]);
+            return $conv;
+        });
+    }
+
+    $initialMessageExists = $conversation->messages()
+        ->where('user_id', $currentUser->id)
+        ->where('body', 'like', '%' . route('frontend.property.show', ['property_id' => $property->id]) . '%')
+        ->exists();
+
+    if (!$initialMessageExists) {
+        $initialMessageBody = "Hello, I'm interested in your property: '{$property->title}'. You can view it here: " . route('frontend.property.show', ['property_id' => $property->id]);
+        
+        $conversation->messages()->create([
+            'user_id' => $currentUser->id,
+            'body' => $initialMessageBody,
+        ]);
+        $conversation->touch();
+    }
+
+    return redirect()->route('chat.index', ['activeConversation' => $conversation->id]);
+}
 
     private function isUserInConversation(Conversation $conversation): bool
     {
@@ -188,65 +241,91 @@ class ChatController extends Controller
     }
 public function requestViewing(Request $request, Conversation $conversation)
 {
+    // 1. التحقق من الصلاحيات: هل المستخدم الحالي جزء من هذه المحادثة؟
     if (!$this->isUserInConversation($conversation)) {
         return response()->json(['error' => 'Unauthorized'], 403);
     }
 
+    // 2. التحقق من وجود طلبات سابقة: هل هناك طلب معلق أو موعد مؤكد في المستقبل؟
+    $isPendingRequest = $conversation->messages()
+        ->where('type', 'viewing_request')
+        ->whereJsonContains('metadata->status', 'pending')
+        ->exists();
+    
+    $isScheduledAppointment = $conversation->messages()
+        ->where('type', 'viewing_confirmed')
+        ->where('metadata->confirmed_slot', '>=', now())
+        ->exists();
+
+    if ($isPendingRequest || $isScheduledAppointment) {
+        return response()->json([
+            'message' => 'You cannot send a new request while another viewing is pending or scheduled.'
+        ], 409); // 409 Conflict: يوجد تعارض
+    }
+
+    // 3. التحقق من صحة البيانات المدخلة من المستخدم
     $validated = $request->validate([
         'slots' => 'required|array|min:1|max:3',
-        // التحقق من أن كل عنصر هو تاريخ ووقت صحيح
         'slots.*' => 'required|date_format:Y-m-d H:i', 
+        'property_id' => 'required|integer|exists:properties,id' // التأكد من أن العقار موجود
     ]);
+
+    // 4. التحقق من منطق العمل: هل الطرف الآخر هو فعلاً مالك العقار؟
+    $property = Property::find($validated['property_id']);
     
-    // تحويل التواريخ إلى صيغة ISO 8601 للتخزين الموحد
-    $suggestedSlots = array_map(function($slot) {
-        return Carbon::parse($slot)->toIso8601String();
-    }, $validated['slots']);
-    
+    // تأكد من أن دالة other_participant موجودة في موديل Conversation
     $otherUser = $conversation->other_participant;
-    $body = "A viewing request has been sent to {$otherUser->name}.";
 
-    $message = $conversation->messages()->create([
-        'user_id' => Auth::id(),
-        'body' => $body,
-        'type' => 'viewing_request',
-        'metadata' => ['slots' => $suggestedSlots]
-    ]);
+    // إذا لم نجد الطرف الآخر، أو إذا كان ID مالك العقار لا يتطابق مع ID الطرف الآخر
+    if (!$otherUser || $property->user_id !== $otherUser->id) {
+        return response()->json(['message' => 'The other user is not the owner of this property.'], 422); // 422: لا يمكن معالجة الطلب
+    }
 
-    $conversation->touch();
-    $message->load('user');
+    // 5. تجهيز البيانات للحفظ
+    $suggestedSlots = array_map(fn($slot) => Carbon::parse($slot)->toIso8601String(), $validated['slots']);
+    
+    // 6. إنشاء وحفظ رسالة طلب المعاينة
+    $message = new Message();
+    $message->conversation_id = $conversation->id;
+    $message->user_id = Auth::id(); // المرسل هو المستخدم الحالي
+    $message->body = "A viewing request has been sent for property: '{$property->title}'"; // رسالة توضيحية
+    $message->type = 'viewing_request';
+    $message->metadata = [
+        'slots' => $suggestedSlots, 
+        'status' => 'pending',
+        'property_id' => (int) $validated['property_id'] // أهم جزء: تخزين ID العقار
+    ];
+    $message->save(); 
 
+    // 7. تحديث المحادثة وإرجاع الرد
+    $conversation->touch(); // لتحديث updated_at وجعل المحادثة في الأعلى
+    $message->load('user'); // تحميل بيانات المستخدم مع الرسالة للـ JavaScript
     $message->formatted_created_at = $message->created_at->format('h:i A');
-    return response()->json($message);
+
+    return response()->json(['success' => true, 'data' => $message]);
 }
 public function acceptViewing(Request $request, Message $message)
 {
-    // التأكد من أن الرسالة هي طلب معاينة
+    // 1. التحقق من الصلاحيات والنوع
     if ($message->type !== 'viewing_request') {
         return response()->json(['error' => 'Invalid message type.'], 400);
     }
-    
-    $conversation = $message->conversation;
-    // التأكد من أن المستخدم الحالي هو الطرف الآخر (البائع) وليس من أرسل الطلب
-    if ($message->user_id == Auth::id() || !$this->isUserInConversation($conversation)) {
-        return response()->json(['error' => 'Unauthorized'], 403);
+    if ($message->user_id == Auth::id() || !$this->isUserInConversation($message->conversation)) {
+        return response()->json(['error' => 'Unauthorized action.'], 403);
     }
 
+    // 2. التحقق من صحة المدخلات
     $validated = $request->validate([
         'slot_index' => 'required|integer'
     ]);
-
-    $slots = $message->metadata['slots'];
+    $slots = $message->metadata['slots'] ?? [];
     $selectedIndex = $validated['slot_index'];
-
     if (!isset($slots[$selectedIndex])) {
         return response()->json(['error' => 'Invalid slot selected.'], 422);
     }
-
     $confirmedSlot = $slots[$selectedIndex];
-    
-    // **مهم جداً:** قم بتحديث الرسالة الأصلية لتعطيل الأزرار (أو إزالتها)
-    // لتجنب قبول الموعد مرتين. يمكننا إضافة حالة 'processed'
+
+    // === الجزء الأول: تحديث رسالة الطلب الأصلية ===
     $originalMetadata = $message->metadata;
     $originalMetadata['status'] = 'processed';
     $originalMetadata['confirmed_slot'] = $confirmedSlot;
@@ -254,24 +333,35 @@ public function acceptViewing(Request $request, Message $message)
     $message->metadata = $originalMetadata;
     $message->save();
 
-    // إنشاء رسالة "تأكيد" جديدة
-    $newMessage = $conversation->messages()->create([
-        'user_id' => Auth::id(), // يمكن جعله system user ID لاحقاً
-        'body' => 'A viewing appointment has been confirmed.',
-        'type' => 'viewing_confirmed',
-        'metadata' => [
-            'confirmed_slot' => $confirmedSlot,
-            'original_message_id' => $message->id,
-        ]
-    ]);
 
-    $conversation->touch();
+    // === الجزء الثاني: إنشاء رسالة التأكيد الجديدة بالبيانات الصحيحة ===
+    $newMessage = new Message();
+    $newMessage->conversation_id = $message->conversation->id;
+    $newMessage->user_id = Auth::id();
+    $newMessage->body = 'A viewing appointment has been confirmed.';
+    $newMessage->type = 'viewing_confirmed';
+    
+    // نقرأ property_id من رسالة الطلب الأصلية ($message) ونضمن أنه رقم
+    $propertyIdFromRequest = data_get($message, 'metadata.property_id');
+    
+    $newMessage->metadata = [
+        'confirmed_slot' => $confirmedSlot,
+        'original_message_id' => $message->id,
+        // نستخدم المتغير الذي قرأناه للتو ونحوله إلى رقم
+        'property_id' => $propertyIdFromRequest ? (int)$propertyIdFromRequest : null
+    ];
+    
+    $newMessage->save();
+    
+    // 6. تحديث المحادثة وإرجاع الرد
+    $message->conversation->touch();
     $newMessage->load('user');
-
-    // أضف إشعارات Firebase هنا إذا أردت...
-
     $newMessage->formatted_created_at = $newMessage->created_at->format('h:i A');
-    return response()->json($newMessage);
+    
+    // ملاحظة: كنا نرجع $newMessage، ولكن الأفضل إرجاع كائن يعبر عن النجاح
+    // ثم يقوم الـ JavaScript بإعادة تحميل المحادثة بالكامل.
+    // هذا يضمن ظهور كل التغييرات (تحديث الطلب الأصلي + رسالة التأكيد).
+    return response()->json(['success' => true]);
 }
 public function rejectViewing(Request $request, Message $message)
 {

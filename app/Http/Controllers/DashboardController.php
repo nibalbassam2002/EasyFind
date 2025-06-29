@@ -8,6 +8,7 @@ use App\Models\Request as PropertyRequestModel;
 use App\Models\Transaction;
 use App\Models\Subscription;
 use Illuminate\Http\Request;
+use App\Models\Message;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -61,7 +62,7 @@ class DashboardController extends Controller
         if ($role === 'admin' || $role === 'content_moderator') {
             $usersQuery = User::query();
             $propertiesQuery = Property::query();
-            $requestsQuery = PropertyRequestModel::query(); // تأكد من استخدام الاسم الصحيح
+            $requestsQuery = Message::where('type', 'viewing_request');
             $transactionsQuery = Transaction::query();
             $completedTransactionsQuery = Transaction::query()->where('status', 'completed');
 
@@ -72,7 +73,7 @@ class DashboardController extends Controller
 
             $viewData['totalUsers'] = $usersQuery->count();
             $viewData['totalProperties'] = $propertiesQuery->count();
-            $viewData['totalRequests'] = $requestsQuery->count();
+            $viewData['totalRequests'] = \App\Models\Message::where('type', 'viewing_request')->count();
             $viewData['totalTransactions'] = $transactionsQuery->count(); // إجمالي جميع المعاملات
             $viewData['completedTransactions'] = $completedTransactionsQuery->count();
 
@@ -238,4 +239,110 @@ class DashboardController extends Controller
         }
         return ['labels' => $labels, 'counts' => $counts];
     }
+public function viewingRequests()
+{
+    $user = Auth::user();
+    $userId = $user->id;
+
+    // الخطوة 1: جلب ID العقارات التي يملكها البائع
+    $propertyIds = Property::where('user_id', $userId)->pluck('id')->toArray();
+    
+    // إذا لم يكن للبائع أي عقارات، لا داعي لإكمال البحث
+    if (empty($propertyIds)) {
+        return view('dashboard.property_lister.viewing-requests', ['viewingRequests' => collect()]);
+    }
+    
+    // الخطوة 2: بناء الاستعلام الرئيسي (هذا هو التعديل الأهم)
+    // نستخدم whereJsonContains بدلاً من whereIn للبحث داخل حقل JSON بمرونة أكبر
+    $viewingRequests = Message::query()
+        ->whereIn('type', ['viewing_request', 'viewing_confirmed'])
+        ->where(function($query) {
+            $query->where(function($subQuery) {
+                $subQuery->where('type', 'viewing_request')->where('metadata->status', 'pending');
+            })->orWhere(function($subQuery) {
+                $subQuery->where('type', 'viewing_confirmed')->where('metadata->confirmed_slot', '>=', now());
+            });
+        })
+        // ▼▼▼ استعلام مرن للبحث في حقل JSON عن أي من ID العقارات ▼▼▼
+        ->where(function ($query) use ($propertyIds) {
+            foreach ($propertyIds as $id) {
+                // هذا يبحث عن "property_id": 123 و "property_id": "123"
+                $query->orWhereJsonContains('metadata->property_id', $id);
+            }
+        })
+        ->with(['user', 'conversation'])
+        ->latest('messages.created_at')
+        ->paginate(15);
+        
+    // الخطوة 3: ربط بيانات العقار بالرسائل (الكود من الحل الأول)
+    if ($viewingRequests->isNotEmpty()) {
+        // استخراج كل معرفات العقارات من حقل الميتا-داتا
+        $requestPropertyIds = $viewingRequests->pluck('metadata.property_id')->filter()->unique()->all();
+
+        // جلب كل العقارات المطلوبة في استعلام واحد فقط
+        $properties = Property::findMany($requestPropertyIds)->keyBy('id');
+
+        // ربط كل رسالة بالعقار الخاص بها
+        $viewingRequests->each(function ($message) use ($properties) {
+            // نستخدم (int) لتوحيد النوع عند الربط
+            $propertyId = (int) ($message->metadata['property_id'] ?? null);
+            if ($propertyId && isset($properties[$propertyId])) {
+                $message->setRelation('property', $properties[$propertyId]);
+            }
+        });
+    }
+
+    return view('dashboard.property_lister.viewing-requests', compact('viewingRequests'));
+}
+
+
+public function cancelViewingRequest(Request $request, Message $message)
+{
+    // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+    //                  الحل هنا
+    // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+
+    // الخطوة 1: استخراج ID العقار من الرسالة نفسها
+    $propertyId = data_get($message, 'metadata.property_id');
+
+    // إذا لم يكن هناك ID للعقار، فهذا إجراء غير مصرح به
+    if (!$propertyId) {
+        return back()->with('error', 'Cannot verify property ownership for this request.');
+    }
+    
+    // الخطوة 2: التحقق من أن المستخدم الحالي هو مالك هذا العقار
+    $isOwner = Property::where('id', $propertyId)->where('user_id', Auth::id())->exists();
+
+    if (!$isOwner) {
+        // إذا لم يكن المالك، نرجع رسالة الخطأ
+        return back()->with('error', 'Unauthorized action.');
+    }
+
+    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+    //             نهاية التحقق من الصلاحيات
+    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
+
+    // الحالة 1: إلغاء موعد مؤكد وموعده لم يأتِ بعد
+    if ($message->type === 'viewing_confirmed' && Carbon::parse($message->metadata['confirmed_slot'])->isFuture()) {
+        // يمكننا هنا إضافة منطق لإرسال رسالة "إلغاء" في الشات
+        // لكن للتبسيط الآن، سنحذف رسالة التأكيد فقط
+        // ملاحظة: قد ترغب في تحديث حالة رسالة الطلب الأصلية أيضاً
+        $message->delete(); 
+        return back()->with('success', 'Appointment has been cancelled successfully.');
+    }
+
+    // الحالة 2: إلغاء طلب معاينة لم يتم الرد عليه بعد
+    if ($message->type === 'viewing_request' && data_get($message, 'metadata.status') === 'pending') {
+        $metadata = $message->metadata;
+        $metadata['status'] = 'cancelled_by_owner'; // تحديث الحالة
+        $message->metadata = $metadata;
+        $message->save();
+
+        // يمكنك إرسال رسالة نظام في الشات هنا أيضاً
+        return back()->with('success', 'The pending request has been cancelled.');
+    }
+
+    return back()->with('error', 'This action cannot be performed on this request.');
+}
 }

@@ -45,11 +45,19 @@ public function getUnreadMessagesCountAttribute()
     if (!Auth::check()) {
         return 0;
     }
+    
 
     // احسب عدد الرسائل في هذه المحادثة التي لم يقرأها المستخدم الحالي
     return $this->messages()
                 ->where('user_id', '!=', Auth::id())
                 ->whereNull('read_at')
                 ->count();
+}
+
+
+public function getOtherParticipantAttribute()
+{
+    // ابحث في مستخدمي هذه المحادثة عن المستخدم الذي لا يساوي المستخدم الحالي
+    return $this->users()->where('user_id', '!=', Auth::id())->first();
 }
 }

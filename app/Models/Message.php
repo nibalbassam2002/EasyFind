@@ -20,8 +20,8 @@ class Message extends Model
     ];
 
     protected $casts = [
+        'metadata' => 'array', 
         'read_at' => 'datetime',
-        'metadata' => 'array',
     ];
 
     public function user()
@@ -54,4 +54,5 @@ class Message extends Model
             },
         );
     }
+
 }

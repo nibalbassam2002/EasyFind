@@ -96,7 +96,13 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::patch('/profile/change-password', [ProfileController::class, 'changePassword'])->name('profile.changePassword');
     Route::delete('/profile/image/delete', [ProfileController::class, 'deleteImage'])->name('profile.deleteImage');
+    Route::get('/dashboard/viewing-requests', [DashboardController::class, 'viewingRequests'])
+         ->name('dashboard.viewingRequests')
+         ->middleware('role:property_lister'); // حماية إضافية
 
+    Route::post('/dashboard/viewing-requests/{message}/cancel', [DashboardController::class, 'cancelViewingRequest'])
+         ->name('dashboard.viewingRequests.cancel')
+         ->middleware('role:property_lister');
 
     // --- Subscription Routes ---
     Route::get('/checkout/{plan_slug}/payment-method', [SubscriptionController::class, 'showPaymentMethod'])->name('frontend.checkout.payment_method');
@@ -135,6 +141,7 @@ Route::middleware(['auth'])->group(function () {
             Route::put('properties/{property}', [PropertyListerController::class, 'update'])->name('properties.update');
             Route::delete('properties/{property}', [PropertyListerController::class, 'destroy'])->name('properties.destroy');
             Route::patch('properties/{property}/feature', [PropertyListerController::class, 'featureProperty'])->name('properties.feature');
+
         });
     Route::post('/properties/{property}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
 

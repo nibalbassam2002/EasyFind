@@ -172,9 +172,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/conversations/{conversation}/new-messages', [ChatController::class, 'fetchNewMessages'])->name('messages.fetchNew');
         Route::delete('/conversations/{conversation}', [ChatController::class, 'destroyConversation'])->name('conversation.destroy');
          Route::post('conversations/{conversation}/request-viewing', [ChatController::class, 'requestViewing'])->name('request-viewing');
-    Route::post('messages/{message}/accept-viewing', [ChatController::class, 'acceptViewing'])->name('accept-viewing');
-    Route::post('messages/{message}/reject-viewing', [ChatController::class, 'rejectViewing'])->name('chat.request.reject');
-Route::post('messages/{message}/cancel-viewing', [ChatController::class, 'cancelViewing'])->name('chat.request.cancel');
+        Route::post('messages/{message}/accept-viewing', [ChatController::class, 'acceptViewing'])->name('accept-viewing');
+       Route::post('messages/{message}/reject-viewing', [ChatController::class, 'rejectViewing'])->name('chat.request.reject');
+      Route::post('messages/{message}/cancel-viewing', [ChatController::class, 'cancelViewing'])->name('chat.request.cancel');
+      Route::post('conversations/{conversation}/make-offer', [ChatController::class, 'makeOffer'])->name('make-offer');
+      Route::post('messages/{message}/accept-offer', [ChatController::class, 'acceptOffer'])->name('accept-offer');
+      Route::post('messages/{message}/reject-offer', [ChatController::class, 'rejectOffer'])->name('reject-offer');
+      Route::post('messages/{message}/simulate-payment', [ChatController::class, 'simulatePayment'])->name('simulate-payment');
     });
 
     // --- User Feedback Submission ---

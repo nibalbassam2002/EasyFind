@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Log;
 use Kreait\Firebase\Contract\Firestore;
 use Kreait\Firebase\Contract\Auth as FirebaseAuth;
 use Kreait\Firebase\Contract\Messaging;
+use App\Models\Transaction;
 use Illuminate\Support\Str;
 use Illuminate\Support\Carbon;
 
@@ -282,7 +283,7 @@ public function requestViewing(Request $request, Conversation $conversation)
     }
 
     // 5. تجهيز البيانات للحفظ
-    $suggestedSlots = array_map(fn($slot) => Carbon::parse($slot)->toIso8601String(), $validated['slots']);
+    $suggestedSlots = array_map(fn($slot) => Carbon::parse($slot)->format('Y-m-d H:i:s'), $validated['slots']);
     
     // 6. إنشاء وحفظ رسالة طلب المعاينة
     $message = new Message();
@@ -346,7 +347,7 @@ public function acceptViewing(Request $request, Message $message)
     
     $newMessage->metadata = [
         'confirmed_slot' => $confirmedSlot,
-        'original_message_id' => $message->id,
+        'original_request_message_id' => $message->id,
         // نستخدم المتغير الذي قرأناه للتو ونحوله إلى رقم
         'property_id' => $propertyIdFromRequest ? (int)$propertyIdFromRequest : null
     ];
@@ -429,6 +430,200 @@ public function cancelViewing(Request $request, Message $message)
 
     $conversation->touch();
     return response()->json(['success' => true, 'message' => $newMessage]);
+}
+public function makeOffer(Request $request, Conversation $conversation): JsonResponse
+{
+    // 1. التحقق من الصلاحيات: هل المستخدم الحالي جزء من المحادثة؟
+    if (!$this->isUserInConversation($conversation)) {
+        return response()->json(['error' => 'Unauthorized'], 403);
+    }
+
+    // 2. التحقق من أن مرسل العرض ليس مالك العقار
+    $property = Property::find($request->input('property_id'));
+    if (!$property || $property->user_id == Auth::id()) {
+        return response()->json(['message' => 'Property owner cannot make an offer on their own property.'], 422);
+    }
+
+    // 3. التحقق من صحة البيانات المدخلة
+    $validated = $request->validate([
+        'property_id'    => 'required|integer|exists:properties,id',
+        'amount'         => 'required|numeric|min:1',
+        'payment_method' => 'required|string|in:online,offline',
+        'notes'          => 'nullable|string|max:1000',
+        'viewing_request_message_id' => 'nullable|integer|exists:messages,id'
+    ]);
+
+    // 4. إنشاء وحفظ رسالة "تقديم العرض"
+    $message = new Message();
+    $message->conversation_id = $conversation->id;
+    $message->user_id = Auth::id(); // المرسل هو المستخدم الحالي
+    $message->body = "An offer of $" . number_format($validated['amount']) . " has been made."; // رسالة توضيحية
+    $message->type = 'offer_made'; // نوع جديد للرسالة
+    $message->metadata = [
+        'property_id'    => $validated['property_id'],
+        'amount'         => (float) $validated['amount'],
+        'payment_method' => $validated['payment_method'],
+        'notes'          => $validated['notes'],
+        'status'         => 'pending', // الحالة الأولية للعرض هي "معلق"
+        'original_request_message_id' => $validated['viewing_request_message_id'] ?? null
+    ];
+    $message->save();
+
+    // 5. تحديث المحادثة وإرجاع الرد
+    $conversation->touch();
+    
+    // سنقوم بإعادة تحميل المحادثة في الواجهة الأمامية، لذا نرسل رد نجاح فقط
+    return response()->json(['success' => true, 'message' => 'Offer sent successfully!']);
+}
+public function acceptOffer(Request $request, Message $message): JsonResponse
+{
+    // 1. التحقق من الصلاحيات
+    if ($message->type !== 'offer_made' || $message->user_id == Auth::id()) {
+        return response()->json(['success' => false, 'message' => 'Unauthorized action.'], 403);
+    }
+    if (data_get($message, 'metadata.status') !== 'pending') {
+        return response()->json(['success' => false, 'message' => 'This offer has already been processed.'], 422);
+    }
+
+    // 2. جلب البيانات اللازمة
+    $metadata = $message->metadata;
+    $propertyId = data_get($metadata, 'property_id');
+    $property = Property::find($propertyId);
+
+    if (!$property) {
+        return response()->json(['success' => false, 'message' => 'Property not found.'], 404);
+    }
+    
+    // 3. تنفيذ الإجراءات داخل Transaction
+    try {
+        DB::transaction(function () use ($message, $property, &$metadata) {
+            
+            // الخطوة أ: تحديث حالة رسالة العرض إلى "مقبول"
+            $metadata['status'] = 'accepted';
+            $metadata['processed_by'] = Auth::id();
+            $metadata['processed_at'] = now()->toDateTimeString();
+            
+            // الخطوة ب: إذا كان الدفع Offline، نوثق الصفقة
+            if ($metadata['payment_method'] === 'offline') {
+                
+                Transaction::create([
+                    'user_id'         => $message->user_id,
+                    'property_id'     => $property->id,
+                    'amount'          => $metadata['amount'],
+                    'type'            => $property->purpose,
+                    'status'          => 'completed',
+                    'payment_method'  => 'offline',
+                ]);
+
+                $property->status = ($property->purpose === 'rent') ? 'rented' : 'sold';
+                $property->save();
+                
+                // ▼▼▼ التغيير الأهم هنا ▼▼▼
+                // نضع علامة أن الصفقة تمت بالكامل
+                $metadata['deal_completed'] = true;
+                
+                // إرسال رسالة نظام
+                $message->conversation->messages()->create([
+                    'user_id' => 0,
+                    'type'    => 'system',
+                    'body'    => "The offline deal for '{$property->title}' has been confirmed and completed."
+                ]);
+            }
+            
+            // الخطوة ج: حفظ التغييرات على رسالة العرض في كل الحالات
+            // الآن سيتم حفظ 'deal_completed' = true بشكل صحيح
+            $message->metadata = $metadata;
+            $message->save();
+        });
+
+    } catch (\Throwable $e) {
+        Log::error("Accept Offer Failed for message ID {$message->id}: " . $e->getMessage());
+        return response()->json(['success' => false, 'message' => 'An error occurred.'], 500);
+    }
+
+    $message->conversation->touch();
+    return response()->json(['success' => true]);
+}
+
+public function rejectOffer(Request $request, Message $message): JsonResponse
+{
+    // التحقق من أن الرسالة هي عرض وأن المستخدم الحالي هو البائع
+    if ($message->type !== 'offer_made' || $message->user_id == Auth::id()) {
+        return response()->json(['success' => false, 'message' => 'Unauthorized action.'], 403);
+    }
+    // التأكد من أن العرض لا يزال معلقاً
+    if (data_get($message, 'metadata.status') !== 'pending') {
+        return response()->json(['success' => false, 'message' => 'This offer has already been processed.'], 422);
+    }
+
+    $metadata = $message->metadata;
+    $metadata['status'] = 'rejected'; // تحديث الحالة
+    $metadata['processed_by'] = Auth::id();
+    $metadata['processed_at'] = now()->toDateTimeString();
+    $message->metadata = $metadata;
+    $message->save();
+    
+    $message->conversation->touch();
+    return response()->json(['success' => true]);
+}
+public function simulatePayment(Request $request, Message $message): JsonResponse
+{
+    // 1. تحقق من الصلاحيات: هل الرسالة عرض مقبول؟ هل المستخدم هو المشتري؟
+    if ($message->type !== 'offer_made' || data_get($message, 'metadata.status') !== 'accepted' || $message->user_id !== Auth::id()) {
+        return response()->json(['success' => false, 'message' => 'Invalid action.'], 403);
+    }
+
+    $metadata = $message->metadata;
+
+    // 2. تحقق من أن الدفع لم يتم محاكاته من قبل
+    if (data_get($metadata, 'payment_simulated') === true) {
+        return response()->json(['success' => false, 'message' => 'Payment has already been simulated.'], 422);
+    }
+    
+    $propertyId = data_get($metadata, 'property_id');
+    $property = Property::find($propertyId);
+    if (!$property) {
+        return response()->json(['success' => false, 'message' => 'Property not found.'], 404);
+    }
+
+    // 3. ابدأ عملية التوثيق
+    try {
+        DB::transaction(function () use ($message, $property, &$metadata) {
+            // أ. إنشاء سجل المعاملة (Transaction)
+            Transaction::create([
+                'user_id' => Auth::id(), // المشتري
+                'property_id' => $property->id,
+                'amount' => $metadata['amount'],
+                'type' => $property->purpose, // 'sale' or 'rent'
+                'status' => 'completed', // بما أنها محاكاة، نعتبرها مكتملة
+                'payment_method' => 'simulated_online',
+            ]);
+
+            // ب. تحديث حالة العقار
+            $property->status = 'sold'; // أو 'rented' بناءً على الغرض
+            $property->save();
+            
+            // ج. تحديث رسالة العرض لوضع علامة أن الدفع تم
+            $metadata['payment_simulated'] = true;
+            $metadata['payment_simulated_at'] = now()->toDateTimeString();
+            $metadata['deal_completed'] = true;
+            $message->metadata = $metadata;
+            $message->save();
+
+            // د. (اختياري) إرسال رسالة نظام جديدة
+            $message->conversation->messages()->create([
+                'user_id' => 0, // 0 يعني رسالة من النظام
+                'type' => 'system',
+                'body' => "Payment confirmed for property '{$property->title}'. The deal is now complete."
+            ]);
+        });
+    } catch (\Throwable $e) {
+        Log::error("Simulated Payment Failed: " . $e->getMessage());
+        return response()->json(['success' => false, 'message' => 'An error occurred while processing the transaction.'], 500);
+    }
+
+    $message->conversation->touch();
+    return response()->json(['success' => true]);
 }
 
 }

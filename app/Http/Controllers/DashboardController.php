@@ -12,6 +12,7 @@ use App\Models\Message;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Carbon\Carbon;
 use App\Models\Review;
 
@@ -249,8 +250,11 @@ public function viewingRequests()
     
     // إذا لم يكن للبائع أي عقارات، لا داعي لإكمال البحث
     if (empty($propertyIds)) {
-        return view('dashboard.property_lister.viewing-requests', ['viewingRequests' => collect()]);
+        // ▼▼▼ هذا هو التعديل الصحيح ▼▼▼
+        $emptyPaginator = new LengthAwarePaginator([], 0, 15);
+        return view('dashboard.property_lister.viewing-requests', ['viewingRequests' => $emptyPaginator]);
     }
+    
     
     // الخطوة 2: بناء الاستعلام الرئيسي (هذا هو التعديل الأهم)
     // نستخدم whereJsonContains بدلاً من whereIn للبحث داخل حقل JSON بمرونة أكبر

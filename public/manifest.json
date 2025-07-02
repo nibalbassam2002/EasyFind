@@ -1,0 +1,29 @@
+{
+    "name": "EasyFind Real Estate",
+    "short_name": "EasyFind",
+    "start_url": "/index.php",
+    "background_color": "#FFD700",
+    "description": "The easiest way to find, sell, and rent properties. Your next home is just a click away.",
+    "display": "fullscreen",
+    "theme_color": "#6777ef",
+"icons": [
+    {
+        "src": "/frontend/assets/icons/android-chrome-192x192.png",
+        "sizes": "192x192",
+        "type": "image/png",
+        "purpose": "any maskable"
+    },
+    {
+        "src": "/frontend/assets/icons/icon-maskable-192x192.png", 
+        "sizes": "192x192",
+        "type": "image/png",
+        "purpose": "maskable"
+    },
+    {
+        "src": "/frontend/assets/icons/android-chrome-512x512.png",
+        "sizes": "512x512",
+        "type": "image/png",
+        "purpose": "any maskable"
+    }
+]
+}

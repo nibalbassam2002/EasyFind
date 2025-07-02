@@ -30,6 +30,7 @@ class DashboardController extends Controller
         $user = Auth::user();
         $role = $user->role;
         $userId = $user->id;
+        
 
         $activeSubscription = $user->activeSubscriptionWithPlan(); // دالة مساعدة في موديل User
 

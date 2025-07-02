@@ -4,8 +4,6 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Auth\Middleware\Authenticate;
-use Laravel\Socialite\Facades\Socialite;
-use Laravel\Socialite\SocialiteServiceProvider;
 use Illuminate\Auth\Middleware\RedirectIfAuthenticated;
 
 
@@ -31,8 +29,6 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })->withProviders([
         \App\Providers\BroadcastServiceProvider::class,
-        SocialiteServiceProvider::class,
-    ])->create()->withFacades(true, [ // <--- ابدأ بإضافة هذا السطر
-        'Socialite' => Socialite::class,
-    ]);
+        \Laravel\Socialite\SocialiteServiceProvider::class,
+    ])->create();
     

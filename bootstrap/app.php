@@ -29,6 +29,5 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })->withProviders([
         \App\Providers\BroadcastServiceProvider::class,
-        \Laravel\Socialite\SocialiteServiceProvider::class,
     ])->create();
     

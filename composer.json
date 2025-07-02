@@ -61,7 +61,7 @@
     },
     "extra": {
         "laravel": {
-            "dont-discover": ["laravel/socialite"]
+            "dont-discover": []
         }
     },
     "config": {

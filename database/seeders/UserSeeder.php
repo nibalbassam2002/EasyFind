@@ -24,15 +24,7 @@ class UserSeeder extends Seeder
                 
             ]
         );
-        User::firstOrCreate(
-            ['email' => 'adham@example.com'],
-            [
-                'name' => 'adham bassam',
-                'password' => Hash::make('password'),
-                'role' => 'property_lister',
-                'status' => 'active',
-            ]
-        );
+        
         
     }
 }

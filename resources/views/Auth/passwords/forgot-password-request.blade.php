@@ -127,7 +127,7 @@
     <div class="col-md-7 d-none d-md-flex logo-area-container">
       {{-- تأكد من أن مسار الشعار صحيح --}}
       <a href="{{ url('/') }}">
-        <img src="{{ asset('frontend/assets/شعار مفرغ 2 1 (1).png') }}" alt="Easy Find">
+        <img src="{{ asset('frontend/assets/logo1.png') }}" alt="Easy Find">
       </a>
     </div>
 
@@ -137,7 +137,7 @@
         {{-- الشعار للشاشات الصغيرة --}}
         <div class="text-center mb-4 d-md-none">
              <a href="{{ url('/') }}">
-                <img src="{{ asset('frontend/assets/شعار مفرغ 2 1 (1).png') }}" alt="Easy Find" style="max-width: 180px; margin-bottom: 0.5rem;">
+                <img src="{{ asset('frontend/assets/logo1.png') }}" alt="Easy Find" style="max-width: 180px; margin-bottom: 0.5rem;">
             </a>
         </div>
 

@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             //
             $table->string('phone')->nullable()->after('password');
-            $table->foreignId('city_id')->nullable()->constrained();
             $table->string('address')->nullable();
             $table->enum('role', ['admin',
                 'content_moderator', 
@@ -35,7 +34,6 @@ return new class extends Migration
             //
             $table->dropColumn([
                 'phone',
-                'city_id',
                 'address',
                 'role',
                 'status',
@@ -43,7 +41,6 @@ return new class extends Migration
                 'description'
             ]);
 
-            $table->dropForeign(['city_id']);
         });
     }
 };

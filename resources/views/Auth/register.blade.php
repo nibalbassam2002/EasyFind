@@ -62,7 +62,7 @@
             <div class="col-md-6 d-none d-md-flex logo flex-column">
                 <div>
                     {{-- ↓↓↓ تم التعديل باستخدام asset() ↓↓↓ --}}
-                    <img src="{{ asset('frontend/assets/شعار مفرغ 2 1 (1).png') }}" alt="Easy Find"
+                    <img src="{{ asset('frontend/assets/logo1.png') }}" alt="Easy Find"
                         style="max-width: 600px;">
                 </div>
             </div>

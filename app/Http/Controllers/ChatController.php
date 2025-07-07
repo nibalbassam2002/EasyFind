@@ -20,15 +20,11 @@ use Illuminate\Support\Carbon;
 
 class ChatController extends Controller
 {
-    // استخدام protected مع تحديد النوع (Type Hinting) هو أفضل ممارسة
     protected Firestore $firestore;
     protected FirebaseAuth $firebaseAuth;
     protected Messaging $messaging;
 
-    /**
-     * هذا هو الـ Constructor النظيف الذي يستخدم الحقن التلقائي من Laravel.
-     * هذا هو الكود القياسي الذي سيعمل على الاستضافة.
-     */
+
     public function __construct(Firestore $firestore, FirebaseAuth $firebaseAuth, Messaging $messaging)
     {
         $this->firestore = $firestore;
@@ -36,14 +32,11 @@ class ChatController extends Controller
         $this->messaging = $messaging;
     }
 
-// في app/Http/Controllers/ChatController.php
+
 
     public function index()
     {
         $user = Auth::user();
-        // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-        //     هنا هو السطر الذي كان ناقصاً
-        // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
         $userId = $user->id;
 
         $conversations = $user->conversations()
@@ -51,11 +44,9 @@ class ChatController extends Controller
             ->latest('updated_at')
             ->get();
 
-        // جلب كل العقارات التي يملكها المستخدم الحالي مرة واحدة فقط
         $userOwnedPropertyIds = Property::where('user_id', $userId)->pluck('id')->toArray();
 
-        $conversations->each(function ($conversation) use ($userOwnedPropertyIds) { // أزلنا $userId من هنا لأنه لم يعد ضرورياً داخل الـ closure
-            // البحث عن آخر رسالة تحتوي على رابط عقار
+        $conversations->each(function ($conversation) use ($userOwnedPropertyIds) { 
             $lastPropertyMessage = $conversation->messages()
                 ->where('body', 'like', '%/properties/show/%')
                 ->latest()
@@ -69,9 +60,9 @@ class ChatController extends Controller
                 }
             }
             
-            // نضيف خاصيتين جديدتين لكل محادثة
+
             $conversation->last_discussed_property_id = $propertyId;
-            // هل المستخدم الحالي هو مالك العقار الذي تتم مناقشته؟
+
             $conversation->is_current_user_property_owner = $propertyId ? in_array($propertyId, $userOwnedPropertyIds) : false;
         });
 
@@ -112,16 +103,15 @@ class ChatController extends Controller
                     ->withNotification($notification)
                     ->withData(['click_action' => route('chat.index', ['activeConversation' => $conversation->id])]);
                 
-                // استخدام $this->messaging التي تم حقنها
                 $this->messaging->send($messageToSend);
             } catch (\Throwable $e) {
                 Log::error('FCM_SEND_ERROR: ' . $e->getMessage());
             }
         }
 
-        // الكتابة في Firestore لتفعيل الـ Real-time
+       
         try {
-            // استخدام $this->firestore التي تم حقنها
+          
             $db = $this->firestore->database();
             $timestamp = new \Google\Cloud\Core\Timestamp(new \DateTime());
             
@@ -153,7 +143,6 @@ class ChatController extends Controller
         return response()->json(['success' => true, 'data' => $message]);
     }
     
-    // --- الدوال الأخرى (لا حاجة لتغييرها) ---
 
     public function fetchMessages(Conversation $conversation): JsonResponse
     {
@@ -169,7 +158,7 @@ class ChatController extends Controller
         return response()->json($messages);
     }
     
-// في ChatController.php
+
 
 public function initiateChatFromPropertyId($property_id)
 {
@@ -229,7 +218,7 @@ public function initiateChatFromPropertyId($property_id)
         }
         try {
             DB::transaction(function () use ($conversation) {
-                // يمكنك هنا إضافة منطق لحذف البيانات من Firestore أيضاً إذا أردت
+               
                 $conversation->messages()->delete();
                 $conversation->users()->detach();
                 $conversation->delete();
@@ -242,7 +231,7 @@ public function initiateChatFromPropertyId($property_id)
     }
 public function requestViewing(Request $request, Conversation $conversation)
 {
-    // 1. التحقق من الصلاحيات: هل المستخدم الحالي جزء من هذه المحادثة؟
+    
     if (!$this->isUserInConversation($conversation)) {
         return response()->json(['error' => 'Unauthorized'], 403);
     }
@@ -610,9 +599,8 @@ public function simulatePayment(Request $request, Message $message): JsonRespons
             $message->metadata = $metadata;
             $message->save();
 
-            // د. (اختياري) إرسال رسالة نظام جديدة
             $message->conversation->messages()->create([
-                'user_id' => 0, // 0 يعني رسالة من النظام
+                'user_id' => 0,
                 'type' => 'system',
                 'body' => "Payment confirmed for property '{$property->title}'. The deal is now complete."
             ]);

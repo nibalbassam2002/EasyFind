@@ -76,12 +76,12 @@ class FrontendController extends Controller
                             ->paginate(12)
                             ->withQueryString();
 
-        // لا داعي للتحقق من المفضلة هنا لأن المستخدم زائر
+        
         $properties->each(function ($property) {
             $property->is_favorited = false;
         });
 
-        // سنستخدم نفس صفحة العرض `properties.blade.php` ولكن مع إخفاء الفلاتر
+        
         return view('frontend.properties', compact('properties'));
     }
 
@@ -141,7 +141,7 @@ public function properties(Request $request)
         $query->where('bathrooms', '>=', $request->input('min_bathrooms'));
     }
 
-    // ▲▲▲ نهاية جزء الفلترة ▲▲▲
+   
 
     // جلب النتائج مع الترتيب والترقيم
     $properties = $query->orderBy('is_featured', 'desc')
@@ -149,7 +149,6 @@ public function properties(Request $request)
                         ->paginate(12)
                         ->withQueryString();
 
-    // ... الكود الحالي لجلب المفضلة يبقى كما هو ...
     $userId = Auth::id();
     if ($userId) {
         $propertyIdsOnPage = collect($properties->items())->pluck('id')->toArray();

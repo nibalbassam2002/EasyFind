@@ -30,7 +30,7 @@
     <nav class="navbar navbar-expand-xl bg-white border-bottom navbar1">
         <div class="container">
             <a href="{{ route('frontend.home') }}" class="navbar-brand">
-                <img src="{{ asset('frontend/assets/شعار مفرغ 2.png') }}" width="80px" height="80px" alt="logo">
+                <img src="{{ asset('frontend/assets/logo-white.png') }}" width="80px" height="80px" alt="logo">
             </a>
 
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarLinks">
@@ -267,7 +267,7 @@
                 <a href="{{ route('frontend.home') }}"
                     class="d-flex align-items-center mb-3 link-body-emphasis text-decoration-none"
                     aria-label="EasyFind">
-                    <img src="{{ asset('frontend/assets/شعار مفرغ 2.png') }}" class="bi me-2" width="120"
+                    <img src="{{ asset('frontend/assets/logo-white.png') }}" class="bi me-2" width="120"
                         height="120" alt="EasyFind Logo">
                 </a>
                 <p class="text-muted">© {{ date('Y') }} EasyFind. All rights reserved.</p>
@@ -580,7 +580,7 @@
     @endauth
 
     @stack('scripts')
-    @vite('resources/js/app.js')
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     {{-- @vite(['resources/css/app.css', 'resources/js/app.js']) --}}
 

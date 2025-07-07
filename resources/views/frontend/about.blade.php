@@ -97,7 +97,7 @@
 
    
         <div class="container p-5 text-center bg-body-tertiary rounded-3">
-            <img src="{{ asset('frontend/assets/شعار مفرغ 2.png') }}" height="100px" width="100px" alt="EasyFind Logo" class="mb-3"> {{-- تقليل حجم الشعار قليلاً --}}
+            <img src="{{ asset('frontend/assets/logo-white.png') }}" height="100px" width="100px" alt="EasyFind Logo" class="mb-3"> {{-- تقليل حجم الشعار قليلاً --}}
             <h1 class="text-body-emphasis">Ready to start?</h1>
             <p class="col-lg-8 mx-auto fs-5 text-muted">
                 Whether you're looking to buy, sell, or rent, EasyFind is here to guide you every step of the way.

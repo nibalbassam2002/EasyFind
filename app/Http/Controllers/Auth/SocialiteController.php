@@ -23,14 +23,12 @@ class SocialiteController extends Controller
     {
         Log::info("Socialite - redirectToProvider: Attempting redirect for [{$provider}]");
 
-        // *** تعديل التحقق ليشمل كل المزودات المدعومة ***
         if (!in_array(strtolower($provider), $this->supportedProviders)) {
             Log::warning("Socialite - redirectToProvider: Unsupported provider [{$provider}]");
             return redirect()->route('register')->with('error', 'Login with ' . ucfirst($provider) . ' is not supported.');
         }
 
         try {
-            // *** استخدام $provider ديناميكيًا ***
             return Socialite::driver(strtolower($provider))->redirect();
         } catch (Exception $e) {
             Log::error("Socialite - redirectToProvider: Exception for [{$provider}]", ['message' => $e->getMessage()]);
@@ -42,14 +40,14 @@ class SocialiteController extends Controller
     {
         Log::info("Socialite - handleProviderCallback: Starting for [{$provider}]");
 
-        // *** تعديل التحقق ليشمل كل المزودات المدعومة ***
+        
         if (!in_array(strtolower($provider), $this->supportedProviders)) {
             Log::warning("Socialite - handleProviderCallback: Unsupported provider callback [{$provider}]");
             return redirect()->route('register')->with('error', 'Login with ' . ucfirst($provider) . ' is not supported.');
         }
 
         try {
-            // *** استخدام $provider ديناميكيًا ***
+            
             $socialUser = Socialite::driver(strtolower($provider))->user();
             Log::info("Socialite - handleProviderCallback: Fetched user from " . ucfirst($provider) . ".", [
                 'id' => $socialUser->getId(),
@@ -62,8 +60,7 @@ class SocialiteController extends Controller
                 return redirect()->route('register')->with('error', ucfirst($provider) . ' did not provide an email. Please register manually or try a different ' . ucfirst($provider) . ' account that shares its email address.');
             }
 
-            // *** تعديل اسم الميثود واستدعائها ***
-            $user = $this->findOrCreateSocialUser($socialUser, strtolower($provider)); // <--- تمرير المزود
+            $user = $this->findOrCreateSocialUser($socialUser, strtolower($provider)); 
 
             if (!$user) {
                 Log::critical("Socialite - handleProviderCallback: findOrCreateSocialUser returned null for provider [{$provider}]. This should not happen.");
@@ -79,7 +76,6 @@ class SocialiteController extends Controller
             Log::error("Socialite - handleProviderCallback: InvalidStateException for [{$provider}].", ['exception_message' => $e->getMessage()]);
             return redirect()->route('register')->with('error', 'Invalid authentication state. Please try the login process again.');
         } catch (QueryException $e) {
-            // ... (كود معالجة QueryException لديك جيد، فقط تأكدي من رسائل الخطأ إذا أردت) ...
              $errorCode = $e->errorInfo[1] ?? null;
             $errorMessage = $e->errorInfo[2] ?? $e->getMessage();
             Log::error("Socialite - handleProviderCallback: QueryException for [{$provider}].", [
@@ -102,29 +98,24 @@ class SocialiteController extends Controller
         }
     }
 
-    /**
-     * Find an existing user by Social Provider ID or Email, or create a new one.
-     * Assigns 'customer' role by default to new users.
-     * *** تم إعادة تسمية الميثود وتعديلها لتكون عامة ***
-     */
+
     protected function findOrCreateSocialUser(\Laravel\Socialite\Contracts\User $socialProviderUser, string $providerName): ?User
     {
-        // $providerName يتم تمريره الآن (مثلاً 'google' أو 'facebook')
+        
         $providerId = $socialProviderUser->getId();
         $email = $socialProviderUser->getEmail();
         $name = $socialProviderUser->getName();
         $avatar = $socialProviderUser->getAvatar();
 
-        // 1. ابحث عن المستخدم عن طريق provider_name و provider_id
+        
         $user = User::where('provider_name', $providerName)
                     ->where('provider_id', $providerId)
                     ->first();
 
         if ($user) {
             Log::info("Socialite - findOrCreateSocialUser: User found by provider_id for [{$providerName}].", ['user_id' => $user->id]);
-            // تحديث الاسم والصورة إذا لزم الأمر
             $user->name = $name ?? $user->name;
-            $user->provider_avatar = $avatar ?? $user->provider_avatar; // تأكدي أن لديك عمود provider_avatar
+            $user->provider_avatar = $avatar ?? $user->provider_avatar;
             if ($user->isDirty()) {
                 $user->save();
                 Log::info("Socialite - findOrCreateSocialUser: Updated existing user's name/avatar for [{$providerName}].", ['user_id' => $user->id]);
@@ -132,7 +123,7 @@ class SocialiteController extends Controller
             return $user;
         }
 
-        // 2. إذا لم يوجد بـ provider_id، ابحث عن طريق البريد الإلكتروني
+       
         Log::info("Socialite - findOrCreateSocialUser: User not found by provider_id for [{$providerName}]. Checking email: {$email}");
         $user = User::where('email', $email)->first();
 
@@ -141,11 +132,10 @@ class SocialiteController extends Controller
 
             if ($user->provider_name && $user->provider_name !== $providerName) {
                 Log::warning("Socialite - findOrCreateSocialUser: Email [{$email}] already linked to [{$user->provider_name}]. Cannot link to [{$providerName}].");
-                // يمكنك هنا إما رمي استثناء أو إعادة توجيه مع رسالة خطأ
-                // سأرمي استثناء ليتم التقاطه في handleProviderCallback
+                
                 throw new Exception("This email is already associated with an account using " . ucfirst($user->provider_name) . ". Please log in with that method or use a different email with " . ucfirst($providerName) . ".");
             }
-             // إذا لم يكن للمستخدم provider_name (سجل يدويًا) أو كان نفس المزود (نادر الحدوث هنا)
+             
             $user->provider_name = $providerName;
             $user->provider_id = $providerId;
             $user->provider_avatar = $avatar ?? $user->provider_avatar;
@@ -156,18 +146,16 @@ class SocialiteController extends Controller
             return $user;
         }
 
-        // 3. مستخدم جديد تمامًا
         Log::info("Socialite - findOrCreateSocialUser: Creating new user for email [{$email}] with provider [{$providerName}].");
         $userDataToCreate = [
             'name' => $name,
             'email' => $email,
             'email_verified_at' => now(),
-            'password' => null, // *** الخيار المفضل: اجعل المستخدم يعينها لاحقًا ***
-            // أو: 'password' => Hash::make(Str::random(16)), // إذا أردت إنشاء كلمة مرور عشوائية
+            'password' => null, 
             'provider_name' => $providerName,
             'provider_id' => $providerId,
-            'provider_avatar' => $avatar, // تأكدي أن لديك هذا العمود في جدول users
-            'has_set_password' => false, // إذا كانت كلمة المرور null
+            'provider_avatar' => $avatar, 
+            'has_set_password' => false,
             'role' => $this->defaultRole,
             'status' => 'active',
         ];
@@ -179,7 +167,7 @@ class SocialiteController extends Controller
 
     protected function redirectTo(User $user)
     {
-        // ... (هذه الميثود تبدو جيدة كما هي لديك) ...
+        
         $intendedUrl = session()->pull('url.intended');
         $defaultRedirect = route('frontend.home');
 

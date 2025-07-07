@@ -265,7 +265,7 @@
             <!-- Left: Logo -->
             <div class="col-md-6 d-none d-md-flex logo-area">
                 <a href="{{ url('/') }}">
-                    <img src="{{ asset('frontend/assets/شعار مفرغ 2 1 (1).png') }}" alt="Easy Find"
+                    <img src="{{ asset('frontend/assets/logo1.png') }}" alt="Easy Find"
                         style="max-width: 600px; margin-bottom: 1rem;">
                 </a>
             </div>

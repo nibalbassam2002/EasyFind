@@ -77,18 +77,9 @@ class ModeratorController extends Controller
     }
     public function showPropertyForReview(Property $property) // استخدام Route Model Binding
     {
-        // لا نحتاج للتحقق من ملكية العقار هنا لأن المشرف/الأدمن يمكنه رؤية كل العقارات المعلقة
-        // ولكن يمكنك إضافة تحقق إذا كان العقار فعلاً 'pending' إذا أردت
-        // if ($property->status !== 'pending') {
-        //     return redirect()->route('moderator.properties.pending')->with('warning', 'This property is not currently pending review.');
-        // }
-
-        // تحميل العلاقات اللازمة لعرض التفاصيل الكاملة
-        $property->load(['user', 'category', 'subCategory', 'listarea.governorate']);
-
-        // يمكنك تمرير أي بيانات إضافية تحتاجها في صفحة المراجعة
+        
         return view('dashboard.moderator.review_property_details', compact('property'));
-        // تأكد أن هذا الـ view موجود: resources/views/dashboard/moderator/review_property_details.blade.php
+       
     }
 
 }

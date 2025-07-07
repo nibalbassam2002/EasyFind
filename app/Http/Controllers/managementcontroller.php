@@ -142,19 +142,14 @@ class ManagementController extends Controller
         return redirect()->route('admin.users.index')->with('success', 'تم تحديث بيانات المستخدم بنجاح!');
     }
 
-    /**
-     * حذف مستخدم من قاعدة البيانات.
-     * DELETE /dashboard/admin/users/{user}
-     * Route Name: admin.users.destroy
-     */
-    public function destroy(User $user) // استخدام Route Model Binding
+
+    public function destroy(User $user) 
     {
         // منع الأدمن من حذف حسابه الشخصي
         if ($user->id === Auth::id()) {
             return redirect()->route('admin.users.index')->with('error', 'لا يمكنك حذف حسابك الخاص!');
         }
 
-        // يمكنك إضافة منطق إضافي هنا (مثلاً: هل يمكن حذف مستخدم لديه عقارات؟)
 
         try {
             $user->delete(); // سيقوم بالحذف الناعم إذا كان المودل يستخدم SoftDeletes
@@ -201,12 +196,10 @@ public function show(User $user)
                                     ->get();
             Log::info('Customer Requests:', $viewData['customerRequests']->toArray());
         }
-        // --- بيانات خاصة بمشرف المحتوى (Content Moderator) ---
+       
         elseif ($user->role === 'content_moderator') {
             Log::info("ManagementController@show: Fetching data for CONTENT_MODERATOR role (User ID: {$user->id}).");
 
-            // 1. إحصائيات مراجعة العقارات
-            // تستخدم عمود 'moderated_by' من جدول 'properties'
             $viewData['total_properties_reviewed'] = Property::where('moderated_by', $user->id)
                                                         ->whereIn('status', ['approved', 'rejected'])->count();
             $viewData['properties_approved_count'] = Property::where('moderated_by', $user->id)
@@ -219,19 +212,15 @@ public function show(User $user)
                 'rejected' => $viewData['properties_rejected_count'],
             ]);
 
-            // 2. تفاصيل آخر العقارات المرفوضة (مع سبب الرفض)
-            // تستخدم 'moderated_by', 'status', 'rejection_reason', 'moderated_at' من 'properties'
+        
             $viewData['recent_rejected_properties_details'] = Property::where('moderated_by', $user->id)
                                                             ->where('status', 'rejected')
-                                                            // ->whereNotNull('rejection_reason') // يمكنك إلغاء التعليق إذا أردت عرض فقط التي لها سبب
                                                             ->orderBy('moderated_at', 'desc')
                                                             ->take(5)
                                                             ->get(['id', 'title', 'rejection_reason', 'moderated_at', 'status']); // أضفت status
             Log::info('Moderator Recent Rejected Properties:', $viewData['recent_rejected_properties_details']->toArray());
 
 
-            // 3. تفاصيل آخر العقارات الموافق عليها
-            // تستخدم 'moderated_by', 'status', 'moderated_at' من 'properties'
             $viewData['recent_approved_properties_details'] = Property::where('moderated_by', $user->id)
                                                             ->where('status', 'approved')
                                                             ->orderBy('moderated_at', 'desc')
@@ -239,9 +228,8 @@ public function show(User $user)
                                                             ->get(['id', 'title', 'status', 'moderated_at']);
             Log::info('Moderator Recent Approved Properties:', $viewData['recent_approved_properties_details']->toArray());
 
-            // 4. إحصائيات التعامل مع الملاحظات
-            // تستخدم عمود 'replied_by' (أو الاسم الصحيح لديك) من جدول 'feedbacks'
-            $viewData['feedback_handled_count'] = Feedback::where('replied_by', $user->id) // <--- تأكد أن 'replied_by' هو اسم العمود الصحيح
+           
+            $viewData['feedback_handled_count'] = Feedback::where('replied_by', $user->id)  
                                                       ->whereIn('status', ['resolved', 'closed', 'replied']) // أو الحالات التي تدل على المعالجة
                                                       ->count();
             Log::info('Moderator Feedback Handled Count (using replied_by): ' . $viewData['feedback_handled_count']);
@@ -253,8 +241,6 @@ public function show(User $user)
                                                         ->take(5)
                                                         ->get();
             Log::info('Moderator Recent Handled Feedbacks:', $viewData['recent_handled_feedbacks']->toArray());
-            // 5. قائمة بأحدث إجراءات الإشراف (حالياً هي العقارات المراجعة)
-            // تستخدم 'moderated_by', 'status', 'moderated_at', 'rejection_reason' من 'properties'
             $viewData['recent_moderation_actions_detailed'] = Property::where('moderated_by', $user->id)
                                                         ->whereIn('status', ['approved', 'rejected'])
                                                         ->orderBy('moderated_at', 'desc')
@@ -333,13 +319,7 @@ public function show(User $user)
     }
     public function showPropertyForReview(Property $property) // استخدام Route Model Binding
     {
-        // لا نحتاج للتحقق من ملكية العقار هنا لأن المشرف/الأدمن يمكنه رؤية كل العقارات المعلقة
-        // ولكن يمكنك إضافة تحقق إذا كان العقار فعلاً 'pending' إذا أردت
-        // if ($property->status !== 'pending') {
-        //     return redirect()->route('moderator.properties.pending')->with('warning', 'This property is not currently pending review.');
-        // }
-
-        // تحميل العلاقات اللازمة لعرض التفاصيل الكاملة
+       
         $property->load(['user', 'category', 'subCategory', 'listarea.governorate']);
 
         // يمكنك تمرير أي بيانات إضافية تحتاجها في صفحة المراجعة

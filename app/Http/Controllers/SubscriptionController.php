@@ -39,7 +39,7 @@ class SubscriptionController extends Controller
                                  ->with('info', "You already have an active subscription: {$activeExistingSubscription->plan->name}. You cannot subscribe to another plan while one is active.");
             }
 
-            // ب. تحقق إذا كان المستخدم قد اشترك *سابقًا* في هذه الخطة المجانية المحددة
+        
             $hasUsedThisSpecificFreePlan = $user->subscriptions()
                                               ->where('plan_id', $plan->id)
                                               ->exists();
@@ -58,12 +58,10 @@ class SubscriptionController extends Controller
         Log::info("SubscriptionController@showPaymentMethod: Processing PAID plan '{$plan->name}' for User ID: {$user->id} using Lahza /page endpoint.");
 
         try {
-            // **مهم جداً: تأكد من وحدة المبلغ (هللات/سنتات أم العملة الأساسية)**
-            // التوثيق لـ "لحظة" (/page endpoint) قد يتطلب المبلغ بالوحدة الأصغر.
-            // افترض أن سعر الخطة في قاعدة البيانات بالوحدة الأساسية (مثلاً 19.99 دولار)
-            $amountInSmallestUnit = (int) round($plan->price * 100); // تحويل إلى سنتات/هللات كعدد صحيح
+            
+            $amountInSmallestUnit = (int) round($plan->price * 100); 
 
-            // تحضير البيانات (Payload) لإرسالها إلى "لحظة" لإنشاء صفحة دفع
+         
             $payload = [
                 'amount' => $amountInSmallestUnit,
                 'currency' => strtolower($plan->currency), // مثال: "usd", "sar", "ils"
@@ -81,8 +79,7 @@ class SubscriptionController extends Controller
                     'plan_slug' => $plan->slug,
                     // يمكنك إضافة أي بيانات أخرى مفيدة هنا
                 ],
-                // ابحث في توثيق "لحظة" عن أي حقول أخرى مطلوبة أو اختيارية لـ POST /page
-                // مثل 'title' للصفحة، 'reference_id' خاص بك، إلخ.
+                
             ];
             Log::info("SubscriptionController@showPaymentMethod: Payload to Lahza (/page): ", $payload);
 
@@ -97,17 +94,17 @@ class SubscriptionController extends Controller
             $paymentPageSlug = $response->json()['data']['slug'];
             $paymentId = $response->json()['data']['id'] ?? null;
 
-            // ▼▼▼ بناء رابط صفحة الدفع (تحقق من الدومين الصحيح من توثيق "لحظة") ▼▼▼
+            
             $lahzaPaymentPageBaseUrl = config('lahza.payment_page_base_url', 'https://checkout.lahza.io/'); // مثال، أضف هذا لـ config/lahza.php
             $paymentUrl = rtrim($lahzaPaymentPageBaseUrl, '/') . '/' . $paymentPageSlug;
-            // أو قد يكون: $paymentUrl = 'https://lahza.io/p/' . $paymentPageSlug; (تحقق من التوثيق!)
+           
 
             Log::info("SubscriptionController@showPaymentMethod: Lahza Payment Page created. User ID {$user->id}. Payment ID: {$paymentId}. Slug: {$paymentPageSlug}. Constructed URL: {$paymentUrl}");
 
             return redirect()->away($paymentUrl); // توجيه المستخدم لصفحة دفع "لحظة"
 
         } else {
-            // ... (الكود الحالي لمعالجة الخطأ أو عدم وجود الرابط) ...
+        
             $errorData = $response->json() ?? ['raw_body' => $response->body(), 'status_code' => $response->status()];
             Log::error("SubscriptionController@showPaymentMethod: Lahza Create Page Error (or slug not found) for User ID {$user->id}. Status: {$response->status()}. Response: ", $errorData);
             $errorMessage = $errorData['message'] ?? 'Could not retrieve payment page details from Lahza.';
@@ -125,11 +122,9 @@ class SubscriptionController extends Controller
     public function handleLahzaSuccess(Request $request)
     {
         Log::info("Lahza Payment Success Callback Received. Request data: ", $request->all());
-        // لا تقم بتفعيل الاشتراك هنا مباشرة. انتظر الـ Webhook.
-        // يمكنك عرض رسالة "شكرًا، جارٍ تأكيد دفعتك" أو توجيه للملف الشخصي.
-        // قد ترغب في التحقق من معرف معاملة إذا تم تمريره في الـ query string
+        
         $transactionId = $request->query('transaction_id'); // أو أي اسم بارامتر يرسله "لحظة"
-        // إذا لم يتم إرسال معرف، يمكنك الاعتماد على الجلسة إذا خزنت paymentId
+        
 
         return redirect()->route('dashboard') // أو صفحة مخصصة لنجاح الدفع
             ->with('success', 'Thank you! Your payment is being processed. Your subscription will be activated shortly.');
@@ -156,7 +151,6 @@ class SubscriptionController extends Controller
                 return redirect()->route('frontend.pricing')->with('error', "Subscription to '{$plan->name}' failed. You may have already used this plan.");
             }
         }
-        // (يمكن إضافة تحقق من وجود اشتراك نشط آخر هنا أيضًا كطبقة أمان إضافية إذا لم تكن واثقًا من تدفق showPaymentMethod)
 
 
         $planFeatures = $plan->features ?? [];
@@ -190,7 +184,7 @@ class SubscriptionController extends Controller
                 $user->save();
                 Log::info("SubscriptionController@createSubscriptionForUser: User ID {$user->id} role changed from '{$originalRole}' to '{$user->role}' after subscribing to free plan '{$plan->name}'.");
             }
-            // ▲▲▲ نهاية تغيير الدور ▲▲▲
+          
 
             $successMessage = "You have successfully subscribed to the {$plan->name} plan!";
             if ($user->role === 'property_lister' && $plan->price == 0.00) {

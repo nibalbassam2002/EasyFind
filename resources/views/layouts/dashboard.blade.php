@@ -45,7 +45,7 @@
     <header id="header" class="header fixed-top d-flex align-items-center">
         <div class="d-flex align-items-center justify-content-between">
             <a href="index.html" class="logo d-flex align-items-center">
-                <img src="{{ asset('assets/img/شعار مفرغ 2.png') }}" alt="" height="100px">
+                <img src="{{ asset('frontend/assets/logo-white.png') }}" alt="" height="100px">
 
             </a>
             <i class="bi bi-list toggle-sidebar-btn"></i>

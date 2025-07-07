@@ -251,14 +251,13 @@ public function viewingRequests()
     
     // إذا لم يكن للبائع أي عقارات، لا داعي لإكمال البحث
     if (empty($propertyIds)) {
-        // ▼▼▼ هذا هو التعديل الصحيح ▼▼▼
+        
         $emptyPaginator = new LengthAwarePaginator([], 0, 15);
         return view('dashboard.property_lister.viewing-requests', ['viewingRequests' => $emptyPaginator]);
     }
     
     
-    // الخطوة 2: بناء الاستعلام الرئيسي (هذا هو التعديل الأهم)
-    // نستخدم whereJsonContains بدلاً من whereIn للبحث داخل حقل JSON بمرونة أكبر
+    
     $viewingRequests = Message::query()
         ->whereIn('type', ['viewing_request', 'viewing_confirmed'])
         ->where(function($query) {
@@ -303,11 +302,7 @@ public function viewingRequests()
 
 public function cancelViewingRequest(Request $request, Message $message)
 {
-    // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-    //                  الحل هنا
-    // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
 
-    // الخطوة 1: استخراج ID العقار من الرسالة نفسها
     $propertyId = data_get($message, 'metadata.property_id');
 
     // إذا لم يكن هناك ID للعقار، فهذا إجراء غير مصرح به
@@ -323,16 +318,12 @@ public function cancelViewingRequest(Request $request, Message $message)
         return back()->with('error', 'Unauthorized action.');
     }
 
-    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-    //             نهاية التحقق من الصلاحيات
-    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+   
 
 
     // الحالة 1: إلغاء موعد مؤكد وموعده لم يأتِ بعد
     if ($message->type === 'viewing_confirmed' && Carbon::parse($message->metadata['confirmed_slot'])->isFuture()) {
-        // يمكننا هنا إضافة منطق لإرسال رسالة "إلغاء" في الشات
-        // لكن للتبسيط الآن، سنحذف رسالة التأكيد فقط
-        // ملاحظة: قد ترغب في تحديث حالة رسالة الطلب الأصلية أيضاً
+        
         $message->delete(); 
         return back()->with('success', 'Appointment has been cancelled successfully.');
     }

@@ -18,7 +18,18 @@ body {
   background: #ffffff;
   color: #000000;
 }
-
+/*logo responsive*/
+.nevbar-hiwi {
+  height: 80px;
+  width: 80px;
+}
+@media (max-width: 768px) {
+  .nevbar-hiwi {
+  height: 60px;
+  width: 60px;
+}
+}
+/**/
 a {
   color: #000000;
   text-decoration: none;

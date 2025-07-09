@@ -30,7 +30,7 @@
     <nav class="navbar navbar-expand-xl bg-white border-bottom navbar1">
         <div class="container">
             <a href="{{ route('frontend.home') }}" class="navbar-brand">
-                <img src="{{ asset('frontend/assets/شعار مفرغ 2.png') }}" width="80px" height="80px" alt="logo">
+                <img src="{{ asset('frontend/assets/شعار مفرغ 2.png') }}" class="nevbar-hiwi" alt="logo">
             </a>
 
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarLinks">

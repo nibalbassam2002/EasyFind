@@ -149,7 +149,7 @@
                         <a class="nav-link nav-icon {{ request()->routeIs('chat.*') ? 'active' : '' }}"
                             href="{{ route('chat.index') }}">
                             <i class="bi bi-chat-left-text"></i>
-                            <span class="badge bg-success badge-number">3</span>
+                            {{-- <span class="badge bg-success badge-number">3</span> --}}
                         </a>
                     @endauth
                 </li>
@@ -182,7 +182,8 @@
                         </li>
 
                         <li>
-                            <a class="dropdown-item d-flex align-items-center" href="users-profile.html">
+                            <a class="dropdown-item d-flex align-items-center"
+                                href="{{ route('profile.index', ['tab' => 'settings']) }}">
                                 <i class="bi bi-gear"></i>
                                 <span>Account Settings</span>
                             </a>
@@ -240,7 +241,7 @@
 
     <script src="{{ asset('assets/vendor/apexcharts/apexcharts.min.js') }}"></script>
     <script src="{{ asset('assets/vendor/chart.js/chart.umd.js') }}"></script>
-    <script src="{{ asset('assets/vendor/echarts/echarts.min.js') }}"></script> 
+    <script src="{{ asset('assets/vendor/echarts/echarts.min.js') }}"></script>
     <script src="{{ asset('assets/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ asset('assets/vendor/quill/quill.js') }}"></script>
     <script src="{{ asset('assets/vendor/simple-datatables/simple-datatables.js') }}"></script>

@@ -1,7 +1,8 @@
 @extends('layouts.dashboard')
 @section('title', 'Profile')
 @section('breadcrumb-items')
-    <li class="breadcrumb-item active">Profile</li>
+    <li class="breadcrumb-item active">
+        Profile</li>
 @endsection
 
 @section('contant')
@@ -12,7 +13,7 @@
 
                 <div class="card">
                     <div class="card-body profile-card pt-4 d-flex flex-column align-items-center">
-                        
+
                         <img src="{{ Auth::user()->profile_image ? asset('storage/images/' . Auth::user()->profile_image) : asset('assets/img/profile.jpg') }}"
                             alt="Profileee" class="rounded-circle">
                         <h2>{{ Auth::user()->name }}</h2>
@@ -43,17 +44,21 @@
                                 <button class="nav-link" data-bs-toggle="tab"
                                     data-bs-target="#profile-settings">Settings</button>
                             </li>
-{{-- ▼▼▼ بداية: تبويب كلمة المرور الديناميكي ▼▼▼ --}}
+                            {{-- ▼▼▼ بداية: تبويب كلمة المرور الديناميكي ▼▼▼ --}}
                             {{-- $passwordIsSet يجب أن يتم تمريره من ProfileController@index --}}
-                            @if(isset($passwordIsSet) && $passwordIsSet)
+                            @if (isset($passwordIsSet) && $passwordIsSet)
                                 <li class="nav-item">
-                                    <button class="nav-link {{ (isset($activeTabForDashboard) && $activeTabForDashboard == 'profile-change-password') ? 'active' : '' }}" data-bs-toggle="tab"
-                                        data-bs-target="#profile-change-password">Change Password</button>
+                                    <button
+                                        class="nav-link {{ isset($activeTabForDashboard) && $activeTabForDashboard == 'profile-change-password' ? 'active' : '' }}"
+                                        data-bs-toggle="tab" data-bs-target="#profile-change-password">Change
+                                        Password</button>
                                 </li>
                             @else
                                 <li class="nav-item">
-                                    <button class="nav-link {{ (isset($activeTabForDashboard) && $activeTabForDashboard == 'profile-set-initial-password') ? 'active' : '' }}" data-bs-toggle="tab"
-                                        data-bs-target="#profile-set-initial-password">Set Initial Password</button>
+                                    <button
+                                        class="nav-link {{ isset($activeTabForDashboard) && $activeTabForDashboard == 'profile-set-initial-password' ? 'active' : '' }}"
+                                        data-bs-toggle="tab" data-bs-target="#profile-set-initial-password">Set Initial
+                                        Password</button>
                                 </li>
                             @endif
 
@@ -77,8 +82,12 @@
 
                                 <div class="row">
                                     <div class="row">
-                                        <div class="col-lg-3 col-md-4 label">Location</div> 
-                                        <div class="col-lg-9 col-md-8">{{ Auth::user()->area?->name ?? 'Not Set' }}@if(Auth::user()->area), {{ Auth::user()->area->governorate?->name }}@endif</div>
+                                        <div class="col-lg-3 col-md-4 label">Location</div>
+                                        <div class="col-lg-9 col-md-8">{{ Auth::user()->area?->name ?? 'Not Set' }}
+                                            @if (Auth::user()->area)
+                                                , {{ Auth::user()->area->governorate?->name }}
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
 
@@ -171,16 +180,18 @@
                                         </div>
                                     </div>
                                     <div class="row mb-3">
-                                        <label for="governorate_id" class="col-md-4 col-lg-3 col-form-label">Governorate</label> {{-- اختيارية؟ --}}
+                                        <label for="governorate_id"
+                                            class="col-md-4 col-lg-3 col-form-label">Governorate</label>
+                                        {{-- اختيارية؟ --}}
                                         <div class="col-md-8 col-lg-9">
-                                            <select class="form-select @error('governorate_id') is-invalid @enderror" id="governorate_id" name="governorate_id"> {{-- name اختياري هنا --}}
+                                            <select class="form-select @error('governorate_id') is-invalid @enderror"
+                                                id="governorate_id" name="governorate_id"> {{-- name اختياري هنا --}}
                                                 <option value="">Select Governorate (Optional)...</option>
                                                 @isset($governorates)
                                                     @foreach ($governorates as $governorate)
-                                                        <option value="{{ $governorate->id }}"
-                                                                {{-- تحديد المحافظة الحالية للمستخدم --}}
-                                                                {{ old('governorate_id', Auth::user()->area?->governorate_id ?? '') == $governorate->id ? 'selected' : '' }}
-                                                                data-areas="{{ json_encode($governorate->areas->pluck('name', 'id')) }}">
+                                                        <option value="{{ $governorate->id }}" {{-- تحديد المحافظة الحالية للمستخدم --}}
+                                                            {{ old('governorate_id', Auth::user()->area?->governorate_id ?? '') == $governorate->id ? 'selected' : '' }}
+                                                            data-areas="{{ json_encode($governorate->areas->pluck('name', 'id')) }}">
                                                             {{ $governorate->name }}
                                                         </option>
                                                     @endforeach
@@ -189,43 +200,58 @@
                                             {{-- لا يوجد @error هنا عادةً --}}
                                         </div>
                                     </div>
-                                    
+
                                     {{-- قائمة المناطق --}}
                                     <div class="row mb-3">
-                                        <label for="area_id" class="col-md-4 col-lg-3 col-form-label">Area</label> {{-- اختيارية؟ --}}
+                                        <label for="area_id" class="col-md-4 col-lg-3 col-form-label">Area</label>
+                                        {{-- اختيارية؟ --}}
                                         <div class="col-md-8 col-lg-9">
-                                            <select class="form-select @error('area_id') is-invalid @enderror" id="area_id" name="area_id"> {{-- هذا الحقل الذي يتم إرساله --}}
-                                                <option value="" disabled selected>Select Governorate First (Optional)...</option>
+                                            <select class="form-select @error('area_id') is-invalid @enderror"
+                                                id="area_id" name="area_id"> {{-- هذا الحقل الذي يتم إرساله --}}
+                                                <option value="" disabled selected>Select Governorate First
+                                                    (Optional)...</option>
                                                 {{-- التعامل مع القيم القديمة/الحالية في حالة التعديل أو الخطأ --}}
-                                                 @if(old('area_id') || Auth::user()->area_id)
-                                                   @php
-                                                       $selectedGovernorateId = old('governorate_id', Auth::user()->area?->governorate_id ?? null);
-                                                       $selectedAreaId = old('area_id', Auth::user()->area_id ?? null);
-                                                       $areasForSelectedGov = [];
-                                                       // تأكد من وجود $governorates
-                                                       if ($selectedGovernorateId && isset($governorates)) {
-                                                           $selectedGov = $governorates->firstWhere('id', $selectedGovernorateId);
-                                                           if($selectedGov) {
-                                                               $areasForSelectedGov = $selectedGov->areas; // يفترض أنه تم تحميلها
-                                                           }
-                                                       }
-                                                   @endphp
-                                                    @if(!empty($areasForSelectedGov))
-                                                       <option value="">Select Area (Optional)...</option> {{-- Default option --}}
-                                                       @foreach($areasForSelectedGov as $area)
-                                                           <option value="{{ $area->id }}" {{ $selectedAreaId == $area->id ? 'selected' : '' }}>
-                                                               {{ $area->name }}
-                                                           </option>
-                                                       @endforeach
-                                                    {{-- إذا لم تكن هناك قيمة قديمة أو حالية، اعرض الخيار الافتراضي --}}
+                                                @if (old('area_id') || Auth::user()->area_id)
+                                                    @php
+                                                        $selectedGovernorateId = old(
+                                                            'governorate_id',
+                                                            Auth::user()->area?->governorate_id ?? null,
+                                                        );
+                                                        $selectedAreaId = old('area_id', Auth::user()->area_id ?? null);
+                                                        $areasForSelectedGov = [];
+                                                        // تأكد من وجود $governorates
+                                                        if ($selectedGovernorateId && isset($governorates)) {
+                                                            $selectedGov = $governorates->firstWhere(
+                                                                'id',
+                                                                $selectedGovernorateId,
+                                                            );
+                                                            if ($selectedGov) {
+                                                                $areasForSelectedGov = $selectedGov->areas; // يفترض أنه تم تحميلها
+                                                            }
+                                                        }
+                                                    @endphp
+                                                    @if (!empty($areasForSelectedGov))
+                                                        <option value="">Select Area (Optional)...</option>
+                                                        {{-- Default option --}}
+                                                        @foreach ($areasForSelectedGov as $area)
+                                                            <option value="{{ $area->id }}"
+                                                                {{ $selectedAreaId == $area->id ? 'selected' : '' }}>
+                                                                {{ $area->name }}
+                                                            </option>
+                                                        @endforeach
+                                                        {{-- إذا لم تكن هناك قيمة قديمة أو حالية، اعرض الخيار الافتراضي --}}
                                                     @elseif (!old('governorate_id') && !Auth::user()->area_id)
-                                                         <option value="" disabled selected>Select Governorate First (Optional)...</option>
+                                                        <option value="" disabled selected>Select Governorate First
+                                                            (Optional)...</option>
                                                     @endif
                                                 @else
-                                                    <option value="" disabled selected>Select Governorate First (Optional)...</option>
-                                                 @endif
+                                                    <option value="" disabled selected>Select Governorate First
+                                                        (Optional)...</option>
+                                                @endif
                                             </select>
-                                            @error('area_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                            @error('area_id')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
                                         </div>
                                     </div>
 
@@ -234,7 +260,8 @@
                                         <div class="col-md-8 col-lg-9">
                                             <input name="address" type="text"
                                                 class="form-control @error('address') is-invalid @enderror" id="Address"
-                                                value="{{ old('address', Auth::user()->address) }}"> {{-- تأكد من وجود حقل address في جدول users --}}
+                                                value="{{ old('address', Auth::user()->address) }}">
+                                            {{-- تأكد من وجود حقل address في جدول users --}}
                                             @error('address')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -275,63 +302,61 @@
 
                             <div class="tab-pane fade pt-3" id="profile-settings">
 
-                                <!-- Settings Form -->
-                                <form>
+                                <hr class="my-4">
 
-                                    <div class="row mb-3">
-                                        <label for="fullName" class="col-md-4 col-lg-3 col-form-label">Email
-                                            Notifications</label>
-                                        <div class="col-md-8 col-lg-9">
-                                            <div class="form-check ">
-                                                <input class="form-check-input" type="checkbox" id="changesMade" checked>
-                                                <label class="form-check-label" for="changesMade">
-                                                    Changes made to your account
-                                                </label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" id="newProducts" checked>
-                                                <label class="form-check-label" for="newProducts">
-                                                    Information on new products and services
-                                                </label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" id="proOffers">
-                                                <label class="form-check-label" for="proOffers">
-                                                    Marketing and promo offers
-                                                </label>
-                                            </div>
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" id="securityNotify"
-                                                    checked disabled>
-                                                <label class="form-check-label" for="securityNotify">
-                                                    Security alerts
-                                                </label>
-                                            </div>
+                                <div class="p-3 border border-danger rounded">
+                                    <h5 class="text-danger fw-bold">Danger Zone</h5>
+                                    <p class="text-muted small">Please note, these actions cannot be undone.</p>
+
+                                    {{-- Deactivation Button --}}
+                                    <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                                        <div>
+                                            <strong>Deactivate Account</strong>
+                                            <p class="text-muted small mb-0">Your profile will be disabled and your
+                                                properties will be hidden. You can reactivate it by contacting support.</p>
                                         </div>
+                                        <button class="btn btn-outline-warning flex-shrink-0 ms-3" data-bs-toggle="modal"
+                                            data-bs-target="#deactivateAccountModal">
+                                            Deactivate
+                                        </button>
                                     </div>
 
-                                    <div class="text-center">
-                                        <button type="submit" class="btn btn-gold">Save Changes</button>
+                                    {{-- Permanent Delete Button --}}
+                                    <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                                        <div>
+                                            <strong>Permanently Delete Account</strong>
+                                            <p class="text-muted small mb-0">Your account and all associated data will be
+                                                permanently deleted.</p>
+                                        </div>
+                                        <button class="btn btn-danger flex-shrink-0 ms-3" data-bs-toggle="modal"
+                                            data-bs-target="#deleteAccountModal">
+                                            Delete
+                                        </button>
                                     </div>
-                                </form><!-- End settings Form -->
+                                </div>
 
                             </div>
 
-                          
+
                             {{-- ▼▼▼ بداية: محتوى تبويبات كلمة المرور الديناميكي ▼▼▼ --}}
-                            @if(isset($passwordIsSet) && $passwordIsSet)
-                                <div class="tab-pane fade {{ (isset($activeTabForDashboard) && $activeTabForDashboard == 'profile-change-password') ? 'show active' : '' }} pt-3" id="profile-change-password">
+                            @if (isset($passwordIsSet) && $passwordIsSet)
+                                <div class="tab-pane fade {{ isset($activeTabForDashboard) && $activeTabForDashboard == 'profile-change-password' ? 'show active' : '' }} pt-3"
+                                    id="profile-change-password">
                                     <h5 class="card-title">Change Password</h5>
-                                    @if (session('success')) {{-- رسالة نجاح تغيير كلمة المرور --}}
+                                    @if (session('success'))
+                                        {{-- رسالة نجاح تغيير كلمة المرور --}}
                                         <div class="alert alert-success alert-dismissible fade show" role="alert">
                                             {{ session('success') }}
-                                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                                aria-label="Close"></button>
                                         </div>
                                     @endif
-                                    @if (session('error')) {{-- رسالة خطأ تغيير كلمة المرور --}}
+                                    @if (session('error'))
+                                        {{-- رسالة خطأ تغيير كلمة المرور --}}
                                         <div class="alert alert-danger alert-dismissible fade show" role="alert">
                                             {{ session('error') }}
-                                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                                aria-label="Close"></button>
                                         </div>
                                     @endif
                                     {{-- لاحظ أن اسم المسار هنا profile.changePassword هو الذي يشير لدالة تغيير كلمة المرور بالداشبورد --}}
@@ -339,23 +364,35 @@
                                         @csrf
                                         @method('PATCH')
                                         <div class="row mb-3">
-                                            <label for="currentPasswordDashboard" class="col-md-4 col-lg-3 col-form-label">Current Password</label>
+                                            <label for="currentPasswordDashboard"
+                                                class="col-md-4 col-lg-3 col-form-label">Current Password</label>
                                             <div class="col-md-8 col-lg-9">
-                                                <input name="current_password" type="password" class="form-control @error('current_password') is-invalid @enderror" id="currentPasswordDashboard" required>
-                                                @error('current_password') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                                <input name="current_password" type="password"
+                                                    class="form-control @error('current_password') is-invalid @enderror"
+                                                    id="currentPasswordDashboard" required>
+                                                @error('current_password')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
                                             </div>
                                         </div>
                                         <div class="row mb-3">
-                                            <label for="newPasswordDashboard" class="col-md-4 col-lg-3 col-form-label">New Password</label>
+                                            <label for="newPasswordDashboard" class="col-md-4 col-lg-3 col-form-label">New
+                                                Password</label>
                                             <div class="col-md-8 col-lg-9">
-                                                <input name="new_password" type="password" class="form-control @error('new_password') is-invalid @enderror" id="newPasswordDashboard" required>
-                                                @error('new_password') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                                <input name="new_password" type="password"
+                                                    class="form-control @error('new_password') is-invalid @enderror"
+                                                    id="newPasswordDashboard" required>
+                                                @error('new_password')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
                                             </div>
                                         </div>
                                         <div class="row mb-3">
-                                            <label for="renewPasswordDashboard" class="col-md-4 col-lg-3 col-form-label">Re-enter New Password</label>
+                                            <label for="renewPasswordDashboard"
+                                                class="col-md-4 col-lg-3 col-form-label">Re-enter New Password</label>
                                             <div class="col-md-8 col-lg-9">
-                                                <input name="new_password_confirmation" type="password" class="form-control" id="renewPasswordDashboard" required>
+                                                <input name="new_password_confirmation" type="password"
+                                                    class="form-control" id="renewPasswordDashboard" required>
                                             </div>
                                         </div>
                                         <div class="text-center">
@@ -364,35 +401,51 @@
                                     </form>
                                 </div>
                             @else
-                                <div class="tab-pane fade {{ (isset($activeTabForDashboard) && $activeTabForDashboard == 'profile-set-initial-password') ? 'show active' : '' }} pt-3" id="profile-set-initial-password">
+                                <div class="tab-pane fade {{ isset($activeTabForDashboard) && $activeTabForDashboard == 'profile-set-initial-password' ? 'show active' : '' }} pt-3"
+                                    id="profile-set-initial-password">
                                     <h5 class="card-title">Set Your Initial Password</h5>
-                                    @if (session('warning')) {{-- رسالة إذا حاول الوصول لتغيير كلمة المرور وهي غير معينة --}}
+                                    @if (session('warning'))
+                                        {{-- رسالة إذا حاول الوصول لتغيير كلمة المرور وهي غير معينة --}}
                                         <div class="alert alert-warning alert-dismissible fade show" role="alert">
                                             {{ session('warning') }}
-                                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                                aria-label="Close"></button>
                                         </div>
                                     @endif
-                                     @if (session('success')) {{-- رسالة نجاح تعيين كلمة المرور الأولية --}}
+                                    @if (session('success'))
+                                        {{-- رسالة نجاح تعيين كلمة المرور الأولية --}}
                                         <div class="alert alert-success alert-dismissible fade show" role="alert">
                                             {{ session('success') }}
-                                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                                aria-label="Close"></button>
                                         </div>
                                     @endif
-                                    <p>Since your password is not currently set (you might have registered via a social account or it was reset), please set a new password for your account to enable direct login and enhance security.</p>
+                                    <p>Since your password is not currently set (you might have registered via a social
+                                        account or it was reset), please set a new password for your account to enable
+                                        direct login and enhance security.</p>
                                     {{-- هذا المسار يجب أن يشير إلى دالة storeInitialPasswordDashboard في ProfileController --}}
-                                    <form method="POST" action="{{ route('profile.store_initial_password_dashboard') }}">
+                                    <form method="POST"
+                                        action="{{ route('profile.store_initial_password_dashboard') }}">
                                         @csrf
                                         <div class="row mb-3">
-                                            <label for="setNewPasswordDashboard" class="col-md-4 col-lg-3 col-form-label">New Password</label>
+                                            <label for="setNewPasswordDashboard"
+                                                class="col-md-4 col-lg-3 col-form-label">New Password</label>
                                             <div class="col-md-8 col-lg-9">
-                                                <input name="new_password" type="password" class="form-control @error('new_password') is-invalid @enderror" id="setNewPasswordDashboard" required>
-                                                @error('new_password') <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> @enderror
+                                                <input name="new_password" type="password"
+                                                    class="form-control @error('new_password') is-invalid @enderror"
+                                                    id="setNewPasswordDashboard" required>
+                                                @error('new_password')
+                                                    <span class="invalid-feedback"
+                                                        role="alert"><strong>{{ $message }}</strong></span>
+                                                @enderror
                                             </div>
                                         </div>
                                         <div class="row mb-3">
-                                            <label for="setRenewPasswordDashboard" class="col-md-4 col-lg-3 col-form-label">Confirm New Password</label>
+                                            <label for="setRenewPasswordDashboard"
+                                                class="col-md-4 col-lg-3 col-form-label">Confirm New Password</label>
                                             <div class="col-md-8 col-lg-9">
-                                                <input name="new_password_confirmation" type="password" class="form-control" id="setRenewPasswordDashboard" required>
+                                                <input name="new_password_confirmation" type="password"
+                                                    class="form-control" id="setRenewPasswordDashboard" required>
                                             </div>
                                         </div>
                                         <div class="text-center">
@@ -487,56 +540,69 @@
             }
         </script>
         <script>
-            document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('DOMContentLoaded', function() {
                 const governorateSelect = document.getElementById('governorate_id');
                 const areaSelect = document.getElementById('area_id');
-            
+                const urlParams = new URLSearchParams(window.location.search);
+                const tabToOpen = urlParams.get('tab');
+
+                if (tabToOpen) {
+                    // نبحث عن زر التبويب الذي نريد فتحه
+                    const tabButton = document.querySelector(`button[data-bs-target="#profile-${tabToOpen}"]`);
+                    if (tabButton) {
+                        // نستخدم Bootstrap JS لفتح التبويب برمجياً
+                        const tab = new bootstrap.Tab(tabButton);
+                        tab.show();
+                    }
+                }
+
                 function updateAreaOptions() {
                     const selectedOption = governorateSelect.options[governorateSelect.selectedIndex];
                     areaSelect.innerHTML = ''; // إفراغ قائمة المناطق الحالية
-            
-                     // إضافة الخيار الافتراضي (الاختياري)
-                     areaSelect.add(new Option('Select Area (Optional)...', ''));
-            
+
+                    // إضافة الخيار الافتراضي (الاختياري)
+                    areaSelect.add(new Option('Select Area (Optional)...', ''));
+
                     if (selectedOption && selectedOption.value) {
                         let areas = {};
                         try {
                             if (selectedOption.dataset.areas) {
                                 areas = JSON.parse(selectedOption.dataset.areas);
                             } else {
-                                 console.warn('No areas data found for selected governorate:', selectedOption.text);
+                                console.warn('No areas data found for selected governorate:', selectedOption.text);
                             }
                         } catch (e) {
                             console.error("Error parsing areas data:", e);
-                             areaSelect.value = "";
+                            areaSelect.value = "";
                             return;
                         }
-            
+
                         // إضافة المناطق الجديدة
                         for (const areaId in areas) {
                             if (areas.hasOwnProperty(areaId)) {
                                 areaSelect.add(new Option(areas[areaId], areaId));
                             }
                         }
-            
+
                         // إعادة تحديد المنطقة القديمة إذا كانت موجودة (مفيد عند خطأ التحقق)
-                         const oldAreaId = "{{ old('area_id', Auth::user()->area_id ?? '') }}"; // استخدم القيمة الحالية كـ fallback
+                        const oldAreaId =
+                            "{{ old('area_id', Auth::user()->area_id ?? '') }}"; // استخدم القيمة الحالية كـ fallback
                         if (oldAreaId && areaSelect.querySelector(`option[value="${oldAreaId}"]`)) {
                             areaSelect.value = oldAreaId;
                         } else {
                             areaSelect.value = ""; // العودة للخيار الافتراضي
                         }
-            
+
                     } else {
                         // إذا لم يتم اختيار محافظة
-                         areaSelect.value = "";
+                        areaSelect.value = "";
                     }
                 }
-            
+
                 // ربط حدث التغيير بقائمة المحافظات
                 if (governorateSelect) {
                     governorateSelect.addEventListener('change', updateAreaOptions);
-            
+
                     // تحديث القائمة عند تحميل الصفحة إذا كانت هناك قيمة للمحافظة
                     if (governorateSelect.value) {
                         updateAreaOptions();
@@ -545,5 +611,53 @@
                     console.error("Governorate select element not found.");
                 }
             });
-            </script>
+        </script>
+        <div class="modal fade" id="deactivateAccountModal" tabindex="-1" aria-labelledby="deactivateModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deactivateModalLabel">Confirm Account Deactivation</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure you want to deactivate your account? Your profile will be hidden. You'll need to
+                        contact support to reactivate it.
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <form method="POST" action="{{ route('account.deactivate') }}">
+                            @csrf
+                            <button type="submit" class="btn btn-warning">Yes, Deactivate</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Account Modal -->
+        <div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteModalLabel">Confirm Permanent Deletion</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="fw-bold text-danger">This action is irreversible!</p>
+                        <p>Are you sure you want to permanently delete your account and all associated data? This cannot be
+                            undone.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <form method="POST" action="{{ route('account.delete') }}">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-danger">Yes, Delete My Account</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
     @endsection

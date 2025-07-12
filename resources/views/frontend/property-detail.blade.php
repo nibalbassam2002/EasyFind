@@ -340,12 +340,42 @@
 
                         @if (Auth::check() && Auth::id() !== $property->user_id)
                             <a href="{{ route('chat.initiate', ['property_id' => $property->id]) }}"
-                                 class="btn btn-gold w-100"><i class="bi bi-chat-dots me-1"></i> Chat with Lister</a>
+                                class="btn btn-gold w-100"><i class="bi bi-chat-dots me-1"></i> Chat with Lister</a>
                         @elseif(!Auth::check())
                             <a href="{{ route('login', ['redirect' => url()->current()]) }}"
                                 class="btn btn-success w-100"><i class="bi bi-chat-dots me-1"></i> Chat with Lister</a>
                         @endif
+                        <div class="mt-3 text-center">
+                            <small class="text-muted d-block mb-2">Share this property</small>
+                            <div class="d-flex justify-content-center">
+                                <!-- Facebook Share -->
+                                <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(url()->current()) }}"
+                                    target="_blank" class="btn btn-outline-secondary btn-sm me-2"
+                                    aria-label="Share on Facebook" title="Share on Facebook">
+                                    <i class="bi bi-facebook"></i>
+                                </a>
 
+                                <!-- Twitter Share -->
+                                <a href="https://twitter.com/intent/tweet?url={{ urlencode(url()->current()) }}&text={{ urlencode($property->title) }}"
+                                    target="_blank" class="btn btn-outline-secondary btn-sm me-2"
+                                    aria-label="Share on Twitter" title="Share on Twitter">
+                                    <i class="bi bi-twitter"></i>
+                                </a>
+
+                                <!-- WhatsApp Share -->
+                                <a href="https://api.whatsapp.com/send?text={{ urlencode($property->title . ' - ' . url()->current()) }}"
+                                    target="_blank" class="btn btn-outline-secondary btn-sm me-2"
+                                    aria-label="Share on WhatsApp" title="Share on WhatsApp">
+                                    <i class="bi bi-whatsapp"></i>
+                                </a>
+
+                                <!-- Copy Link Button -->
+                                <button id="copyLinkBtn" class="btn btn-outline-secondary btn-sm" aria-label="Copy link"
+                                    title="Copy property link">
+                                    <i class="bi bi-link-45deg"></i>
+                                </button>
+                            </div>
+                        </div>
                         <hr class="my-3">
                         <div class="text-muted small">
                             <p class="mb-1"><strong>Listed by:</strong> {{ $property->user?->name ?? 'N/A' }}</p>
@@ -682,7 +712,34 @@
                         });
                 });
             });
+            const copyLinkBtn = document.getElementById('copyLinkBtn');
+            if (copyLinkBtn) {
+                const originalIcon = copyLinkBtn.innerHTML; // نحفظ الأيقونة الأصلية
 
+                copyLinkBtn.addEventListener('click', function() {
+                    const propertyUrl = window.location.href;
+
+                    navigator.clipboard.writeText(propertyUrl).then(() => {
+                        // تم النسخ بنجاح
+                        copyLinkBtn.innerHTML =
+                        '<i class="bi bi-check-lg"></i>'; // تغيير الأيقونة إلى علامة صح
+                        copyLinkBtn.classList.add('btn-success');
+                        copyLinkBtn.classList.remove('btn-outline-secondary');
+
+                        // إعادة الزر إلى حالته الأصلية بعد ثانيتين
+                        setTimeout(() => {
+                            copyLinkBtn.innerHTML = originalIcon;
+                            copyLinkBtn.classList.remove('btn-success');
+                            copyLinkBtn.classList.add('btn-outline-secondary');
+                        }, 2000);
+
+                    }).catch(err => {
+                        // حدث خطأ أثناء النسخ
+                        console.error('Failed to copy link: ', err);
+                        alert('Could not copy link to clipboard.');
+                    });
+                });
+            }
             // كود الخريطة (Leaflet)
             @if ($property->latitude && $property->longitude)
                 var map = L.map('propertyMap').setView([{{ $property->latitude }}, {{ $property->longitude }}],

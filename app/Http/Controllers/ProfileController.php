@@ -247,5 +247,43 @@ class ProfileController extends Controller
     Auth::user()->update(['fcm_token' => $request->fcm_token]);
     return response()->json(['success' => true]);
 }
+public function deactivateAccount(Request $request)
+    {
+        $user = Auth::user();
 
+        $user->status = 'inactive';
+        $user->save();
+
+        // Log the user out
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/')->with('success', 'Your account has been deactivated. You can reactivate it by logging in again.');
+    }
+
+    /**
+     * Permanently deletes the user's account.
+     */
+    public function deleteAccount(Request $request)
+    {
+        $user = Auth::user();
+
+        // !! مهم جداً: معالجة البيانات المرتبطة قبل الحذف
+        // قم بإلغاء التعليق عن الأسطر التي تحتاجها
+        // $user->properties()->delete(); // مثال لحذف عقارات المستخدم
+        $user->favorites()->delete();  // مثال لحذف المفضلة
+        $user->reviews()->delete();    // مثال لحذف التقييمات
+
+        Auth::logout();
+
+        if ($user->delete()) {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            
+            return redirect('/')->with('success', 'Your account has been permanently deleted.');
+        }
+
+        return redirect()->back()->with('error', 'There was a problem deleting your account.');
+    }
 }

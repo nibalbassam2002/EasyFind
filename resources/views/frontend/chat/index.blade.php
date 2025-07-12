@@ -784,7 +784,7 @@
                         // ▼▼▼ هذا هو التعديل المهم ▼▼▼
                         let footerContent = `<i class="bi bi-check-circle-fill me-1"></i> Offer Accepted!`;
                         // إذا كان الدفع لم يتم محاكاته بعد، والمستخدم هو المشتري، وطريقة الدفع online
-                        if (!metadata.payment_simulated && isSent && metadata.payment_method === 'online') {
+                        if (metadata.deal_completed !== true && !metadata.payment_simulated && isSent && metadata.payment_method === 'online') {
                             footerContent +=
                                 `<br><button class="btn btn-primary btn-sm mt-2 simulate-payment-btn"><i class="bi bi-credit-card-2-front-fill me-1"></i> Pay Deposit Now (Simulated)</button>`;
                         }

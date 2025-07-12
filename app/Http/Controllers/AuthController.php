@@ -26,46 +26,54 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
-    public function login(Request $request)
-    {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
-        ]);
+public function login(Request $request)
+{
+    $credentials = $request->validate([
+        'email' => ['required', 'email'],
+        'password' => ['required'],
+    ]);
 
-        if (Auth::attempt($credentials, $request->boolean('remember'))) { 
-            $request->session()->regenerate();
-            $redirectUrl = $request->input('redirect');
-            if ($redirectUrl && Str::startsWith($redirectUrl, url('/'))) {
-                 $intendedPath = parse_url($redirectUrl, PHP_URL_PATH);
-                 if (!(Auth::user()->role === 'customer' && $intendedPath === '/dashboard')) {
-                     return redirect()->intended($redirectUrl);
-                 }
-                    }
+    if (Auth::attempt($credentials, $request->boolean('remember'))) { 
+        
+        // ▼▼▼ هذا هو التعديل الوحيد في هذه الدالة ▼▼▼
+        if (Auth::user()->status === 'inactive') {
+            
+            Auth::logout();
 
-            $user = Auth::user();
+            return back()->withErrors([
+                'email' => 'This account is inactive. Please contact support.',
+            ])->onlyInput('email');
+        }
+        // ▲▲▲ نهاية التعديل ▲▲▲
 
-
-            switch ($user->role) {
-                case 'admin':
-                case 'content_moderator':
-                    return redirect()->route('dashboard');
-                case 'property_lister':
-                case 'customer':
-                    return redirect()->route('frontend.home'); 
-
-                default:
-
-                return redirect()->route('frontend.home');
-
-            }
+        $request->session()->regenerate();
+        $redirectUrl = $request->input('redirect');
+        if ($redirectUrl && Str::startsWith($redirectUrl, url('/'))) {
+             $intendedPath = parse_url($redirectUrl, PHP_URL_PATH);
+             if (!(Auth::user()->role === 'customer' && $intendedPath === '/dashboard')) {
+                 return redirect()->intended($redirectUrl);
+             }
         }
 
+        $user = Auth::user();
 
-        return back()->withErrors([
-            'email' => 'The provided credentials do not match our records.',
-        ])->onlyInput('email');
+        switch ($user->role) {
+            case 'admin':
+            case 'content_moderator':
+                return redirect()->route('dashboard');
+            case 'property_lister':
+            case 'customer':
+                return redirect()->route('frontend.home'); 
+
+            default:
+                return redirect()->route('frontend.home');
+        }
     }
+
+    return back()->withErrors([
+        'email' => 'The provided credentials do not match our records.',
+    ])->onlyInput('email');
+}
 
     public function logout(Request $request)
     {

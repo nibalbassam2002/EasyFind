@@ -466,7 +466,8 @@ public function makeOffer(Request $request, Conversation $conversation): JsonRes
 }
 public function acceptOffer(Request $request, Message $message): JsonResponse
 {
-    // 1. التحقق من الصلاحيات
+    $message->load('conversation.users');
+    // 1. التحقق من الصلاحيات (يبقى كما هو)
     if ($message->type !== 'offer_made' || $message->user_id == Auth::id()) {
         return response()->json(['success' => false, 'message' => 'Unauthorized action.'], 403);
     }
@@ -474,7 +475,7 @@ public function acceptOffer(Request $request, Message $message): JsonResponse
         return response()->json(['success' => false, 'message' => 'This offer has already been processed.'], 422);
     }
 
-    // 2. جلب البيانات اللازمة
+    // 2. جلب البيانات (يبقى كما هو)
     $metadata = $message->metadata;
     $propertyId = data_get($metadata, 'property_id');
     $property = Property::find($propertyId);
@@ -483,7 +484,7 @@ public function acceptOffer(Request $request, Message $message): JsonResponse
         return response()->json(['success' => false, 'message' => 'Property not found.'], 404);
     }
     
-    // 3. تنفيذ الإجراءات داخل Transaction
+    // 3. تنفيذ الإجراءات داخل Transaction (هنا التعديل)
     try {
         DB::transaction(function () use ($message, $property, &$metadata) {
             
@@ -504,59 +505,67 @@ public function acceptOffer(Request $request, Message $message): JsonResponse
                     'payment_method'  => 'offline',
                 ]);
 
+                // تحديث حالة العقار
                 $property->status = ($property->purpose === 'rent') ? 'rented' : 'sold';
                 $property->save();
                 
-                // ▼▼▼ التغيير الأهم هنا ▼▼▼
                 // نضع علامة أن الصفقة تمت بالكامل
                 $metadata['deal_completed'] = true;
                 
                 // إرسال رسالة نظام
                 $message->conversation->messages()->create([
-                    'user_id' => 0,
+                    'user_id' => 0, // 0 يعني رسالة من النظام
                     'type'    => 'system',
                     'body'    => "The offline deal for '{$property->title}' has been confirmed and completed."
                 ]);
             }
             
-            // الخطوة ج: حفظ التغييرات على رسالة العرض في كل الحالات
-            // الآن سيتم حفظ 'deal_completed' = true بشكل صحيح
+            // ▼▼▼ هذا هو السطر المهم الذي تم نقله إلى هنا ▼▼▼
+            // الخطوة ج: حفظ التغييرات على رسالة العرض في كل الحالات داخل الـ transaction
             $message->metadata = $metadata;
             $message->save();
         });
 
     } catch (\Throwable $e) {
         Log::error("Accept Offer Failed for message ID {$message->id}: " . $e->getMessage());
-        return response()->json(['success' => false, 'message' => 'An error occurred.'], 500);
+        return response()->json(['success' => false, 'message' => 'An error occurred while processing the offer.'], 500);
     }
 
     $message->conversation->touch();
+    
+    // نرجع رد نجاح، والـ JavaScript سيعيد تحميل المحادثة
     return response()->json(['success' => true]);
 }
 
 public function rejectOffer(Request $request, Message $message): JsonResponse
 {
-    // التحقق من أن الرسالة هي عرض وأن المستخدم الحالي هو البائع
+    // التحقق (يبقى كما هو)
     if ($message->type !== 'offer_made' || $message->user_id == Auth::id()) {
         return response()->json(['success' => false, 'message' => 'Unauthorized action.'], 403);
     }
-    // التأكد من أن العرض لا يزال معلقاً
     if (data_get($message, 'metadata.status') !== 'pending') {
         return response()->json(['success' => false, 'message' => 'This offer has already been processed.'], 422);
     }
 
-    $metadata = $message->metadata;
-    $metadata['status'] = 'rejected'; // تحديث الحالة
-    $metadata['processed_by'] = Auth::id();
-    $metadata['processed_at'] = now()->toDateTimeString();
-    $message->metadata = $metadata;
-    $message->save();
-    
-    $message->conversation->touch();
+    try {
+        $metadata = $message->metadata;
+        $metadata['status'] = 'rejected';
+        $metadata['processed_by'] = Auth::id();
+        $metadata['processed_at'] = now()->toDateTimeString();
+        $message->metadata = $metadata;
+        $message->save();
+        
+        $message->conversation->touch();
+    } catch (\Throwable $e) {
+        Log::error("Reject Offer Failed for message ID {$message->id}: " . $e->getMessage());
+        return response()->json(['success' => false, 'message' => 'An error occurred.'], 500);
+    }
+
     return response()->json(['success' => true]);
 }
 public function simulatePayment(Request $request, Message $message): JsonResponse
 {
+    $message->load('conversation.users');
     // 1. تحقق من الصلاحيات: هل الرسالة عرض مقبول؟ هل المستخدم هو المشتري؟
     if ($message->type !== 'offer_made' || data_get($message, 'metadata.status') !== 'accepted' || $message->user_id !== Auth::id()) {
         return response()->json(['success' => false, 'message' => 'Invalid action.'], 403);
@@ -589,8 +598,8 @@ public function simulatePayment(Request $request, Message $message): JsonRespons
             ]);
 
             // ب. تحديث حالة العقار
-            $property->status = 'sold'; // أو 'rented' بناءً على الغرض
-            $property->save();
+           $property->status = ($property->purpose === 'rent') ? 'rented' : 'sold';
+           $property->save();
             
             // ج. تحديث رسالة العرض لوضع علامة أن الدفع تم
             $metadata['payment_simulated'] = true;
@@ -606,7 +615,7 @@ public function simulatePayment(Request $request, Message $message): JsonRespons
             ]);
         });
     } catch (\Throwable $e) {
-        Log::error("Simulated Payment Failed: " . $e->getMessage());
+        Log::error("Simulated Payment Failed for message ID {$message->id}: " . $e->getMessage() . "\n" . $e->getTraceAsString());
         return response()->json(['success' => false, 'message' => 'An error occurred while processing the transaction.'], 500);
     }
 

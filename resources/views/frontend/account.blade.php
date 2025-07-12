@@ -3,19 +3,21 @@
 @push('styles')
     <style>
         .btn-gold {
-            background-color: #FFD700; 
+            background-color: #FFD700;
             border-color: #FFD700;
-            color: #333; 
+            color: #333;
             font-weight: 600;
         }
+
         .btn-gold:hover,
         .btn-gold:focus,
         .btn-gold:active {
-            background-color: #FFD700; 
+            background-color: #FFD700;
             border-color: #FFD700;
-            color: #333; 
-            box-shadow: 0 0 0 0.25rem rgba(255, 215, 0, 0.5); 
+            color: #333;
+            box-shadow: 0 0 0 0.25rem rgba(255, 215, 0, 0.5);
         }
+
         .filter-item {
             cursor: pointer;
             padding: 1rem;
@@ -336,8 +338,8 @@
             padding-top: 1rem;
         }
 
-        .profile .profile-overview .label ,
-        .profile .profile-edit label{
+        .profile .profile-overview .label,
+        .profile .profile-edit label {
             font-weight: 600;
             color: #333;
             font-size: 0.9rem;
@@ -373,71 +375,74 @@
         <div class="row gx-lg-4">
             <!--  Sidebar -->
             <div class="col-md-3 col-lg-3 mb-4 mb-md-0 account-sidebar">
-                      <!-- زر برجر لفتح السايدبار (للشاشات الصغيرة فقط) -->
+                <!-- زر برجر لفتح السايدبار (للشاشات الصغيرة فقط) -->
 
-      <div class="d-md-none p-2">
-        <button class="btn btn-outline-secondary" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas">
-          <i class="bi bi-list "></i>
-        </button>
-      </div>
-        <!-- Offcanvas للهواتف -->
-      <div class="offcanvas offcanvas-start d-md-none" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel">
-        <div class="offcanvas-header">
-          <h5 class="offcanvas-title" id="sidebarOffcanvasLabel">Menu</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-        </div>
-          <div class="offcanvas-body">
-       <!-- محتوى السايدبار -->
-            <a href="#" class=" nav-link">
-                        <p><img src="{{ Auth::user()->profile_image ? asset('storage/images/' . Auth::user()->profile_image) : asset('assets/img/profile.jpg') }}"
-                                alt="{{ Auth::user()->name }}" class="rounded-circle" width="30px" height="30px"
-                                style="border-radius: 50px;">{{ Auth::user()->name }}</p>
-                        
-                    </a>
-                    <!-- account details -->
-                    <div class="mb-3 a-gold1">
-                        <a href="{{ route('frontend.account') }}"
-                            class="  list-group-item list-group-item-action {{ request()->routeIs('frontend.account') ? 'active' : '' }}">
-                            <i class="bi bi-person-fill" style="font-size: 20px;"></i> Account Details</a>
-
+                <div class="d-md-none p-2">
+                    <button class="btn btn-outline-secondary" type="button" data-bs-toggle="offcanvas"
+                        data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas">
+                        <i class="bi bi-list "></i>
+                    </button>
+                </div>
+                <!-- Offcanvas للهواتف -->
+                <div class="offcanvas offcanvas-start d-md-none" tabindex="-1" id="sidebarOffcanvas"
+                    aria-labelledby="sidebarOffcanvasLabel">
+                    <div class="offcanvas-header">
+                        <h5 class="offcanvas-title" id="sidebarOffcanvasLabel">Menu</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
                     </div>
-                    <!-- favourites -->
-                    <div class="mb-3 a-gold">
-                        <a href="{{ route('frontend.favorites') }}"
-                            class="list-group-item list-group-item-action {{ request()->routeIs('frontend.favorites') ? 'active' : '' }}"><i
-                                class="bi bi-heart" style="font-size: 15px;"></i>
-                            Favourites</a>
+                    <div class="offcanvas-body">
+                        <!-- محتوى السايدبار -->
+                        <a href="#" class=" nav-link">
+                            <p><img src="{{ Auth::user()->profile_image ? asset('storage/images/' . Auth::user()->profile_image) : asset('assets/img/profile.jpg') }}"
+                                    alt="{{ Auth::user()->name }}" class="rounded-circle" width="30px" height="30px"
+                                    style="border-radius: 50px;">{{ Auth::user()->name }}</p>
 
-                    </div>
-
-                    <!-- Chats -->
-                    <div class="mb-3 a-gold">
-                        <a href="./chat.html" class="nav-link"><i class="bi bi-chat-dots	" style="font-size: 15px;"></i>
-                            Chats</a>
-                    </div>
-                    <!-- notification -->
-                    <div class="mb-3 a-gold">
-                        <!-- زر الإشعارات كأنه نص -->
-                        <button id="notificationBtn2" style="all: unset; cursor: pointer;">
-                            <i class="bi bi-bell	" style="font-size: 15px;"></i> Notifications
-                        </button>
-                    </div>
-
-                    <!-- refer friend -->
-                    <div class="mb-3 a-gold">
-                        <a href="#" class="nav-link" onclick="copyReferralLink()">
-                            <i class="bi bi-person-plus" style="font-size: 15px;"></i> Refer friend
                         </a>
-                    </div>
-                    <div class="mb-3 " style="height: 40px;">
+                        <!-- account details -->
+                        <div class="mb-3 a-gold1">
+                            <a href="{{ route('frontend.account') }}"
+                                class="  list-group-item list-group-item-action {{ request()->routeIs('frontend.account') ? 'active' : '' }}">
+                                <i class="bi bi-person-fill" style="font-size: 20px;"></i> Account Details</a>
 
-                    </div>
-                    <!--break line -->
-                    <div class="mb-3 ">
-                        <hr>
-                    </div>
-                    @if (Auth::user()->password === null)
+                        </div>
+                        <!-- favourites -->
                         <div class="mb-3 a-gold">
+                            <a href="{{ route('frontend.favorites') }}"
+                                class="list-group-item list-group-item-action {{ request()->routeIs('frontend.favorites') ? 'active' : '' }}"><i
+                                    class="bi bi-heart" style="font-size: 15px;"></i>
+                                Favourites</a>
+
+                        </div>
+
+                        <!-- Chats -->
+                        <div class="mb-3 a-gold">
+                            <a href="{{ route('chat.index') }}" class="nav-link"><i class="bi bi-chat-dots	"
+                                    style="font-size: 15px;"></i>
+                                Chats</a>
+                        </div>
+                        <!-- notification -->
+                        <div class="mb-3 a-gold">
+                            <!-- زر الإشعارات كأنه نص -->
+                            <button id="notificationBtn2" style="all: unset; cursor: pointer;">
+                                <i class="bi bi-bell	" style="font-size: 15px;"></i> Notifications
+                            </button>
+                        </div>
+
+                        <!-- refer friend -->
+                        <div class="mb-3 a-gold">
+                            <a href="#" class="nav-link" onclick="copyReferralLink()">
+                                <i class="bi bi-person-plus" style="font-size: 15px;"></i> Refer friend
+                            </a>
+                        </div>
+                        <div class="mb-3 " style="height: 40px;">
+
+                        </div>
+                        <!--break line -->
+                        <div class="mb-3 ">
+                            <hr>
+                        </div>
+                        @if (Auth::user()->password === null)
+                            <div class="mb-3 a-gold">
                                 <a href="{{ route('profile.show_set_initial_password_form') }}"
                                     class="nav-link {{ ($activeTab ?? '') == 'profile-set-initial-password' ? 'active-link text-warning fw-bold' : '' }}">
                                     <i class="bi bi-key-fill" style="font-size: 20px;"></i> Set Initial Password
@@ -445,40 +450,42 @@
                             </div>
                         @endif
 
-                    <!-- Setting -->
-                    <div class="mb-3 a-gold">
-                        <a href="#" class="nav-link"><i class="bi bi-gear" style="font-size: 20px;"></i> Settings</a>
+                        <!-- Setting -->
+                        <div class="mb-3 a-gold">
+                            <a href="#" class="nav-link"><i class="bi bi-gear" style="font-size: 20px;"></i>
+                                Settings</a>
+                        </div>
+                        <!-- Help center -->
+                        <div class="mb-3 a-gold">
+                            <a href="{{ route('frontend.help_center') }}"
+                                class="nav-link {{ request()->routeIs('frontend.help_center') ? 'active-link' : '' }}">
+                                <i class="bi bi-question-circle" style="font-size: 20px;"></i> Help center
+                            </a>
+                        </div>
+                        <!-- Log out -->
+                        <div class="mb-3 a-gold">
+                            <a href="#" class="list-group-item list-group-item-action text-danger"
+                                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                <i class="bi bi-box-arrow-right"></i>
+                                <span>Logout</span>
+                            </a>
+                            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                                @csrf
+                            </form>
+                        </div>
                     </div>
-                    <!-- Help center -->
-                    <div class="mb-3 a-gold">
-                        <a href="{{ route('frontend.help_center') }}" class="nav-link {{ request()->routeIs('frontend.help_center') ? 'active-link' : '' }}">
-                            <i class="bi bi-question-circle" style="font-size: 20px;"></i> Help center
-                        </a>
-                    </div>
-                    <!-- Log out -->
-                    <div class="mb-3 a-gold">
-                        <a href="#" class="list-group-item list-group-item-action text-danger"
-                            onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                            <i class="bi bi-box-arrow-right"></i>
-                            <span>Logout</span>
-                        </a>
-                        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-                            @csrf
-                        </form>
-                    </div>
-          </div>
-    </div>
-          
-    
-     
+                </div>
 
-              <!--  Sidebar for big screen -->
-               <div class="filter-section d-none d-md-block p-3 border">
+
+
+
+                <!--  Sidebar for big screen -->
+                <div class="filter-section d-none d-md-block p-3 border">
                     <a href="#" class=" nav-link">
                         <p><img src="{{ Auth::user()->profile_image ? asset('storage/images/' . Auth::user()->profile_image) : asset('assets/img/profile.jpg') }}"
                                 alt="{{ Auth::user()->name }}" class="rounded-circle" width="30px" height="30px"
                                 style="border-radius: 50px;">{{ Auth::user()->name }}</p>
-                        
+
                     </a>
                     <!-- account details -->
                     <div class="mb-3 a-gold1">
@@ -498,10 +505,11 @@
 
                     <!-- Chats -->
                     <div class="mb-3 a-gold">
-                        <a href="./chat.html" class="nav-link"><i class="bi bi-chat-dots	" style="font-size: 15px;"></i>
+                        <a href="{{ route('chat.index') }}" class="nav-link"><i class="bi bi-chat-dots	"
+                                style="font-size: 15px;"></i>
                             Chats</a>
                     </div>
-                   
+
 
                     <!-- refer friend -->
                     <div class="mb-3 a-gold">
@@ -518,7 +526,7 @@
                     </div>
                     @if (Auth::user()->password === null)
                         <div class="mb-3 a-gold">
-                    
+
                             <a href="{{ route('profile.show_set_initial_password_form') }}"
                                 class="nav-link {{ ($activeTab ?? '') == 'profile-set-initial-password' ? 'active-link text-warning fw-bold' : '' }}">
                                 <i class="bi bi-key-fill" style="font-size: 20px;"></i> Set Initial Password
@@ -527,8 +535,9 @@
                     @endif
 
                     <!-- Help center -->
-                   <div class="mb-3 a-gold">
-                        <a href="{{ route('frontend.help_center') }}" class="nav-link {{ request()->routeIs('frontend.help_center') ? 'active-link' : '' }}">
+                    <div class="mb-3 a-gold">
+                        <a href="{{ route('frontend.help_center') }}"
+                            class="nav-link {{ request()->routeIs('frontend.help_center') ? 'active-link' : '' }}">
                             <i class="bi bi-question-circle" style="font-size: 20px;"></i> Help center
                         </a>
                     </div>
@@ -544,7 +553,7 @@
                         </form>
                     </div>
                 </div>
-    
+
             </div>
             <!-- main Section -->
             <div class="col-md-9 col-lg-9 account-content">
@@ -588,7 +597,7 @@
                                                 data-bs-target="#profile-settings">Settings</button>
                                         </li>
 
-                                        
+
                                         @if (Auth::user()->password === null)
                                             <li class="nav-item">
                                                 <button
@@ -844,91 +853,110 @@
                                         </div>
 
                                         <div class="tab-pane fade pt-3" id="profile-settings">
+                                            <hr class="my-4">
 
-                                            <!-- Settings Form -->
-                                            <form>
+                                            <div class="p-3 border border-danger rounded">
+                                                <h5 class="text-danger fw-bold">Danger Zone</h5>
+                                                <p class="text-muted small">Please note, these actions cannot be undone.
+                                                </p>
 
-                                                <div class="row mb-3">
-                                                    <label for="fullName" class="col-md-4 col-lg-3 col-form-label">Email
-                                                        Notifications</label>
-                                                    <div class="col-md-8 col-lg-9">
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="checkbox"
-                                                                id="changesMade" checked>
-                                                            <label class="form-check-label" for="changesMade">
-                                                                Changes made to your account
-                                                            </label>
-                                                        </div>
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="checkbox"
-                                                                id="newProducts" checked>
-                                                            <label class="form-check-label" for="newProducts">
-                                                                Information on new products and services
-                                                            </label>
-                                                        </div>
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="checkbox"
-                                                                id="proOffers">
-                                                            <label class="form-check-label" for="proOffers">
-                                                                Marketing and promo offers
-                                                            </label>
-                                                        </div>
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="checkbox"
-                                                                id="securityNotify" checked disabled>
-                                                            <label class="form-check-label" for="securityNotify">
-                                                                Security alerts
-                                                            </label>
-                                                        </div>
+                                                {{-- Deactivation Button --}}
+                                                <div
+                                                    class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                                                    <div>
+                                                        <strong>Deactivate Account</strong>
+                                                        <p class="text-muted small mb-0">Your profile will be disabled and
+                                                            your properties will be hidden. You can reactivate it by
+                                                            contacting support.</p>
                                                     </div>
+                                                    <button class="btn btn-outline-warning flex-shrink-0 ms-3"
+                                                        data-bs-toggle="modal" data-bs-target="#deactivateAccountModal">
+                                                        Deactivate
+                                                    </button>
                                                 </div>
 
-                                                <div class="text-center">
-                                                    <button type="submit" class="btn btn-gold">Save Changes</button>
-                                                </div>
-                                            </form><!-- End settings Form -->
-
-                                        </div>
-                                        
-                                            <div class="tab-pane fade {{ ($activeTab ?? '') == 'profile-set-initial-password' ? 'show active' : '' }} pt-3"
-                                                id="profile-set-initial-password">
-                                                <div class="card">
-                                                    <div class="card-header"><h5 class="mb-0">Set Your Initial Password</h5></div>
-                                                    <div class="card-body">
-                                                        @if (session('initial_password_success'))
-                                                            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                                                {{ session('initial_password_success') }}
-                                                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                                            </div>
-                                                        @endif
-                                                        @if ($errors->storeInitialPassword->any())
-                                                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                                                <ul class="mb-0">@foreach ($errors->storeInitialPassword->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
-                                                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                                            </div>
-                                                        @endif
-                                                        <p class="text-muted small">Since your password is not set, please set a new password for your account.</p>
-                                                        <form method="POST" action="{{ route('profile.store_initial_password') }}">
-                                                            @csrf
-                                                            <div class="row mb-3">
-                                                                <label for="set_initial_password_input" class="col-md-4 col-lg-3 col-form-label">New Password</label>
-                                                                <div class="col-md-8 col-lg-9">
-                                                                    <input id="set_initial_password_input" type="password" class="form-control @error('password', 'storeInitialPassword') is-invalid @enderror" name="password" required autocomplete="new-password">
-                                                                    @error('password', 'storeInitialPassword')<span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>@enderror
-                                                                </div>
-                                                            </div>
-                                                            <div class="row mb-3">
-                                                                <label for="set_initial_password_confirmation" class="col-md-4 col-lg-3 col-form-label">Confirm New Password</label>
-                                                                <div class="col-md-8 col-lg-9">
-                                                                    <input id="set_initial_password_confirmation" type="password" class="form-control" name="password_confirmation" required autocomplete="new-password">
-                                                                </div>
-                                                            </div>
-                                                            <div class="text-center"><button type="submit" class="btn btn-gold">Set Password</button></div>
-                                                        </form>
+                                                {{-- Permanent Delete Button --}}
+                                                <div
+                                                    class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                                                    <div>
+                                                        <strong>Permanently Delete Account</strong>
+                                                        <p class="text-muted small mb-0">Your account and all associated
+                                                            data will be permanently deleted.</p>
                                                     </div>
+                                                    <button class="btn btn-danger flex-shrink-0 ms-3"
+                                                        data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                                                        Delete
+                                                    </button>
                                                 </div>
                                             </div>
-                                       
+
+
+                                        </div>
+
+                                        <div class="tab-pane fade {{ ($activeTab ?? '') == 'profile-set-initial-password' ? 'show active' : '' }} pt-3"
+                                            id="profile-set-initial-password">
+                                            <div class="card">
+                                                <div class="card-header">
+                                                    <h5 class="mb-0">Set Your Initial Password</h5>
+                                                </div>
+                                                <div class="card-body">
+                                                    @if (session('initial_password_success'))
+                                                        <div class="alert alert-success alert-dismissible fade show"
+                                                            role="alert">
+                                                            {{ session('initial_password_success') }}
+                                                            <button type="button" class="btn-close"
+                                                                data-bs-dismiss="alert" aria-label="Close"></button>
+                                                        </div>
+                                                    @endif
+                                                    @if ($errors->storeInitialPassword->any())
+                                                        <div class="alert alert-danger alert-dismissible fade show"
+                                                            role="alert">
+                                                            <ul class="mb-0">
+                                                                @foreach ($errors->storeInitialPassword->all() as $error)
+                                                                    <li>{{ $error }}</li>
+                                                                @endforeach
+                                                            </ul>
+                                                            <button type="button" class="btn-close"
+                                                                data-bs-dismiss="alert" aria-label="Close"></button>
+                                                        </div>
+                                                    @endif
+                                                    <p class="text-muted small">Since your password is not set, please set
+                                                        a new password for your account.</p>
+                                                    <form method="POST"
+                                                        action="{{ route('profile.store_initial_password') }}">
+                                                        @csrf
+                                                        <div class="row mb-3">
+                                                            <label for="set_initial_password_input"
+                                                                class="col-md-4 col-lg-3 col-form-label">New
+                                                                Password</label>
+                                                            <div class="col-md-8 col-lg-9">
+                                                                <input id="set_initial_password_input" type="password"
+                                                                    class="form-control @error('password', 'storeInitialPassword') is-invalid @enderror"
+                                                                    name="password" required autocomplete="new-password">
+                                                                @error('password', 'storeInitialPassword')
+                                                                    <span class="invalid-feedback"
+                                                                        role="alert"><strong>{{ $message }}</strong></span>
+                                                                @enderror
+                                                            </div>
+                                                        </div>
+                                                        <div class="row mb-3">
+                                                            <label for="set_initial_password_confirmation"
+                                                                class="col-md-4 col-lg-3 col-form-label">Confirm New
+                                                                Password</label>
+                                                            <div class="col-md-8 col-lg-9">
+                                                                <input id="set_initial_password_confirmation"
+                                                                    type="password" class="form-control"
+                                                                    name="password_confirmation" required
+                                                                    autocomplete="new-password">
+                                                            </div>
+                                                        </div>
+                                                        <div class="text-center"><button type="submit"
+                                                                class="btn btn-gold">Set Password</button></div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+
 
                                         <div class="tab-pane fade pt-3" id="profile-change-password">
                                             <!-- Change Password Form -->
@@ -996,257 +1024,314 @@
                         </div>
 
                     </div>
-            
 
 
-        @endsection
-        @push('scripts')
-       <script>
-        const modal = document.getElementById('notificationModal');
-        const btn1 = document.getElementById('notificationBtn');
-        const btn2 = document.getElementById('notificationBtn2');
-        const close = document.getElementById('closeModal');
 
-        function openModal() {
-        modal.style.display = 'flex';
-                     }
+                @endsection
+                @push('scripts')
+                    <script>
+                        const modal = document.getElementById('notificationModal');
+                        const btn1 = document.getElementById('notificationBtn');
+                        const btn2 = document.getElementById('notificationBtn2');
+                        const close = document.getElementById('closeModal');
 
-        if (btn1) btn1.onclick = openModal;
-        if (btn2) btn2.onclick = openModal;
-
-        if (close) {
-        close.onclick = () => {
-        modal.style.display = 'none';
-                     };
-                       }
-
-         window.onclick = (e) => {
-         if (e.target === modal) {
-         modal.style.display = 'none';
-                     }
-                       };
-           </script>
-
-            <script>
-                function toggleEdit(icon) {
-                    const box = icon.closest('.rounded-box');
-                    const input = box.querySelector('input');
-
-                    if (input.readOnly) {
-                        input.readOnly = false;
-                        input.classList.remove('form-control-plaintext');
-                        input.classList.add('form-control');
-                        input.focus();
-                    } else {
-                        input.readOnly = true;
-                        input.classList.add('form-control-plaintext');
-                        input.classList.remove('form-control');
-                    }
-                }
-
-                function previewImage(event) {
-                    const input = event.target;
-                    const reader = new FileReader();
-                    reader.onload = function() {
-                        const img = document.getElementById('profileImage');
-                        img.src = reader.result;
-                    };
-                    reader.readAsDataURL(input.files[0]);
-                }
-            </script>
-            <script>
-  function copyReferralLink() {
-    const link = "https://amirkehail1.github.io/EasyFind/";
-    navigator.clipboard.writeText(link).then(function () {
-      alert("Referral link copied to clipboard!");
-    }, function (err) {
-      alert("Failed to copy the link: " + err);
-    });
-  }
-</script>
-            <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-            <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-            <script>
-                // Function to preview the uploaded image
-                var loadFile = function(event) {
-                    var output = document.getElementById('output');
-                    if (event.target.files && event.target.files[0]) {
-                        output.src = URL.createObjectURL(event.target.files[0]);
-                        output.onload = function() {
-                            URL.revokeObjectURL(output.src) // free memory
+                        function openModal() {
+                            modal.style.display = 'flex';
                         }
-                    }
-                };
 
-                // Function to confirm image deletion
-                function confirmDeleteImage(element) {
-                    Swal.fire({
-                        title: 'هل أنت متأكد؟',
-                        text: "لن تتمكن من التراجع عن هذا!",
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#3085d6',
-                        cancelButtonColor: '#d33',
-                        confirmButtonText: 'نعم، احذفها!',
-                        cancelButtonText: 'إلغاء'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            performImageDelete();
+                        if (btn1) btn1.onclick = openModal;
+                        if (btn2) btn2.onclick = openModal;
+
+                        if (close) {
+                            close.onclick = () => {
+                                modal.style.display = 'none';
+                            };
                         }
-                    })
-                }
 
-               // Function to perform the image deletion using Axios
-function performImageDelete() {
-    axios.delete("{{ route('profile.deleteImage') }}")
-        .then(function(response) {
-            // تحقق من أن الخادم أرسل البيانات المتوقعة
-            if (response.data && response.data.message && response.data.default_image) {
-                Swal.fire(
-                    'تم الحذف!',
-                    response.data.message,
-                    'success'
-                );
-
-                const defaultImagePath = response.data.default_image;
-
-                // 1. تحديث الصورة في تبويب "Edit Profile"
-                let editProfileImage = document.getElementById('profileImagePreviewEdit');
-                if (editProfileImage) {
-                    editProfileImage.src = defaultImagePath;
-                } else {
-                    console.warn('Element with ID "profileImagePreviewEdit" not found for update.');
-                }
-
-                // 2. تحديث الصورة في تبويب "Overview" (البطاقة الجانبية)
-                // يفترض أن هذا هو المحدد الصحيح بناءً على هيكل HTML لديك
-                let overviewCardImage = document.querySelector('.profile-card .rounded-circle');
-                if (overviewCardImage) {
-                    overviewCardImage.src = defaultImagePath;
-                } else {
-                    console.warn('Overview card image not found with selector ".profile-card .rounded-circle".');
-                }
-
-                // 4. تحديث صورة السايدبار (القائمة الجانبية للملف الشخصي)
-                // يفترض أن هذا هو المحدد الصحيح للصورة الأولى في السايدبار
-                let sidebarAccImage = document.querySelector('.account-sidebar .filter-section img.rounded-circle');
-                if (sidebarAccImage) {
-                    sidebarAccImage.src = defaultImagePath;
-                } else {
-                    console.warn('Sidebar account image not found with selector ".account-sidebar .filter-section img.rounded-circle".');
-                }
-
-                // 5. مسح قيمة حقل إدخال الملف (مهم)
-                let fileInput = document.getElementById('profileImageUploadEdit');
-                if (fileInput) {
-                    fileInput.value = ""; // هذا يمنع إعادة إرسال الملف المحذوف إذا لم يتم اختيار ملف جديد وضغط المستخدم حفظ
-                }
-
-            } else {
-                // إذا كانت استجابة الخادم ناجحة (2xx) لكنها لا تحتوي على البيانات المتوقعة
-                console.error('Server response successful, but data format is incorrect:', response.data);
-                Swal.fire(
-                    'خطأ في الاستجابة!',
-                    'الخادم لم يرجع البيانات بالشكل المتوقع بعد الحذف.',
-                    'error'
-                );
-            }
-        })
-        .catch(function(error) {
-            console.error("AJAX Error during image deletion:", error); // تسجيل الخطأ الكامل في الكونسول
-
-            let errorMessage = 'حدث خطأ ما أثناء الحذف.'; // رسالة عامة
-
-            if (error.response) {
-                // الخادم استجاب بحالة خطأ (مثل 4xx أو 5xx)
-                console.error("Server Error Response Data:", error.response.data);
-                console.error("Server Error Response Status:", error.response.status);
-                if (error.response.data && error.response.data.message) {
-                    errorMessage = error.response.data.message; // استخدم رسالة الخطأ من الخادم إذا كانت موجودة
-                } else if (error.response.status) {
-                    errorMessage = `خطأ من الخادم: ${error.response.status}`;
-                }
-            } else if (error.request) {
-                // الطلب أُرسل ولكن لم يتم تلقي أي رد (مشكلة شبكة عادةً)
-                console.error("No response received:", error.request);
-                errorMessage = 'لم يتم تلقي رد من الخادم. يرجى التحقق من اتصالك بالإنترنت.';
-            } else {
-                // خطأ حدث أثناء إعداد الطلب
-                console.error('Error setting up request:', error.message);
-                errorMessage = `خطأ في إعداد الطلب: ${error.message}`;
-            }
-
-            Swal.fire(
-                'خطأ!',
-                errorMessage,
-                'error'
-            );
-        });
-}
-            </script>
-            <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    const governorateSelectEdit = document.getElementById('governorate_id_edit'); // <--- ID جديد
-                    const areaSelectEdit = document.getElementById('area_id_edit'); // <--- ID جديد
-
-                    function updateAreaOptionsEdit() { // <--- اسم دالة جديد
-                        if (!governorateSelectEdit || !areaSelectEdit) return;
-                        const selectedGovOption = governorateSelectEdit.options[governorateSelectEdit.selectedIndex];
-                        const currentSelectedArea = "{{ old('area_id', Auth::user()->area_id ?? '') }}"; // القيمة الحالية
-                        areaSelectEdit.innerHTML = ''; // إفراغ
-
-                        let defaultOption = new Option('Select Area (Optional)...', '');
-                        areaSelectEdit.add(defaultOption);
-                        areaSelectEdit.disabled = true;
-
-
-                        if (selectedGovOption && selectedGovOption.value && selectedGovOption.dataset.areas) {
-                            areaSelectEdit.disabled = false;
-                            let areas = {};
-                            try {
-                                areas = JSON.parse(selectedGovOption.dataset.areas);
-                            } catch (e) {
-                                console.error(e);
-                                return;
-                            }
-
-                            for (const areaId in areas) {
-                                if (areas.hasOwnProperty(areaId)) {
-                                    const option = new Option(areas[areaId], areaId);
-                                    if (String(areaId) === String(currentSelectedArea)) {
-                                        option.selected = true;
-                                    }
-                                    areaSelectEdit.add(option);
-                                }
-                            }
-                            if (!areaSelectEdit.value && currentSelectedArea) areaSelectEdit.value = ""; // أبقِ الافتراضي
-                        }
-                    }
-
-                    if (governorateSelectEdit) {
-                        governorateSelectEdit.addEventListener('change', updateAreaOptionsEdit);
-                        // شغل عند التحميل
-                        updateAreaOptionsEdit();
-                    }
-                });
-            </script>
-            <script>
-                var loadFileEdit = function(event) {
-                    var output = document.getElementById('profileImagePreviewEdit'); // <--- تم التصحيح
-                    if (event.target.files && event.target.files[0]) {
-                        var reader = new FileReader();
-                        reader.onload = function() {
-                            output.src = reader.result;
-                            output.onload = function() { // اختياري: لتحرير الذاكرة بعد تحميل الصورة في الـ img
-                                URL.revokeObjectURL(output.src);
+                        window.onclick = (e) => {
+                            if (e.target === modal) {
+                                modal.style.display = 'none';
                             }
                         };
-                        reader.readAsDataURL(event.target.files[0]);
-                    } else {
+                    </script>
 
-                        output.src =
-                            "{{ Auth::user()->profile_image ? asset('storage/images/' . Auth::user()->profile_image) : asset('assets/img/profile.jpg') }}";
-                    }
-                };
-            </script>
-        @endpush
+                    <script>
+                        function toggleEdit(icon) {
+                            const box = icon.closest('.rounded-box');
+                            const input = box.querySelector('input');
+
+                            if (input.readOnly) {
+                                input.readOnly = false;
+                                input.classList.remove('form-control-plaintext');
+                                input.classList.add('form-control');
+                                input.focus();
+                            } else {
+                                input.readOnly = true;
+                                input.classList.add('form-control-plaintext');
+                                input.classList.remove('form-control');
+                            }
+                        }
+
+                        function previewImage(event) {
+                            const input = event.target;
+                            const reader = new FileReader();
+                            reader.onload = function() {
+                                const img = document.getElementById('profileImage');
+                                img.src = reader.result;
+                            };
+                            reader.readAsDataURL(input.files[0]);
+                        }
+                    </script>
+                    <script>
+                        function copyReferralLink() {
+                            const link = "https://amirkehail1.github.io/EasyFind/";
+                            navigator.clipboard.writeText(link).then(function() {
+                                alert("Referral link copied to clipboard!");
+                            }, function(err) {
+                                alert("Failed to copy the link: " + err);
+                            });
+                        }
+                    </script>
+                    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+                    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+                    <script>
+                        // Function to preview the uploaded image
+                        var loadFile = function(event) {
+                            var output = document.getElementById('output');
+                            if (event.target.files && event.target.files[0]) {
+                                output.src = URL.createObjectURL(event.target.files[0]);
+                                output.onload = function() {
+                                    URL.revokeObjectURL(output.src) // free memory
+                                }
+                            }
+                        };
+
+                        // Function to confirm image deletion
+                        function confirmDeleteImage(element) {
+                            Swal.fire({
+                                title: 'هل أنت متأكد؟',
+                                text: "لن تتمكن من التراجع عن هذا!",
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonColor: '#3085d6',
+                                cancelButtonColor: '#d33',
+                                confirmButtonText: 'نعم، احذفها!',
+                                cancelButtonText: 'إلغاء'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    performImageDelete();
+                                }
+                            })
+                        }
+
+                        // Function to perform the image deletion using Axios
+                        function performImageDelete() {
+                            axios.delete("{{ route('profile.deleteImage') }}")
+                                .then(function(response) {
+                                    // تحقق من أن الخادم أرسل البيانات المتوقعة
+                                    if (response.data && response.data.message && response.data.default_image) {
+                                        Swal.fire(
+                                            'تم الحذف!',
+                                            response.data.message,
+                                            'success'
+                                        );
+
+                                        const defaultImagePath = response.data.default_image;
+
+                                        // 1. تحديث الصورة في تبويب "Edit Profile"
+                                        let editProfileImage = document.getElementById('profileImagePreviewEdit');
+                                        if (editProfileImage) {
+                                            editProfileImage.src = defaultImagePath;
+                                        } else {
+                                            console.warn('Element with ID "profileImagePreviewEdit" not found for update.');
+                                        }
+
+                                        // 2. تحديث الصورة في تبويب "Overview" (البطاقة الجانبية)
+                                        // يفترض أن هذا هو المحدد الصحيح بناءً على هيكل HTML لديك
+                                        let overviewCardImage = document.querySelector('.profile-card .rounded-circle');
+                                        if (overviewCardImage) {
+                                            overviewCardImage.src = defaultImagePath;
+                                        } else {
+                                            console.warn(
+                                                'Overview card image not found with selector ".profile-card .rounded-circle".');
+                                        }
+
+                                        // 4. تحديث صورة السايدبار (القائمة الجانبية للملف الشخصي)
+                                        // يفترض أن هذا هو المحدد الصحيح للصورة الأولى في السايدبار
+                                        let sidebarAccImage = document.querySelector(
+                                            '.account-sidebar .filter-section img.rounded-circle');
+                                        if (sidebarAccImage) {
+                                            sidebarAccImage.src = defaultImagePath;
+                                        } else {
+                                            console.warn(
+                                                'Sidebar account image not found with selector ".account-sidebar .filter-section img.rounded-circle".'
+                                            );
+                                        }
+
+                                        // 5. مسح قيمة حقل إدخال الملف (مهم)
+                                        let fileInput = document.getElementById('profileImageUploadEdit');
+                                        if (fileInput) {
+                                            fileInput.value =
+                                                ""; // هذا يمنع إعادة إرسال الملف المحذوف إذا لم يتم اختيار ملف جديد وضغط المستخدم حفظ
+                                        }
+
+                                    } else {
+                                        // إذا كانت استجابة الخادم ناجحة (2xx) لكنها لا تحتوي على البيانات المتوقعة
+                                        console.error('Server response successful, but data format is incorrect:', response.data);
+                                        Swal.fire(
+                                            'خطأ في الاستجابة!',
+                                            'الخادم لم يرجع البيانات بالشكل المتوقع بعد الحذف.',
+                                            'error'
+                                        );
+                                    }
+                                })
+                                .catch(function(error) {
+                                    console.error("AJAX Error during image deletion:", error); // تسجيل الخطأ الكامل في الكونسول
+
+                                    let errorMessage = 'حدث خطأ ما أثناء الحذف.'; // رسالة عامة
+
+                                    if (error.response) {
+                                        // الخادم استجاب بحالة خطأ (مثل 4xx أو 5xx)
+                                        console.error("Server Error Response Data:", error.response.data);
+                                        console.error("Server Error Response Status:", error.response.status);
+                                        if (error.response.data && error.response.data.message) {
+                                            errorMessage = error.response.data.message; // استخدم رسالة الخطأ من الخادم إذا كانت موجودة
+                                        } else if (error.response.status) {
+                                            errorMessage = `خطأ من الخادم: ${error.response.status}`;
+                                        }
+                                    } else if (error.request) {
+                                        // الطلب أُرسل ولكن لم يتم تلقي أي رد (مشكلة شبكة عادةً)
+                                        console.error("No response received:", error.request);
+                                        errorMessage = 'لم يتم تلقي رد من الخادم. يرجى التحقق من اتصالك بالإنترنت.';
+                                    } else {
+                                        // خطأ حدث أثناء إعداد الطلب
+                                        console.error('Error setting up request:', error.message);
+                                        errorMessage = `خطأ في إعداد الطلب: ${error.message}`;
+                                    }
+
+                                    Swal.fire(
+                                        'خطأ!',
+                                        errorMessage,
+                                        'error'
+                                    );
+                                });
+                        }
+                    </script>
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const governorateSelectEdit = document.getElementById('governorate_id_edit'); // <--- ID جديد
+                            const areaSelectEdit = document.getElementById('area_id_edit'); // <--- ID جديد
+
+                            function updateAreaOptionsEdit() { // <--- اسم دالة جديد
+                                if (!governorateSelectEdit || !areaSelectEdit) return;
+                                const selectedGovOption = governorateSelectEdit.options[governorateSelectEdit.selectedIndex];
+                                const currentSelectedArea = "{{ old('area_id', Auth::user()->area_id ?? '') }}"; // القيمة الحالية
+                                areaSelectEdit.innerHTML = ''; // إفراغ
+
+                                let defaultOption = new Option('Select Area (Optional)...', '');
+                                areaSelectEdit.add(defaultOption);
+                                areaSelectEdit.disabled = true;
+
+
+                                if (selectedGovOption && selectedGovOption.value && selectedGovOption.dataset.areas) {
+                                    areaSelectEdit.disabled = false;
+                                    let areas = {};
+                                    try {
+                                        areas = JSON.parse(selectedGovOption.dataset.areas);
+                                    } catch (e) {
+                                        console.error(e);
+                                        return;
+                                    }
+
+                                    for (const areaId in areas) {
+                                        if (areas.hasOwnProperty(areaId)) {
+                                            const option = new Option(areas[areaId], areaId);
+                                            if (String(areaId) === String(currentSelectedArea)) {
+                                                option.selected = true;
+                                            }
+                                            areaSelectEdit.add(option);
+                                        }
+                                    }
+                                    if (!areaSelectEdit.value && currentSelectedArea) areaSelectEdit.value = ""; // أبقِ الافتراضي
+                                }
+                            }
+
+                            if (governorateSelectEdit) {
+                                governorateSelectEdit.addEventListener('change', updateAreaOptionsEdit);
+                                // شغل عند التحميل
+                                updateAreaOptionsEdit();
+                            }
+                        });
+                    </script>
+                    <script>
+                        var loadFileEdit = function(event) {
+                            var output = document.getElementById('profileImagePreviewEdit'); // <--- تم التصحيح
+                            if (event.target.files && event.target.files[0]) {
+                                var reader = new FileReader();
+                                reader.onload = function() {
+                                    output.src = reader.result;
+                                    output.onload = function() { // اختياري: لتحرير الذاكرة بعد تحميل الصورة في الـ img
+                                        URL.revokeObjectURL(output.src);
+                                    }
+                                };
+                                reader.readAsDataURL(event.target.files[0]);
+                            } else {
+
+                                output.src =
+                                    "{{ Auth::user()->profile_image ? asset('storage/images/' . Auth::user()->profile_image) : asset('assets/img/profile.jpg') }}";
+                            }
+                        };
+                    </script>
+                    <div class="modal fade" id="deactivateAccountModal" tabindex="-1"
+                        aria-labelledby="deactivateModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="deactivateModalLabel">Confirm Account Deactivation</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    Are you sure you want to deactivate your account? Your profile will be hidden. You'll
+                                    need to contact support to reactivate it.
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary"
+                                        data-bs-dismiss="modal">Cancel</button>
+                                    <form method="POST" action="{{ route('account.deactivate') }}">
+                                        @csrf
+                                        <button type="submit" class="btn btn-warning">Yes, Deactivate</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Delete Account Modal -->
+                    <div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteModalLabel"
+                        aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="deleteModalLabel">Confirm Permanent Deletion</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p class="fw-bold text-danger">This action is irreversible!</p>
+                                    <p>Are you sure you want to permanently delete your account and all associated data?
+                                        This cannot be undone.</p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary"
+                                        data-bs-dismiss="modal">Cancel</button>
+                                    <form method="POST" action="{{ route('account.delete') }}">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger">Yes, Delete My Account</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endpush

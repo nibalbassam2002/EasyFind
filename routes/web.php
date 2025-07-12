@@ -99,6 +99,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard/viewing-requests', [DashboardController::class, 'viewingRequests'])
          ->name('dashboard.viewingRequests')
          ->middleware('role:property_lister'); // حماية إضافية
+    Route::post('/my-account/deactivate', [ProfileController::class, 'deactivateAccount'])->name('account.deactivate');
+    Route::delete('/my-account/delete', [ProfileController::class, 'deleteAccount'])->name('account.delete');
 
     Route::post('/dashboard/viewing-requests/{message}/cancel', [DashboardController::class, 'cancelViewingRequest'])
          ->name('dashboard.viewingRequests.cancel')

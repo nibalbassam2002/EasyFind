@@ -22,7 +22,7 @@
                 <div class="container">
                     <div class="carousel-caption text-center fs-6">
                         <h1><span class="highlighted-word fhs1">Buy</span></h1>
-                        <p><span class="highlighted-word fhs">All you want in real estate you will find it here</span></p>
+                        <p class="d-none d-sm-block"><span class="highlighted-word fhs ">All you want in real estate you will find it here</span></p>
                         <form class="d-flex justify-content-center mt-3" role="search" method="GET"
                             action="{{ route('frontend.public.search') }}">
                             <input  class="form-control me-2 search-input" type="search"
@@ -39,7 +39,7 @@
                     class="d-block w-100" alt="Sell properties">
                 <div class="carousel-caption text-center fs-6">
                     <h1><span class="highlighted-word fhs1">Sell</span></h1>
-                    <p><span class="highlighted-word fhs">Showcase your property to thousands of potential buyers.</span></p>
+                    <p class="d-none d-sm-block"><span class="highlighted-word fhs">Showcase your property to thousands of potential buyers.</span></p>
                    <p>
     @guest
         {{-- حالة الزائر --}}
@@ -81,7 +81,7 @@
                     alt="Rent properties">
                 <div class="carousel-caption text-center fs-6">
                     <h1><span class="highlighted-word fhs1">Rent</span></h1>
-                    <p class="opacity-75"><span class="highlighted-word fhs">Helping millions find their perfect rental
+                    <p class="opacity-75 d-none d-sm-block"><span class="highlighted-word fhs">Helping millions find their perfect rental
                             fit.</span></p>
                     <p>
          {{-- زر صغير للموبايل --}}

@@ -10,6 +10,13 @@
 padding-bottom: 0.3rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
+/*logo responsive*/
+.nevbar-hiwi {
+  height: 80px;
+  width: 80px;
+}
+
+/**/
 .btn-outline-gold {
 border-color: #f0ad4e;
 color: #f0ad4e;

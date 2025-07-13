@@ -11,23 +11,23 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Kreait\Firebase\Contract\Firestore;
 use Kreait\Firebase\Contract\Auth as FirebaseAuth;
 use Kreait\Firebase\Contract\Messaging;
 use App\Models\Transaction;
 use Illuminate\Support\Str;
 use Illuminate\Support\Carbon;
+use Kreait\Firebase\Database\Reference; // استيراد المرجع
 
 class ChatController extends Controller
 {
-    protected Firestore $firestore;
+    // لم نعد نحتاج Firestore هنا
     protected FirebaseAuth $firebaseAuth;
     protected Messaging $messaging;
 
 
-    public function __construct(Firestore $firestore, FirebaseAuth $firebaseAuth, Messaging $messaging)
+    public function __construct(FirebaseAuth $firebaseAuth, Messaging $messaging)
     {
-        $this->firestore = $firestore;
+        // لم نعد نحتاج Firestore هنا
         $this->firebaseAuth = $firebaseAuth;
         $this->messaging = $messaging;
     }
@@ -111,26 +111,28 @@ class ChatController extends Controller
 
        
         try {
-          
-            $db = $this->firestore->database();
-            $timestamp = new \Google\Cloud\Core\Timestamp(new \DateTime());
-            
-            // 1. إضافة الرسالة إلى المجموعة الفرعية
-            $db->collection('conversations')->document($conversation->id)
-               ->collection('messages')->add([
-                    'userId' => (int) Auth::id(), 
+            $db = app('firebase.database'); // احصل على مثيل قاعدة بيانات Realtime
+            $timestamp = now()->timestamp; // Realtime Database يستخدم timestamps بسيطة
+
+            // 1. إنشاء مفتاح فريد للرسالة
+            $messageKey = $db->getReference('conversations/' . $conversation->id . '/messages')->push()->getKey();
+
+            // 2. كتابة الرسالة باستخدام المفتاح
+            $db->getReference('conversations/' . $conversation->id . '/messages/' . $messageKey)
+                ->set([
+                    'userId' => (int) Auth::id(),
                     'userName' => Auth::user()->name,
-                    'message' => $validated['body'], 
+                    'message' => $validated['body'],
                     'timestamp' => $timestamp,
                 ]);
 
-            // 2. تحديث المستند الرئيسي للمحادثة (هذا هو مفتاح الـ Real-time)
-            $db->collection('conversations')->document($conversation->id)
-               ->set([
+            // 3. تحديث معلومات المحادثة الرئيسية (آخر رسالة ووقت التحديث)
+            $db->getReference('conversations/' . $conversation->id)
+                ->update([
                     'lastMessage' => ['text' => $validated['body'], 'senderId' => (int) Auth::id(), 'senderName' => Auth::user()->name],
                     'updatedAt' => $timestamp,
-                    'participants' => $conversation->users()->pluck('id')->toArray() 
-                ], ['merge' => true]);
+                    'participants' => $conversation->users()->pluck('id')->toArray()
+                ]);
 
         } catch (\Exception $e) {
             Log::error('FIREBASE_SEND_FAILED: ' . $e->getMessage());

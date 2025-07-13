@@ -601,53 +601,51 @@
             </div>
         </div>
     </div>
+{{-- ▼▼▼ قم بنسخ هذا الكود بالكامل واستبدله بالجزء المقابل في ملفك ▼▼▼ --}}
 @auth
-<!-- =================== Firebase SDKs =================== -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
+<!-- =================== Firebase SDKs (v9 Compat) - النسخة الحديثة والصحيحة =================== -->
+<script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script> {{-- <<< مكتبة Realtime Database --}}
+<script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-messaging-compat.js"></script>
 
 <script>
-    // ▼▼▼ هذا هو المكان الوحيد لتهيئة Firebase ▼▼▼
+    // تهيئة Firebase بطريقة آمنة عبر قراءة الإعدادات من Laravel
     const firebaseConfig = {
-      apiKey: "AIzaSyABOQOeenk68g5swkqpiDmAHnso87Twvo0",
-      authDomain: "easyfind-realestate.firebaseapp.com",
-      projectId: "easyfind-realestate",
-      storageBucket: "easyfind-realestate.appspot.com",
-      messagingSenderId: "1027579634327",
-      appId: "1:1027579634327:web:9717b0d643a803a63bbfd2"
-      // measurementId لا نحتاجه هنا حالياً
+        apiKey: "{{ config('services.firebase.api_key') }}",
+        authDomain: "{{ config('services.firebase.auth_domain') }}",
+        databaseURL: "{{ config('services.firebase.database_url') }}", // <<< رابط قاعدة البيانات
+        projectId: "{{ config('services.firebase.project_id') }}",
+        storageBucket: "{{ config('services.firebase.storage_bucket') }}",
+        messagingSenderId: "{{ config('services.firebase.messaging_sender_id') }}",
+        appId: "{{ config('services.firebase.app_id') }}"
     };
-    
-    // تحقق إذا لم يكن التطبيق قد تم تهيئته بالفعل لمنع الخطأ
+
+    // تهيئة تطبيق Firebase مرة واحدة فقط
     if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
     }
 
-    // الآن، عرّفي المتغيرات بشكل عام لتكون متاحة في الصفحات الأخرى
-    // هذه المتغيرات ستقرأها صفحة الشات
-    var auth = firebase.auth();
-    var db = firebase.firestore();
-    var messaging = firebase.messaging();
+    // الآن، عرّف المتغيرات التي ستستخدمها في الصفحات الأخرى (مثل صفحة الدردشة)
+    const auth = firebase.auth();
+    const db = firebase.database(); // <<< <<< هذا هو التعديل الأهم: database() وليس firestore()
+    const messaging = firebase.messaging();
 
     // --- كود إشعارات FCM (يبقى كما هو) ---
     function requestPermissionAndSaveToken() {
-        messaging.getToken({ vapidKey: 'BIZyjY5XT0ckpb4tZ1Kf4FwVLA8Xsl0sTbtlQlq1S9-S52vZVUtwwy_BMI5ItpQ8jcuDl2n9-OVPOpszt4AlNgo' }) 
+        const vapidKey = '{{ config('services.firebase.vapid_key') }}'; // يجب أن يكون VAPID Key موجوداً
+        if (!vapidKey) return console.error("VAPID key is missing.");
+
+        messaging.getToken({ vapidKey: vapidKey })
         .then((currentToken) => {
             if (currentToken) {
                 fetch('/update-fcm-token', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
+                    headers: {'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}'},
                     body: JSON.stringify({ fcm_token: currentToken })
                 });
             }
-        }).catch((err) => {
-            console.log('An error occurred while retrieving token. ', err);
-        });
+        }).catch((err) => console.log('An error occurred while retrieving token. ', err) );
     }
     
     requestPermissionAndSaveToken();
@@ -657,11 +655,8 @@
         Swal.fire({
             title: payload.notification.title,
             text: payload.notification.body,
-            icon: 'info',
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 5000
+            icon: 'info', toast: true, position: 'top-end',
+            showConfirmButton: false, timer: 5000
         });
     });
 </script>

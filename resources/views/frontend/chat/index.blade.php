@@ -757,9 +757,10 @@
                     const cardContent =
                         `<div class="card message-card"><div class="card-header bg-light"><i class="bi bi-calendar-check-fill me-2 text-primary"></i><strong>Viewing Request</strong></div><div class="card-body p-0"><p class="card-text p-3 pb-2">${message.body||(requestorName+' requested a viewing:')}</p><ul class="list-group list-group-flush">${slotsHtml}</ul>${cardFooter}</div></div>`;
                     return `<div class="message-item ${isSent?'sent':'received'} ${groupClass}" data-message-id="${message.id}" data-user-id="${message.user_id}">${!isSent?avatarHtml:''}${cardContent}${isSent?avatarHtml:'' }</div>`;
+                }
 
-                    // 2. التعامل مع عروض الشراء/الإيجار
-                } else if (message.type === 'offer_made' && message.metadata) {
+                // 2. التعامل مع عروض الشراء/الإيجار
+                else if (message.type === 'offer_made' && message.metadata) {
                     const metadata = message.metadata;
                     const offerAmount = new Intl.NumberFormat('en-US', {
                         style: 'currency',
@@ -803,9 +804,10 @@
                     const cardContent =
                         `<div class="card message-card"><div class="card-header bg-light"><i class="bi bi-tag-fill me-2 text-success"></i><strong>Offer Made</strong></div><div class="card-body p-0"><div class="p-3 pb-2"><p class="card-text">${offerorName} made an offer of <strong>${offerAmount}</strong>.</p><p class="card-text small text-muted"><i class="bi bi-credit-card me-2"></i>Proposed Payment: <strong>${paymentMethodText}</strong></p></div>${notesHtml}</div>${cardFooter}</div>`;
                     return `<div class="message-item system-message" data-message-id="${message.id}" data-user-id="${message.user_id}">${cardContent}</div>`;
+                }
 
-                    // 3. التعامل مع رسائل النظام الأخرى
-                } else if (['viewing_confirmed', 'viewing_rejected', 'viewing_cancelled', 'system'].includes(message
+                // 3. التعامل مع رسائل النظام الأخرى
+                else if (['viewing_confirmed', 'viewing_rejected', 'viewing_cancelled', 'system'].includes(message
                         .type)) {
                     let alertHtml = '';
                     if (message.type === 'viewing_confirmed' && message.metadata?.confirmed_slot) {
@@ -837,8 +839,18 @@
                     }
                     return `<div class="message-item system-message" data-message-id="${message.id}">${alertHtml}</div>`;
 
-                    // 4. التعامل مع الرسائل النصية العادية
-                } else {
+                    // 4. التعامل مع رسالة تأكيد الدفع (هذا هو التعديل!)
+                } else if (message.type === 'payment_confirmation') {
+                    const isSent = message.user_id == currentUserId;
+                    const offerorName = isSent ? 'You' : (message.user ? message.user.name + ' has' :
+                        'A user has');
+                    const cardContent =
+                        `<div class="alert alert-success text-center w-100 my-2"><h5 class="alert-heading"><i class="bi bi-check-circle-fill me-2"></i> Payment Confirmed!</h5><p class="mb-1">${offerorName} have completed the simulated payment.</p><p class="fw-bold fs-5">${message.body}</p></div>`; // استخدم body الرسالة لعرض أي معلومات إضافية
+                    return `<div class="message-item system-message" data-message-id="${message.id}">${cardContent}</div>`;
+                }
+
+                // 5. التعامل مع الرسائل النصية العادية
+                else {
                     const timeHtml =
                         `<span class="message-time">${message.formatted_created_at||'Just now'}</span>`;
                     const messageBody = linkify(message.body).replace(/\n/g, '<br>');

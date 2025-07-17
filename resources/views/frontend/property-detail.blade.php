@@ -667,23 +667,33 @@
                         '.button-text'); // استهداف النص داخل الزر
 
                     fetch('{{ route('favorites.toggle') }}', {
-                            /* ... نفس كود fetch للمفضلة ... */
+                            method: 'POST', // حدد نوع الطلب
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector(
+                                        'meta[name="csrf-token"]').getAttribute(
+                                    'content') // هذا هو السطر المهم
+                            },
+                            body: JSON.stringify({ // أرسل البيانات في الـ body
+                                property_id: propertyId
+                            })
                         })
+
                         .then(response => response.json())
                         .then(data => {
                             if (data.success) { // تم تعديل هذا ليتناسب مع الاستجابة المتوقعة
                                 if (data.status === 'favorited') {
                                     icon.classList.remove('bi-heart');
                                     icon.classList.add('bi-heart-fill');
-                                    button.classList.remove('btn-outline-danger');
-                                    button.classList.add('btn-danger');
+                                    button.classList.remove('btn-outline-gold'); // استخدم الكلاس الصحيح
+                                    button.classList.add('btn-gold');
                                     if (buttonTextSpan) buttonTextSpan.textContent =
                                         'Remove from Favourites';
                                 } else { // unfavorited
                                     icon.classList.remove('bi-heart-fill');
                                     icon.classList.add('bi-heart');
-                                    button.classList.remove('btn-danger');
-                                    button.classList.add('btn-outline-danger');
+                                    button.classList.remove('btn-gold');           // استخدم الكلاس الصحيح
+                                    button.classList.add('btn-outline-gold');
                                     if (buttonTextSpan) buttonTextSpan.textContent =
                                         'Add to Favourites';
                                 }
@@ -722,7 +732,7 @@
                     navigator.clipboard.writeText(propertyUrl).then(() => {
                         // تم النسخ بنجاح
                         copyLinkBtn.innerHTML =
-                        '<i class="bi bi-check-lg"></i>'; // تغيير الأيقونة إلى علامة صح
+                            '<i class="bi bi-check-lg"></i>'; // تغيير الأيقونة إلى علامة صح
                         copyLinkBtn.classList.add('btn-success');
                         copyLinkBtn.classList.remove('btn-outline-secondary');
 

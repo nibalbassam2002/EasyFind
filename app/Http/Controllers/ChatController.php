@@ -568,56 +568,56 @@ public function rejectOffer(Request $request, Message $message): JsonResponse
 public function simulatePayment(Request $request, Message $message): JsonResponse
 {
     $message->load('conversation.users');
-    // 1. تحقق من الصلاحيات: هل الرسالة عرض مقبول؟ هل المستخدم هو المشتري؟
+
+    // 1. تحقق من الصلاحيات (هام)
     if ($message->type !== 'offer_made' || data_get($message, 'metadata.status') !== 'accepted' || $message->user_id !== Auth::id()) {
         return response()->json(['success' => false, 'message' => 'Invalid action.'], 403);
     }
 
+    // 2. جلب البيانات الوصفية للعرض
     $metadata = $message->metadata;
 
-    // 2. تحقق من أن الدفع لم يتم محاكاته من قبل
-    if (data_get($metadata, 'payment_simulated') === true) {
-        return response()->json(['success' => false, 'message' => 'Payment has already been simulated.'], 422);
-    }
-    
+    // 3. جلب العقار
     $propertyId = data_get($metadata, 'property_id');
     $property = Property::find($propertyId);
+
     if (!$property) {
         return response()->json(['success' => false, 'message' => 'Property not found.'], 404);
     }
 
-    // 3. ابدأ عملية التوثيق
+    // 4. تحديث قاعدة البيانات داخل Transaction
     try {
         DB::transaction(function () use ($message, $property, &$metadata) {
-            // أ. إنشاء سجل المعاملة (Transaction)
+            // أ. إنشاء سجل المعاملة
             Transaction::create([
                 'user_id' => Auth::id(), // المشتري
                 'property_id' => $property->id,
                 'amount' => $metadata['amount'],
-                'type' => $property->purpose, // 'sale' or 'rent'
+                'type' => $property->purpose,
                 'status' => 'completed', // بما أنها محاكاة، نعتبرها مكتملة
                 'payment_method' => 'simulated_online',
             ]);
 
             // ب. تحديث حالة العقار
-           $property->status = ($property->purpose === 'rent') ? 'rented' : 'sold';
-           $property->save();
+            $property->status = ($property->purpose === 'rent') ? 'rented' : 'sold';
+            $property->save();
             
-            // ج. تحديث رسالة العرض لوضع علامة أن الدفع تم
+            // ج. تحديث البيانات الوصفية للعرض
             $metadata['payment_simulated'] = true;
             $metadata['payment_simulated_at'] = now()->toDateTimeString();
             $metadata['deal_completed'] = true;
             $message->metadata = $metadata;
             $message->save();
 
+            // د. إنشاء رسالة من المشتري لتأكيد الدفع
             $message->conversation->messages()->create([
-                'user_id' => 0,
-                'type' => 'system',
-                'body' => "Payment confirmed for property '{$property->title}'. The deal is now complete."
+                'user_id' => Auth::id(), // الآن الرسالة صادرة من المشتري
+                'type' => 'payment_confirmation', // نوع جديد للرسالة
+                'body' => "I have completed the payment (simulated).",
             ]);
         });
     } catch (\Throwable $e) {
-        Log::error("Simulated Payment Failed for message ID {$message->id}: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+        Log::error("Simulated Payment Failed: " . $e->getMessage() . "\n" . $e->getTraceAsString());
         return response()->json(['success' => false, 'message' => 'An error occurred while processing the transaction.'], 500);
     }
 

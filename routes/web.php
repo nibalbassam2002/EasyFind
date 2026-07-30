@@ -178,9 +178,11 @@ Route::middleware(['auth'])->group(function () {
        Route::post('messages/{message}/reject-viewing', [ChatController::class, 'rejectViewing'])->name('chat.request.reject');
       Route::post('messages/{message}/cancel-viewing', [ChatController::class, 'cancelViewing'])->name('chat.request.cancel');
       Route::post('conversations/{conversation}/make-offer', [ChatController::class, 'makeOffer'])->name('make-offer');
+      Route::post('conversations/{conversation}/attachment', [ChatController::class, 'sendAttachment'])->name('attachment.store');
       Route::post('messages/{message}/accept-offer', [ChatController::class, 'acceptOffer'])->name('accept-offer');
       Route::post('messages/{message}/reject-offer', [ChatController::class, 'rejectOffer'])->name('reject-offer');
       Route::post('messages/{message}/simulate-payment', [ChatController::class, 'simulatePayment'])->name('simulate-payment');
+      Route::post('/initiate-direct', [ChatController::class, 'initiateDirectChat'])->name('initiate.direct');
     });
 
     // --- User Feedback Submission ---

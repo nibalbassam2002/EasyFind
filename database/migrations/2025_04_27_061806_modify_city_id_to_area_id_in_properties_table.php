@@ -18,7 +18,11 @@ return new class extends Migration
             } catch (\Exception $e) {
                 logger('Could not drop foreign key city_id for properties: ' . $e->getMessage());
             }
-           $table->renameColumn('city_id', 'area_id');
+           if (Schema::hasColumn('users', 'city_id')) {
+                $table->renameColumn('city_id', 'area_id');
+            } else {
+                $table->unsignedBigInteger('area_id')->nullable();
+            }
 
         
             $table->unsignedBigInteger('area_id')->nullable()->change(); 

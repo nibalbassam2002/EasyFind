@@ -2,13 +2,11 @@
 const filesToCache = [
     '/',
     '/offline.html',
-    // أضف هنا ملفات CSS و JS الرئيسية إذا أردت
-    // مثلاً: '/frontend/style.css'
 ];
 
-const cacheName = 'offline-v1'; // استخدم اسماً ذا إصدار لتسهيل التحديثات
+const cacheName = 'offline-v2'; // *** غيّرنا الإصدار لإجبار التحديث ***
 
-// عند التثبيت (Install): قم بتخزين الملفات الأساسية
+// عند التثبيت (Install)
 self.addEventListener("install", (event) => {
     event.waitUntil(
         caches.open(cacheName).then((cache) => {
@@ -16,34 +14,50 @@ self.addEventListener("install", (event) => {
             return cache.addAll(filesToCache);
         })
     );
+    self.skipWaiting(); // *** تفعيل فوري بدون انتظار ***
 });
 
-// عند التفعيل (Activate): قم بحذف الـ Cache القديم
+// عند التفعيل (Activate)
 self.addEventListener("activate", (event) => {
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
                 cacheNames.map((name) => {
                     if (name !== cacheName) {
+                        console.log("Service Worker: Deleting old cache:", name);
                         return caches.delete(name);
                     }
                 })
             );
         })
     );
+    self.clients.claim(); // *** تطبيق فوري على جميع الصفحات المفتوحة ***
 });
 
-// عند طلب أي ملف (Fetch): استراتيجية "الشبكة أولاً، ثم الكاش"
+// عند طلب أي ملف (Fetch)
 self.addEventListener("fetch", (event) => {
-    // لا تتعامل مع الطلبات التي ليست من نوع GET
     if (event.request.method !== 'GET') {
         return;
     }
 
+    const url = new URL(event.request.url);
+    const isHTMLRequest = event.request.headers.get('accept')?.includes('text/html');
+    const isAuthPage = url.pathname.includes('/login') || 
+                       url.pathname.includes('/register') ||
+                       url.pathname.includes('/logout');
+
+    // صفحات HTML والمصادقة: شبكة فقط بدون كاش
+    if (isHTMLRequest || isAuthPage) {
+        event.respondWith(
+            fetch(event.request).catch(() => caches.match('/offline.html'))
+        );
+        return;
+    }
+
+    // باقي الملفات (CSS, JS, Images): شبكة أولاً ثم كاش
     event.respondWith(
         fetch(event.request)
             .then((response) => {
-                // إذا كان الطلب ناجحاً، قم بتخزين نسخة منه في الكاش وأعد الأصل للمتصفح
                 if (response.status === 200) {
                     const responseToCache = response.clone();
                     caches.open(cacheName).then((cache) => {
@@ -53,9 +67,7 @@ self.addEventListener("fetch", (event) => {
                 return response;
             })
             .catch(() => {
-                // إذا فشل طلب الشبكة (لا يوجد إنترنت)، ابحث في الكاش
                 return caches.match(event.request).then((response) => {
-                    // إذا وجدته في الكاش، أعده. إذا لم تجده، أعد صفحة الأوفلاين
                     return response || caches.match('/offline.html');
                 });
             })

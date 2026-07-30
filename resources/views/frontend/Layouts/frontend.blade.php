@@ -13,6 +13,9 @@
     <title>@yield('title', 'EasyFind - Real Estate')</title>
 
     <link rel="icon" type="image/x-icon" href="{{ asset('assets/img/logo for tab.png') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -27,7 +30,7 @@
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-xl bg-white border-bottom navbar1">
+    <nav class="navbar navbar-expand-lg bg-white border-bottom navbar1">
         <div class="container">
             <a href="{{ route('frontend.home') }}" class="navbar-brand">
                 <img src="{{ asset('frontend/assets/logo-white.png') }}" width="80px" height="80px" alt="logo">
@@ -58,6 +61,7 @@
                                 <a href="{{ route('lister.properties.create') }}" class="nav-link">Sell</a>
                             @endif
                         @endguest
+                        </li> 
                     <li class="nav-item">
                         @guest
                             <a href="{{ route('login') }}?redirect={{ urlencode(route('frontend.properties', ['purpose' => 'sale'])) }}"
@@ -313,14 +317,7 @@
                 <h5>Services</h5>
                 <ul class="nav flex-column">
                     <li class="nav-item mb-2">
-                        @guest {{-- إذا كان المستخدم زائرًا (غير مسجل) --}}
-                            <a href="{{ route('login', ['intended' => route('frontend.properties')]) }}"
-                                class="nav-link p-0 text-muted">Explore Properties</a>
-                        @else
-                            {{-- إذا كان المستخدم مسجلاً دخوله --}}
-                            <a href="{{ route('frontend.properties') }}" class="nav-link p-0 text-muted">Explore
-                                Properties</a>
-                        @endguest
+                        <a href="{{ route('frontend.properties') }}" class="nav-link p-0 text-muted">Explore Properties</a>
                     </li>
                     @auth
                         @if (Auth::user()->role !== 'customer')
@@ -580,9 +577,8 @@
     @endauth
 
     @stack('scripts')
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-
-    {{-- @vite(['resources/css/app.css', 'resources/js/app.js']) --}}
+    {{-- @vite(['resources/css/app.css']) --}}
+{{-- @vite(['resources/css/app.css', 'resources/js/app.js']) --}}
 
     <div class="modal fade" id="subscribeModal" tabindex="-1" aria-labelledby="subscribeModalLabel"
         aria-hidden="true">

@@ -1,12 +1,18 @@
 @php
     // جلب المستخدم الآخر في المحادثة
     $otherUser = $conversation->other_participant;
+    
+    // هذا هو السطر المفقود الذي يسبب الخطأ
+    // يقوم بجلب أدوار كلا المستخدمين في المحادثة ويجمعها في نص واحد
+    $rolesString = $conversation->users->pluck('role')->implode(',');
 @endphp
 
 {{-- تأكد من وجود مستخدم آخر قبل عرض أي شيء --}}
 @if ($otherUser)
+    {{-- لقد أصلحت أيضًا تكرار data-is-owner هنا --}}
     <li class="list-group-item conversation-item {{ request()->query('activeConversation') == $conversation->id ? 'active' : '' }}" 
         data-conversation-id="{{ $conversation->id }}"
+        data-roles="{{ $rolesString }}"
         data-is-owner="{{ $conversation->is_current_user_property_owner ? 'true' : 'false' }}">
         
         {{-- 1. الصورة الرمزية للمستخدم الآخر --}}

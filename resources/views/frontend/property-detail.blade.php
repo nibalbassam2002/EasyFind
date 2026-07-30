@@ -176,6 +176,8 @@
                 $imageUrl = null;
                 if (filter_var($cleanPath, FILTER_VALIDATE_URL)) {
                     $imageUrl = $cleanPath;
+                } elseif (strpos($cleanPath, 'frontend/assets/') === 0 || strpos($cleanPath, 'assets/') === 0) {
+                    $imageUrl = asset($cleanPath);
                 } elseif (Storage::disk('public')->exists($cleanPath)) {
                     $imageUrl = Storage::url($cleanPath);
                 }
@@ -244,7 +246,7 @@
                     </div>
 
                     <!-- العمود الخاص بالفيديو/الصورة الرئيسية (على اليمين للشاشات الكبيرة) -->
-                    <div class="col-auto order-md-2">
+                    <div class="col-md-10 order-md-2">
                         <div id="mainMediaDisplay" class="main-media-container">
                             @if ($mainDisplayItem['type'] === 'video')
                                 <video id="mainContentPlayer" src="{{ $mainDisplayItem['src'] }}" controls autoplay
@@ -561,11 +563,13 @@
 
                                     if ($cardFirstImage) {
                                         $cleanCardPath = trim($cardFirstImage, '"\'/\\');
-                                        if (filter_var($cleanCardPath, FILTER_VALIDATE_URL)) {
-                                            $cardImageUrl = $cleanCardPath;
-                                        } elseif (Storage::disk('public')->exists($cleanCardPath)) {
-                                            $cardImageUrl = Storage::url($cleanCardPath);
-                                        }
+                                         if (filter_var($cleanCardPath, FILTER_VALIDATE_URL)) {
+                                             $cardImageUrl = $cleanCardPath;
+                                         } elseif (strpos($cleanCardPath, 'frontend/assets/') === 0 || strpos($cleanCardPath, 'assets/') === 0) {
+                                             $cardImageUrl = asset($cleanCardPath);
+                                         } elseif (Storage::disk('public')->exists($cleanCardPath)) {
+                                             $cardImageUrl = Storage::url($cleanCardPath);
+                                         }
                                     }
                                 @endphp
                                 <a href="{{ route('frontend.property.show', $simProperty->id) }}"
@@ -644,7 +648,7 @@
             } else if (type === 'video') {
                 newMediaElementHTML = `<video id="mainContentPlayer" src="${src}" controls autoplay muted></video>`;
             } else { // image
-                newMediaElementHTML = `<img id="mainContentPlayer" src="${src}" alt="Main property media">`;
+                newMediaElementHTML = `<img id="mainContentPlayer" src="${src}" alt="Main property media" class="img-fluid main-media-image">`;
             }
             mainMediaContainer.innerHTML = newMediaElementHTML;
 

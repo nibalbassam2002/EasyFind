@@ -4,104 +4,84 @@
     'Find properties for sale or rent in Gaza. EasyFind helps you locate houses, apartments, tents,
     and caravans.')
 @section('content')
-    {{-- Carousel --}}
-    <div id="carouselExampleCaptions" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3000">
-        <div class="carousel-indicators">
-            <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="0" class="active"
-                aria-current="true" aria-label="Slide 1"></button>
-            <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="1"
-                aria-label="Slide 2"></button>
-            <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="2"
-                aria-label="Slide 3"></button>
-        </div>
-        <div class="carousel-inner">
+    {{-- Modern Premium Hero Section --}}
+    <div class="hero-section">
+        <div class="hero-overlay"></div>
+        <div class="container hero-container text-center">
+            <div class="row justify-content-center">
+                <div class="col-lg-10 col-xl-8">
+                    <h1 class="hero-title animate-fade-in-up">Find Your Perfect Home in Gaza</h1>
+                    <p class="hero-subtitle animate-fade-in-up-delay">Explore houses, apartments, caravans, and tents for sale or rent.</p>
+                    
+                    {{-- Unified Tabbed Search Bar --}}
+                    <div class="search-card-wrapper animate-fade-in-up-delay-2">
+                        <div class="search-tabs">
+                            <button type="button" class="search-tab active" data-purpose="sale">Buy</button>
+                            <button type="button" class="search-tab" data-purpose="rent">Rent</button>
+                        </div>
+                        <div class="search-form-card">
+                            <form action="{{ route('frontend.properties') }}" method="GET" class="row g-2 p-2 align-items-center">
+                                <input type="hidden" name="purpose" id="search-purpose" value="sale">
+                                
+                                {{-- Search Input --}}
+                                <div class="col-md-4">
+                                    <div class="input-group search-input-group">
+                                        <span class="input-group-text bg-transparent border-0 pe-0"><i class="bi bi-search text-muted"></i></span>
+                                        <input type="text" name="search" class="form-control bg-transparent border-0" placeholder="Search by title, address..." value="{{ request('search') }}">
+                                    </div>
+                                </div>
+                                
+                                {{-- Governorate Select --}}
+                                <div class="col-md-3 border-start-md">
+                                    <div class="input-group search-input-group">
+                                        <span class="input-group-text bg-transparent border-0 pe-0"><i class="bi bi-geo-alt text-muted"></i></span>
+                                        <select name="governorate_id" class="form-select bg-transparent border-0">
+                                            <option value="">All Locations</option>
+                                            @foreach($governorates as $gov)
+                                                <option value="{{ $gov->id }}">{{ $gov->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
 
-            <div class="carousel-item active">
-                <img src="{{ asset('frontend/assets/better_cropped_villa.png') }}" class="d-block w-100"
-                    alt="Buy properties">
-                <div class="container">
-                    <div class="carousel-caption text-center fs-6">
-                        <h1><span class="highlighted-word fhs1">Buy</span></h1>
-                        <p class="d-none d-sm-block"><span class="highlighted-word fhs ">All you want in real estate you will find it here</span></p>
-                        <form class="d-flex justify-content-center mt-3" role="search" method="GET"
-                            action="{{ route('frontend.public.search') }}">
-                            <input  class="form-control me-2 search-input" type="search"
-                                name="search" placeholder="Search by title, address..." aria-label="Search"
-                                value="{{ request('search') }}">
-                            <button class="btn btn-gold" type="submit">Search</button>
-                        </form>
+                                {{-- Category Select --}}
+                                <div class="col-md-3 border-start-md">
+                                    <div class="input-group search-input-group">
+                                        <span class="input-group-text bg-transparent border-0 pe-0"><i class="bi bi-house-door text-muted"></i></span>
+                                        <select name="category_slug" class="form-select bg-transparent border-0">
+                                            <option value="">All Categories</option>
+                                            @foreach($categories as $cat)
+                                                <option value="{{ $cat->slug }}">{{ $cat->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {{-- Search Button --}}
+                                <div class="col-md-2">
+                                    <button class="btn btn-gold w-100 py-2 fw-bold" type="submit">
+                                        Search
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    {{-- Dynamic Call to Action --}}
+                    <div class="hero-cta mt-4 animate-fade-in-up-delay-2">
+                        @guest
+                            <span>Want to sell or rent? <a href="{{ route('login', ['intended' => route('frontend.pricing')]) }}" class="text-gold fw-bold text-decoration-none ms-1">Login to Sell <i class="bi bi-arrow-right"></i></a></span>
+                        @else
+                            @if (Auth::user()->role === 'customer')
+                                <span>Want to list your property? <a href="{{ route('frontend.pricing') }}" class="text-gold fw-bold text-decoration-none ms-1">Become a Seller <i class="bi bi-arrow-right"></i></a></span>
+                            @else
+                                <span>Have a property? <a href="{{ route('lister.properties.create') }}" class="text-gold fw-bold text-decoration-none ms-1">List Your Property <i class="bi bi-arrow-right"></i></a></span>
+                            @endif
+                        @endguest
                     </div>
                 </div>
             </div>
-
-            <div class="carousel-item">
-                <img src="{{ asset('frontend/assets/cropped_A_high-resolution_digital_photograph_showcases_a_s.png') }}"
-                    class="d-block w-100" alt="Sell properties">
-                <div class="carousel-caption text-center fs-6">
-                    <h1><span class="highlighted-word fhs1">Sell</span></h1>
-                    <p class="d-none d-sm-block"><span class="highlighted-word fhs">Showcase your property to thousands of potential buyers.</span></p>
-                   <p>
-    @guest
-        {{-- حالة الزائر --}}
-        {{-- زر صغير للموبايل --}}
-        <a class="btn btn-sm btn-dark d-lg-none"
-            href="{{ route('login', ['intended' => route('frontend.pricing')]) }}">
-            Login to Sell
-        </a>
-        {{-- زر كبير للديسكتوب --}}
-        <a class="btn btn-lg btn-dark d-none d-lg-inline-block"
-            href="{{ route('login', ['intended' => route('frontend.pricing')]) }}">
-            Login to Sell
-        </a>
-    @else
-        @if (Auth::user()->role === 'customer')
-            {{-- زبون: توجهه لصفحة الخطط --}}
-            <a class="btn btn-sm btn-gold2 d-lg-none" href="{{ route('frontend.pricing') }}">
-                Become a Seller
-            </a>
-            <a class="btn btn-lg btn-gold2 d-none d-lg-inline-block" href="{{ route('frontend.pricing') }}">
-                Become a Seller
-            </a>
-        @else
-            {{-- بائع أو أدمن: توجهه لصفحة إضافة عقار --}}
-            <a class="btn btn-sm btn-outline-light d-lg-none" href="{{ route('lister.properties.create') }}">
-                List Your Property
-            </a>
-            <a class="btn btn-lg btn-outline-light d-none d-lg-inline-block" href="{{ route('lister.properties.create') }}">
-                List Your Property
-            </a>
-        @endif
-    @endguest
-</p>
-
-                </div>
-            </div>
-            <div class="carousel-item">
-                <img src="{{ asset('frontend/assets/homepage2_LE_upscale_balanced_x4.jpg') }}" class="d-block w-100"
-                    alt="Rent properties">
-                <div class="carousel-caption text-center fs-6">
-                    <h1><span class="highlighted-word fhs1">Rent</span></h1>
-                    <p class="opacity-75 d-none d-sm-block"><span class="highlighted-word fhs">Helping millions find their perfect rental
-                            fit.</span></p>
-                    <p>
-         {{-- زر صغير للموبايل --}}
-           <a class="btn btn-gold2 btn-sm  d-lg-none" href="{{ route('frontend.properties', ['purpose' => 'rent']) }}">
-          View Rentals
-          </a>
-           {{-- زر كبير للديسكتوب --}}
-          <a class="btn btn-lg btn-gold2 d-none d-lg-inline-block" href="{{ route('frontend.properties', ['purpose' => 'rent']) }}">View
-                            Rentals</a>
-         </p>
-
-                </div>
-            </div>
         </div>
-        <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleCaptions"
-            data-bs-slide="prev"><span class="carousel-control-prev-icon" aria-hidden="true"></span><span
-                class="visually-hidden">Previous</span></button>
-        <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleCaptions"
-            data-bs-slide="next"><span class="carousel-control-next-icon" aria-hidden="true"></span><span
-                class="visually-hidden">Next</span></button>
     </div>
     @auth
         @if (Auth::user()->role == 'property_lister')
@@ -240,13 +220,8 @@
         <div class="row g-4 property-list-row">
             @forelse ($latestProperties as $property)
                 <div class="col-12 col-sm-6 col-md-4 col-lg-3 d-flex">
-                    @guest
-                        <a href="{{ route('login', ['intended' => route('frontend.property.show', $property->id)]) }}"
-                            class="text-decoration-none d-block w-100">
-                        @else
-                            <a href="{{ route('frontend.property.show', $property->id) }}"
-                                class="text-decoration-none d-block w-100">
-                            @endguest
+                    <a href="{{ route('frontend.property.show', $property->id) }}"
+                        class="text-decoration-none d-block w-100">
                             <div class="card property-card h-100 shadow-sm">
                                 @php
 
@@ -258,15 +233,15 @@
                                     $firstImage = $images[0] ?? null;
                                     $imageUrl = asset('frontend/assets/home.jpg'); // صورة افتراضية
 
-                                    if ($firstImage && Storage::disk('public')->exists($firstImage)) {
+                                    if ($firstImage && (strpos($firstImage, 'frontend/assets/') === 0 || strpos($firstImage, 'assets/') === 0)) {
+                                        $imageUrl = asset($firstImage);
+                                    } elseif ($firstImage && Storage::disk('public')->exists($firstImage)) {
                                         $imageUrl = Storage::url($firstImage);
                                     } elseif (
                                         is_array($images) &&
                                         count($images) > 0 &&
                                         Storage::disk('public')->exists($images[0])
                                     ) {
-                                        // حالة إضافية إذا كانت images مصفوفة ولكن لم يتم جلبها كـ $firstImage
-                                        // مفيد إذا لم يكن $casts مستخدماً بشكل صحيح
                                         $imageUrl = Storage::url($images[0]);
                                     }
                                 @endphp
@@ -351,14 +326,8 @@
         {{-- زر عرض الكل --}}
         {{-- يوجد خطأ هنا، إغلاق وسم a غير صحيح --}}
         <div class="text-center mt-5">
-            @guest
-                <a href="{{ route('login') }}?redirect={{ urlencode(route('frontend.properties')) }}"
-                    class="btn btn-outline-gold px-5 py-2 rounded-pill shadow-sm">View All Properties</a>
-            @endguest
-            @auth
-                <a href="{{ route('frontend.properties') }}"
-                    class="btn btn-outline-gold px-5 py-2 rounded-pill shadow-sm">View All Properties</a>
-            @endauth
+            <a href="{{ route('frontend.properties') }}"
+                class="btn btn-outline-gold px-5 py-2 rounded-pill shadow-sm">View All Properties</a>
         </div>
     </div>
 
@@ -466,3 +435,25 @@
 
 
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabs = document.querySelectorAll('.search-tab');
+        const purposeInput = document.getElementById('search-purpose');
+        
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Remove active class from all tabs
+                tabs.forEach(t => t.classList.remove('active'));
+                
+                // Add active class to clicked tab
+                this.classList.add('active');
+                
+                // Set hidden input value
+                purposeInput.value = this.dataset.purpose;
+            });
+        });
+    });
+</script>
+@endpush

@@ -331,6 +331,31 @@
             <div class="col-lg-4 col-xl-3 chat-sidebar" id="chatSidebar">
                 <div class="chat-sidebar-header">
                     <h5>Chats</h5>
+                    @if (Auth::user()->role === 'content_moderator' && isset($admins) && $admins->isNotEmpty())
+                        <div class="dropdown">
+                            <button class="btn btn-gold btn-sm" type="button" id="startNewChatBtn"
+                                data-bs-toggle="dropdown" aria-expanded="false"
+                                style="--bs-btn-padding-y: .25rem; --bs-btn-padding-x: .6rem; --bs-btn-font-size: .8rem;">
+                                <i class="bi bi-pencil-square"></i> New Chat
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="startNewChatBtn">
+                                <li class="dropdown-header">Contact an Admin</li>
+                                @foreach ($admins as $admin)
+                                    <li>
+                                        <form action="{{ route('chat.initiate.direct') }}" method="POST"
+                                            class="dropdown-item p-0">
+                                            @csrf
+                                            <input type="hidden" name="recipient_id" value="{{ $admin->id }}">
+                                            <button type="submit"
+                                                class="btn btn-link text-dark text-decoration-none w-100 text-start px-3 py-2">
+                                                {{ $admin->name }}
+                                            </button>
+                                        </form>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
                 </div>
                 <ul class="list-group list-group-flush conversations-list" id="conversationsList">
                     @forelse($conversations as $conversation)
@@ -371,6 +396,10 @@
                     <div class="chat-input-area p-2 bg-white border-top">
                         <form id="sendMessageForm">
                             <div class="input-group">
+                                <input type="file" id="attachmentInput" class="d-none"> {{-- مدخل الملفات المخفي --}}
+                                <button class="btn" type="button" id="attachmentBtn" title="Send a file">
+                                    <i class="bi bi-paperclip fs-5 text-secondary"></i>
+                                </button>
                                 {{-- زر طلب المعاينة --}}
                                 <button class="btn d-none" type="button" id="requestViewingBtn" title="Request a Viewing"
                                     data-bs-toggle="modal" data-bs-target="#requestViewingModal">
@@ -410,11 +439,13 @@
                         <div class="mb-3"><label class="form-label">Suggestion 1</label><input type="text"
                                 class="form-control datetime-picker" placeholder="Select Date and Time" name="slots[]"
                                 required></div>
-                        <div class="mb-3"><label class="form-label">Suggestion 2 (Optional)</label><input type="text"
-                                class="form-control datetime-picker" placeholder="Select Date and Time" name="slots[]">
+                        <div class="mb-3"><label class="form-label">Suggestion 2 (Optional)</label><input
+                                type="text" class="form-control datetime-picker" placeholder="Select Date and Time"
+                                name="slots[]">
                         </div>
-                        <div class="mb-3"><label class="form-label">Suggestion 3 (Optional)</label><input type="text"
-                                class="form-control datetime-picker" placeholder="Select Date and Time" name="slots[]">
+                        <div class="mb-3"><label class="form-label">Suggestion 3 (Optional)</label><input
+                                type="text" class="form-control datetime-picker" placeholder="Select Date and Time"
+                                name="slots[]">
                         </div>
                     </form>
                 </div>
@@ -626,6 +657,21 @@
             function updateActionButtons(messages, isOwner) {
                 const requestBtn = document.getElementById('requestViewingBtn');
                 const offerBtn = document.getElementById('makeOfferBtn');
+                const activeConvItem = document.querySelector('.conversation-item.active');
+                if (activeConvItem) {
+                    // 2. اقرأ الأدوار من data-roles
+                    const roles = activeConvItem.dataset.roles || '';
+
+                    // 3. تحقق إذا كانت محادثة إدارية
+                    const isAdminChat = roles.includes('admin') && roles.includes('content_moderator');
+
+                    // 4. إذا كانت محادثة إدارية، أخفِ الأزرار وتوقف
+                    if (isAdminChat) {
+                        requestBtn.classList.add('d-none');
+                        offerBtn.classList.add('d-none');
+                        return; // <-- مهم جداً للخروج من الدالة
+                    }
+                }
                 const offerPropertyIdInput = document.getElementById('offer_property_id');
                 const offerViewingRequestIdInput = document.getElementById('offer_viewing_request_id');
                 const now = new Date();
@@ -850,7 +896,35 @@
                 }
 
                 // 5. التعامل مع الرسائل النصية العادية
-                else {
+                else if (message.type === 'image' && message.metadata?.url) {
+                    const isSent = message.user_id == currentUserId;
+                    // ... (الكود لتحديد الصورة الرمزية للمستخدم) ...
+                    const imageHtml = `
+            <div class="message-content p-1" style="background-color: transparent; border: none;">
+                <a href="${message.metadata.url}" target="_blank">
+                    <img src="${message.metadata.url}" alt="${message.metadata.file_name}" style="max-width: 250px; border-radius: 15px; cursor: pointer;">
+                </a>
+            </div>`;
+                    return `<div class="message-item ${isSent ? 'sent' : 'received'} ...">${imageHtml}</div>`;
+                }
+
+                // 6. التعامل مع الملفات المرفقة الأخرى
+                else if (message.type === 'file' && message.metadata?.url) {
+                    const isSent = message.user_id == currentUserId;
+                    // ... (الكود لتحديد الصورة الرمزية للمستخدم) ...
+                    const fileSize = (message.metadata.size / 1024).toFixed(1) + ' KB';
+                    const fileHtml = `
+            <div class="message-content d-flex align-items-center">
+                <i class="bi bi-file-earmark-arrow-down fs-2 me-2"></i>
+                <div>
+                    <a href="${message.metadata.url}" target="_blank" class="fw-bold" style="color: inherit; text-decoration: none;">
+                        ${message.metadata.file_name}
+                    </a>
+                    <div class="message-time">${fileSize}</div>
+                </div>
+            </div>`;
+                    return `<div class="message-item ${isSent ? 'sent' : 'received'} ...">${fileHtml}</div>`;
+                } else {
                     const timeHtml =
                         `<span class="message-time">${message.formatted_created_at||'Just now'}</span>`;
                     const messageBody = linkify(message.body).replace(/\n/g, '<br>');
@@ -1285,6 +1359,60 @@
                 }
             }
             initialLoad();
+
+            const attachmentBtn = document.getElementById('attachmentBtn');
+            const attachmentInput = document.getElementById('attachmentInput');
+
+            // 2. عند الضغط على زر المشبك، قم بفتح نافذة اختيار الملفات
+            attachmentBtn.addEventListener('click', () => {
+                attachmentInput.click();
+            });
+
+            // 3. عند اختيار ملف، قم برفعه مباشرة
+            attachmentInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file || !currentConversationId) return;
+
+                // تعطيل الزر مؤقتاً وإظهار علامة تحميل
+                attachmentBtn.disabled = true;
+                attachmentBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+                const formData = new FormData();
+                formData.append('attachment', file);
+
+                try {
+                    const response = await fetch(
+                        `/chat/conversations/${currentConversationId}/attachment`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
+                            },
+                            body: formData
+                        });
+
+                    const result = await response.json();
+                    if (!response.ok || !result.success) {
+                        throw new Error(result.message || 'Failed to upload file.');
+                    }
+
+                    // بعد النجاح، أعد تحميل المحادثة لإظهار الملف
+                    const activeConvElement = conversationsList.querySelector(
+                        '.conversation-item.active');
+                    if (activeConvElement) {
+                        loadConversation(currentConversationId, activeConvElement);
+                    }
+
+                } catch (error) {
+                    Swal.fire('Error', error.message, 'error');
+                } finally {
+                    // إعادة الزر لحالته الطبيعية
+                    attachmentBtn.disabled = false;
+                    attachmentBtn.innerHTML = '<i class="bi bi-paperclip fs-5 text-secondary"></i>';
+                    // تفريغ قيمة المدخل للسماح برفع نفس الملف مرة أخرى
+                    attachmentInput.value = '';
+                }
+            });
         });
     </script>
 @endpush

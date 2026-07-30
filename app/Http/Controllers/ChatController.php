@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Log;
 use Kreait\Firebase\Contract\Auth as FirebaseAuth;
 use Kreait\Firebase\Contract\Messaging;
 use App\Models\Transaction;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Support\Carbon;
 use Kreait\Firebase\Database\Reference; // استيراد المرجع
@@ -37,10 +38,14 @@ class ChatController extends Controller
     public function index()
     {
         $user = Auth::user();
+        $admins = [];
+         if ($user->role === 'content_moderator') {
+        $admins = User::where('role', 'admin')->where('id', '!=', $user->id)->get();
+    }
         $userId = $user->id;
 
         $conversations = $user->conversations()
-            ->with(['users', 'lastMessage.user'])
+            ->with(['users:id,name,role,profile_image', 'lastMessage.user'])
             ->latest('updated_at')
             ->get();
 
@@ -75,7 +80,7 @@ class ChatController extends Controller
             session()->flash('error', 'Could not connect to the chat service. Please try again later.');
         }
 
-        return view('frontend.chat.index', compact('conversations', 'user', 'firebaseToken'));
+        return view('frontend.chat.index', compact('conversations', 'user', 'firebaseToken', 'admins'));
     }
 
     /**
@@ -624,5 +629,95 @@ public function simulatePayment(Request $request, Message $message): JsonRespons
     $message->conversation->touch();
     return response()->json(['success' => true]);
 }
+public function initiateDirectChat(Request $request)
+{
+    // 1. التحقق من الصلاحيات (فقط الأدمن والمشرفون يمكنهم بدء هذه المحادثات)
+    if (!in_array(Auth::user()->role, ['admin', 'content_moderator'])) {
+        return redirect()->back()->with('error', 'Unauthorized action.');
+    }
 
+    // 2. التحقق من وجود ID المستخدم المراد محادثته
+    $validated = $request->validate([
+        'recipient_id' => 'required|integer|exists:users,id',
+    ]);
+
+    $currentUser = Auth::user();
+    $recipient = User::find($validated['recipient_id']);
+
+    // لا يمكن للمستخدم محادثة نفسه
+    if ($currentUser->id === $recipient->id) {
+        return redirect()->back()->with('error', 'You cannot start a chat with yourself.');
+    }
+
+    // 3. البحث عن أي محادثة قائمة بين هذين المستخدمين (بغض النظر عن نوعها)
+    $conversation = Conversation::whereHas('users', function ($query) use ($currentUser) {
+            $query->where('user_id', $currentUser->id);
+        })
+        ->whereHas('users', function ($query) use ($recipient) {
+            $query->where('user_id', $recipient->id);
+        })
+        ->withCount('users')
+        ->having('users_count', 2)
+        ->first();
+
+    // 4. إذا لم تكن هناك محادثة، أنشئ واحدة جديدة
+    if (!$conversation) {
+        $conversation = DB::transaction(function () use ($currentUser, $recipient) {
+            $conv = Conversation::create(); // محادثة عادية بدون نوع
+            $conv->users()->attach([$currentUser->id, $recipient->id]);
+            return $conv;
+        });
+        // (اختياري) يمكنك إضافة رسالة نظام أولى هنا إذا أردت
+        // $conversation->messages()->create([...]);
+    }
+    
+    // 5. إعادة التوجيه إلى صفحة الشات مع تفعيل المحادثة
+    return redirect()->route('chat.index', ['activeConversation' => $conversation->id]);
+}
+public function sendAttachment(Request $request, Conversation $conversation): JsonResponse
+{
+    // 1. التحقق من أن المستخدم جزء من المحادثة
+    if (!$this->isUserInConversation($conversation)) {
+        return response()->json(['error' => 'Unauthorized'], 403);
+    }
+
+    // 2. التحقق من صحة الملف (هذه الخطوة مهمة جداً للأمان)
+    $validated = $request->validate([
+        'attachment' => [
+            'required',
+            'file',
+            'max:5120', // 5MB max size
+            'mimes:jpg,jpeg,png,gif,pdf,doc,docx,xls,xlsx,txt' // أنواع الملفات المسموح بها
+        ]
+    ]);
+
+    $file = $validated['attachment'];
+
+    // 3. تخزين الملف في مكان آمن ومنظم
+    // سننشئ مجلداً خاصاً بكل محادثة لتنظيم الملفات
+    $path = $file->store("chat_attachments/{$conversation->id}", 'public');
+
+    // 4. تحديد نوع الرسالة (صورة أم ملف)
+    $messageType = Str::startsWith($file->getMimeType(), 'image/') ? 'image' : 'file';
+
+    // 5. إنشاء سجل الرسالة في قاعدة البيانات
+    $message = $conversation->messages()->create([
+        'user_id' => Auth::id(),
+        'type'    => $messageType,
+        'body'    => $file->getClientOriginalName(), // سنضع اسم الملف الأصلي في النص
+        'metadata' => [
+            'file_name' => $file->getClientOriginalName(),
+            'path'      => $path,
+            'url'       => Storage::url($path), // الرابط العام للملف
+            'mime_type' => $file->getMimeType(),
+            'size'      => $file->getSize(),
+        ]
+    ]);
+
+    $conversation->touch();
+
+    // 6. إرجاع بيانات الرسالة الجديدة للـ JavaScript
+    $message->load('user');
+    return response()->json(['success' => true, 'data' => $message]);
+}
 }

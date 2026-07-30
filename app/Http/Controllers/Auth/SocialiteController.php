@@ -47,8 +47,11 @@ class SocialiteController extends Controller
         }
 
         try {
-            
-            $socialUser = Socialite::driver(strtolower($provider))->user();
+            $driver = Socialite::driver(strtolower($provider));
+            if (config('app.env') === 'local') {
+                $driver->setHttpClient(new \GuzzleHttp\Client(['verify' => false]));
+            }
+            $socialUser = $driver->user();
             Log::info("Socialite - handleProviderCallback: Fetched user from " . ucfirst($provider) . ".", [
                 'id' => $socialUser->getId(),
                 'email' => $socialUser->getEmail(),

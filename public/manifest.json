@@ -1,7 +1,7 @@
 {
     "name": "EasyFind Real Estate",
     "short_name": "EasyFind",
-    "start_url": "/index.php",
+    "start_url": "/",
     "background_color": "#FFD700",
     "description": "The easiest way to find, sell, and rent properties. Your next home is just a click away.",
     "display": "fullscreen",

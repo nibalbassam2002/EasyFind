@@ -35,7 +35,7 @@ RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Run Composer installation
-RUN composer install --no-interaction --optimize-autoloader --no-dev --ignore-platform-reqs
+RUN composer install --no-interaction --optimize-autoloader --no-dev --ignore-platform-reqs --no-scripts
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
@@ -43,5 +43,5 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
 # Expose port 80
 EXPOSE 80
 
-# Start command
-CMD ["apache2-foreground"]
+# Start command running package discovery at runtime and starting Apache
+CMD ["sh", "-c", "php artisan package:discover --ansi && php artisan config:clear && apache2-foreground"]

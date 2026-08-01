@@ -22,7 +22,7 @@ class ProfileController extends Controller
         $user = Auth::user()->load('area.governorate'); 
         $governorates = Governorate::with('areas')->orderBy('name')->get();
 
-        return view('Auth.profile', [ 
+        return view('auth.profile', [ 
             'user' => $user,
             'governorates' => $governorates,
         ]);

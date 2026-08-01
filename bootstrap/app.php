@@ -8,6 +8,10 @@ use Illuminate\Auth\Middleware\RedirectIfAuthenticated;
 
 // Write Firebase credentials JSON to file dynamically on bootstrap
 if (isset($_ENV['FIREBASE_CREDENTIALS_JSON']) || isset($_SERVER['FIREBASE_CREDENTIALS_JSON']) || env('FIREBASE_CREDENTIALS_JSON')) {
+    $_ENV['GOOGLE_CLOUD_PROJECT'] = 'easyfind-realestate';
+    $_SERVER['GOOGLE_CLOUD_PROJECT'] = 'easyfind-realestate';
+    putenv('GOOGLE_CLOUD_PROJECT=easyfind-realestate');
+
     $path = dirname(__DIR__) . '/storage/app/firebase_credentials.json';
     if (!file_exists($path)) {
         @mkdir(dirname($path), 0755, true);

@@ -39,6 +39,7 @@ RUN composer install --no-interaction --optimize-autoloader --no-dev --ignore-pl
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+RUN chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Expose port 80
 EXPOSE 80

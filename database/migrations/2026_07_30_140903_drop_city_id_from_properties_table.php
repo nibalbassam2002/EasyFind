@@ -11,16 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('properties', function (Blueprint $table) {
-            if (Schema::hasColumn('properties', 'city_id')) {
-                try {
-                    $table->dropForeign(['city_id']);
-                } catch (\Exception $e) {
-                    logger('Could not drop foreign key city_id: ' . $e->getMessage());
-                }
-                $table->dropColumn('city_id');
+        if (Schema::hasColumn('properties', 'city_id')) {
+            try {
+                Schema::table('properties', function (Blueprint $table) {
+                    $table->dropForeign('properties_city_id_foreign');
+                });
+            } catch (\Exception $e) {
+                logger('Could not drop foreign key city_id: ' . $e->getMessage());
             }
-        });
+
+            Schema::table('properties', function (Blueprint $table) {
+                $table->dropColumn('city_id');
+            });
+        }
     }
 
     /**

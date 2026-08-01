@@ -11,16 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
+        try {
+            Schema::table('users', function (Blueprint $table) {
+                $table->dropForeign('users_city_id_foreign');
+            });
+        } catch (\Exception $e) {
+            logger('Could not drop foreign key city_id for users: ' . $e->getMessage());
+        }
+
         Schema::table('users', function (Blueprint $table) {
-            try {
-                $table->dropForeign(['city_id']);
-            } catch (\Exception $e) {
-                logger('Could not drop foreign key city_id for users: ' . $e->getMessage());
-            }
-
-
-           $table->renameColumn('city_id', 'area_id');
-
+            $table->renameColumn('city_id', 'area_id');
 
             $table->foreign('area_id')
                  ->references('id')
@@ -34,15 +34,16 @@ return new class extends Migration
      */
     public function down(): void
     {
+        try {
+            Schema::table('users', function (Blueprint $table) {
+                $table->dropForeign('users_area_id_foreign');
+            });
+        } catch (\Exception $e) {
+            logger('Could not drop foreign key area_id for users during rollback: ' . $e->getMessage());
+        }
+
         Schema::table('users', function (Blueprint $table) {
-            try {
-                $table->dropForeign(['area_id']);
-           } catch (\Exception $e) {
-                logger('Could not drop foreign key area_id for users during rollback: ' . $e->getMessage());
-           }
-
-           $table->renameColumn('area_id', 'city_id');
-
+            $table->renameColumn('area_id', 'city_id');
 
             try {
                 $table->foreign('city_id')

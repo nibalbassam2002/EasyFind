@@ -12,6 +12,10 @@ if (isset($_ENV['FIREBASE_CREDENTIALS_JSON']) || isset($_SERVER['FIREBASE_CREDEN
     $_SERVER['GOOGLE_CLOUD_PROJECT'] = 'easyfind-realestate';
     putenv('GOOGLE_CLOUD_PROJECT=easyfind-realestate');
 
+    $_ENV['FIREBASE_CREDENTIALS'] = 'storage/app/firebase_credentials.json';
+    $_SERVER['FIREBASE_CREDENTIALS'] = 'storage/app/firebase_credentials.json';
+    putenv('FIREBASE_CREDENTIALS=storage/app/firebase_credentials.json');
+
     $path = dirname(__DIR__) . '/storage/app/firebase_credentials.json';
     if (!file_exists($path)) {
         @mkdir(dirname($path), 0755, true);

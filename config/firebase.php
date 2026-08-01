@@ -16,7 +16,9 @@ return [
     | الـ credentials الآن تقرأ المسار الكامل من ملف .env
     |
     */
-'credentials' => storage_path('app/firebase_credentials.json'),
+    'credentials' => env('FIREBASE_CREDENTIALS_JSON') 
+        ? json_decode(env('FIREBASE_CREDENTIALS_JSON'), true) 
+        : (env('FIREBASE_CREDENTIALS') ?: storage_path('app/firebase_credentials.json')),
 
     /*
     |--------------------------------------------------------------------------

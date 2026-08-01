@@ -6,6 +6,15 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Auth\Middleware\RedirectIfAuthenticated;
 
+// Write Firebase credentials JSON to file dynamically on bootstrap
+if (isset($_ENV['FIREBASE_CREDENTIALS_JSON']) || isset($_SERVER['FIREBASE_CREDENTIALS_JSON']) || env('FIREBASE_CREDENTIALS_JSON')) {
+    $path = dirname(__DIR__) . '/storage/app/firebase_credentials.json';
+    if (!file_exists($path)) {
+        @mkdir(dirname($path), 0755, true);
+        @file_put_contents($path, $_ENV['FIREBASE_CREDENTIALS_JSON'] ?? $_SERVER['FIREBASE_CREDENTIALS_JSON'] ?? env('FIREBASE_CREDENTIALS_JSON'));
+    }
+}
+
 
 
 return Application::configure(basePath: dirname(__DIR__))

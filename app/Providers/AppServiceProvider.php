@@ -15,13 +15,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        if (env('FIREBASE_CREDENTIALS_JSON')) {
-            $path = storage_path('app/firebase_credentials.json');
-            if (!file_exists($path)) {
-                @mkdir(dirname($path), 0755, true);
-                @file_put_contents($path, env('FIREBASE_CREDENTIALS_JSON'));
-            }
-        }
+        //
     }
 
     /**

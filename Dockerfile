@@ -44,5 +44,5 @@ RUN chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache
 # Expose port 80
 EXPOSE 80
 
-# Start command running package discovery at runtime and starting Apache
-CMD ["sh", "-c", "php artisan package:discover --ansi && php artisan config:clear && apache2-foreground"]
+# Start command running package discovery, migrations, seeders, and starting Apache
+CMD ["sh", "-c", "php artisan package:discover --ansi && php artisan config:clear && php artisan migrate --force && php artisan db:seed --force && apache2-foreground"]

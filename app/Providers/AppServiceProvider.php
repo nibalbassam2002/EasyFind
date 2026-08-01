@@ -28,5 +28,9 @@ class AppServiceProvider extends ServiceProvider
         Response::macro('error404', function () {
             return response()->view('auth.404', [], 404);
         });
+
+        if (config('app.env') === 'production') {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
     }
 }
